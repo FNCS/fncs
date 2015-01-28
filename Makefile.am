@@ -10,6 +10,8 @@ AM_CPPFLAGS =
 AM_LDFLAGS =
 LDADD =
 
+AM_CPPFLAGS += -I$(top_srcdir)/include
+AM_CPPFLAGS += -I$(top_srcdir)/contrib
 AM_CPPFLAGS += $(ZMQ_CPPFLAGS)
 
 AM_LDFLAGS += $(ZMQ_LDFLAGS)
@@ -18,8 +20,6 @@ LDADD += libfncs.la
 LDADD += $(ZMQ_LIBS)
 
 include_HEADERS += include/fncs.hpp
-
-AM_CPPFLAGS += -I$(top_srcdir)/include
 
 lib_LTLIBRARIES += libfncs.la
 libfncs_la_SOURCES =
