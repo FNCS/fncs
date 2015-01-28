@@ -331,11 +331,11 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
-include_HEADERS = include/fncs.hpp
+include_HEADERS = src/fncs.hpp
 lib_LTLIBRARIES = libfncs.la
 EXTRA_DIST = README
 AM_CXXFLAGS = 
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/contrib \
+AM_CPPFLAGS = -I$(top_srcdir)/contrib -I$(top_srcdir)/src \
 	$(ZMQ_CPPFLAGS)
 AM_LDFLAGS = $(ZMQ_LDFLAGS)
 LDADD = libfncs.la $(ZMQ_LIBS)
