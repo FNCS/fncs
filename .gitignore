@@ -1,0 +1,15 @@
+*~
+*.o
+*.lo
+.deps
+.dirstamp
+.libs
+Makefile
+autom4te.cache/
+config.h
+config.log
+config.status
+libfncs.la
+libtool
+stamp-h1
+bld*/
