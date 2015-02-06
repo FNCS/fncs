@@ -12,11 +12,14 @@ LDADD =
 
 AM_CPPFLAGS += -I$(top_srcdir)/contrib
 AM_CPPFLAGS += -I$(top_srcdir)/src
+AM_CPPFLAGS += $(CZMQ_CPPFLAGS)
 AM_CPPFLAGS += $(ZMQ_CPPFLAGS)
 
+AM_LDFLAGS += $(CZMQ_LDFLAGS)
 AM_LDFLAGS += $(ZMQ_LDFLAGS)
 
 LDADD += libfncs.la
+LDADD += $(CZMQ_LIBS)
 LDADD += $(ZMQ_LIBS)
 
 include_HEADERS += src/fncs.hpp
@@ -28,3 +31,5 @@ libfncs_la_SOURCES += src/fncs.cpp
 check_PROGRAMS += tests/test
 tests_test_SOURCES = tests/test.cpp
 
+bin_PROGRAMS += fncs_broker
+fncs_broker_SOURCES = src/broker.cpp

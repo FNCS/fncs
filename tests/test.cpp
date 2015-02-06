@@ -13,6 +13,8 @@ int main(int argc, char **argv)
     LINFO << "This is my first info";
     LTRACE << "This is my first trace";
 
+    fncs::initialize();
+
     return 0;
 }
 

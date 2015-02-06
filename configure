@@ -595,7 +595,7 @@ PACKAGE_STRING='Framework for Network Co-Simulation 2 0.1'
 PACKAGE_BUGREPORT='jeff.daily@pnnl.gov'
 PACKAGE_URL=''
 
-ac_unique_file="include/fncs.hpp"
+ac_unique_file="src/fncs.hpp"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -669,6 +669,11 @@ CCDEPMODE
 ac_ct_CC
 CFLAGS
 CC
+HAVE_CZMQ_FALSE
+HAVE_CZMQ_TRUE
+CZMQ_CPPFLAGS
+CZMQ_LDFLAGS
+CZMQ_LIBS
 HAVE_ZMQ_FALSE
 HAVE_ZMQ_TRUE
 ZMQ_CPPFLAGS
@@ -765,6 +770,7 @@ enable_option_checking
 enable_silent_rules
 enable_dependency_tracking
 with_zmq
+with_czmq
 enable_shared
 enable_static
 with_pic
@@ -1419,6 +1425,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-zmq[=ARG]        specify location of zmq install and/or other flags
+  --with-czmq[=ARG]       specify location of czmq install and/or other flags
   --with-pic[=PKGS]       try to use only PIC/non-PIC objects [default=use
                           both]
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
@@ -4600,18 +4607,18 @@ done ;;
 esac
 happy_header=no
 # Check for header.
-fncs_save_CPPFLAGS="$CPPFLAGS"; CPPFLAGS="$CPPFLAGS $ZMQ_CPPFLAGS"
+fncs_check_package_save_CPPFLAGS="$CPPFLAGS"; CPPFLAGS="$CPPFLAGS $ZMQ_CPPFLAGS"
 ac_fn_cxx_check_header_mongrel "$LINENO" "zmq.h" "ac_cv_header_zmq_h" "$ac_includes_default"
 if test "x$ac_cv_header_zmq_h" = xyes; then :
   happy_header=yes
 fi
 
 
-CPPFLAGS="$fncs_save_CPPFLAGS"
+CPPFLAGS="$fncs_check_package_save_CPPFLAGS"
 happy_lib=no
 # Check for library.
-fncs_save_LIBS="$LIBS"; LIBS="$ZMQ_LIBS $LIBS"
-fncs_save_LDFLAGS="$LDFLAGS"; LDFLAGS="$LDFLAGS $ZMQ_LDFLAGS"
+fncs_check_package_save_LIBS="$LIBS"; LIBS="$ZMQ_LIBS $LIBS"
+fncs_check_package_save_LDFLAGS="$LDFLAGS"; LDFLAGS="$LDFLAGS $ZMQ_LDFLAGS"
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing zmq_ctx_new" >&5
 $as_echo_n "checking for library containing zmq_ctx_new... " >&6; }
 if ${ac_cv_search_zmq_ctx_new+:} false; then :
@@ -4668,8 +4675,8 @@ if test "$ac_res" != no; then :
   happy_lib=yes
 fi
 
-LIBS="$fncs_save_LIBS"
-LDFLAGS="$fncs_save_LDFLAGS"
+LIBS="$fncs_check_package_save_LIBS"
+LDFLAGS="$fncs_check_package_save_LDFLAGS"
 case $ac_cv_search_zmq_ctx_new in #(
   *none*) :
      ;; #(
@@ -4701,6 +4708,268 @@ fi
 
 
 
+fncs_save_CPPFLAGS="$CPPFLAGS"
+fncs_save_LDFLAGS="$LDFLAGS"
+fncs_save_LIBS="$LIBS"
+CPPFLAGS="$CPPFLAGS $ZMQ_CPPFLAGS"
+LDFLAGS="$LDFLAGS $ZMQ_LDFLAGS"
+LIBS="$LIBS $ZMQ_LIBS"
+
+
+
+
+
+CZMQ_LIBS=
+CZMQ_LDFLAGS=
+CZMQ_CPPFLAGS=
+
+# Check whether --with-czmq was given.
+if test "${with_czmq+set}" = set; then :
+  withval=$with_czmq;
+else
+  with_czmq=yes
+fi
+
+case $with_czmq in #(
+  yes) :
+     ;; #(
+  no) :
+     ;; #(
+  *) :
+    if ac_fn_cxx_compute_int "$LINENO" "(long int) (sizeof (void*))" "fncs_arg_parse_sizeof_voidp"        ""; then :
+
+fi
+
+for arg in $with_czmq ; do
+    case $arg in #(
+  yes) :
+     ;; #(
+  no) :
+     ;; #(
+  -l*) :
+    CZMQ_LIBS="$CZMQ_LIBS $arg" ;; #(
+  -L*) :
+    CZMQ_LDFLAGS="$CZMQ_LDFLAGS $arg" ;; #(
+  -WL*) :
+    CZMQ_LDFLAGS="$CZMQ_LDFLAGS $arg" ;; #(
+  -Wl*) :
+    CZMQ_LDFLAGS="$CZMQ_LDFLAGS $arg" ;; #(
+  -I*) :
+    CZMQ_CPPFLAGS="$CZMQ_CPPFLAGS $arg" ;; #(
+  *.a) :
+    CZMQ_LIBS="$CZMQ_LIBS $arg" ;; #(
+  *.so) :
+    CZMQ_LIBS="$CZMQ_LIBS $arg" ;; #(
+  *lib) :
+    if test -d $arg; then :
+  CZMQ_LDFLAGS="$CZMQ_LDFLAGS -L$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of with_czmq not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of with_czmq not parsed" >&2;}
+fi ;; #(
+  *lib/) :
+    if test -d $arg; then :
+  CZMQ_LDFLAGS="$CZMQ_LDFLAGS -L$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of with_czmq not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of with_czmq not parsed" >&2;}
+fi ;; #(
+  *lib64) :
+    if test -d $arg; then :
+  CZMQ_LDFLAGS="$CZMQ_LDFLAGS -L$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of with_czmq not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of with_czmq not parsed" >&2;}
+fi ;; #(
+  *lib64/) :
+    if test -d $arg; then :
+  CZMQ_LDFLAGS="$CZMQ_LDFLAGS -L$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of with_czmq not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of with_czmq not parsed" >&2;}
+fi ;; #(
+  *include) :
+    if test -d $arg; then :
+  CZMQ_CPPFLAGS="$CZMQ_CPPFLAGS -I$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of with_czmq not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of with_czmq not parsed" >&2;}
+fi ;; #(
+  *include/) :
+    if test -d $arg; then :
+  CZMQ_CPPFLAGS="$CZMQ_CPPFLAGS -I$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of with_czmq not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of with_czmq not parsed" >&2;}
+fi ;; #(
+  *include64) :
+    if test -d $arg; then :
+  CZMQ_CPPFLAGS="$CZMQ_CPPFLAGS -I$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of with_czmq not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of with_czmq not parsed" >&2;}
+fi ;; #(
+  *include64/) :
+    if test -d $arg; then :
+  CZMQ_CPPFLAGS="$CZMQ_CPPFLAGS -I$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of with_czmq not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of with_czmq not parsed" >&2;}
+fi ;; #(
+  *) :
+    fncs_arg_parse_ok=no ;;
+esac
+# $arg didn't fit the most common cases
+# check for subdirectories e.g. lib,include
+    if test "x$fncs_arg_parse_ok" = xno; then :
+  if test "x$fncs_arg_parse_sizeof_voidp" = x8; then :
+  if test -d $arg/lib64; then :
+  CZMQ_LDFLAGS="$CZMQ_LDFLAGS -L$arg/lib64"; fncs_arg_parse_ok=yes
+elif test -d $arg/lib; then :
+  CZMQ_LDFLAGS="$CZMQ_LDFLAGS -L$arg/lib"; fncs_arg_parse_ok=yes
+fi
+             if test -d $arg/include64; then :
+  CZMQ_CPPFLAGS="$CZMQ_CPPFLAGS -I$arg/include64"; fncs_arg_parse_ok=yes
+elif test -d $arg/include; then :
+  CZMQ_CPPFLAGS="$CZMQ_CPPFLAGS -I$arg/include"; fncs_arg_parse_ok=yes
+fi
+else
+  if test -d $arg/lib; then :
+  CZMQ_LDFLAGS="$CZMQ_LDFLAGS -L$arg/lib"; fncs_arg_parse_ok=yes
+fi
+             if test -d $arg/include; then :
+  CZMQ_CPPFLAGS="$CZMQ_CPPFLAGS -I$arg/include"; fncs_arg_parse_ok=yes
+fi
+fi
+fi
+# $arg still unknown, look for "lib" and "include" anywhere...
+    if test "x$fncs_arg_parse_ok" = xno; then :
+  case $arg in #(
+  *lib*) :
+    if test -d $arg; then :
+  CZMQ_LDFLAGS="$CZMQ_LDFLAGS -L$arg"; fncs_arg_parse_ok=yes
+fi ;; #(
+  *include*) :
+    if test -d $arg; then :
+  CZMQ_CPPFLAGS="$CZMQ_CPPFLAGS -I$arg"; fncs_arg_parse_ok=yes
+fi ;; #(
+  *) :
+     ;;
+esac
+fi
+# warn user that $arg fell through
+     if test "x$fncs_arg_parse_ok" = xno; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of with_czmq not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of with_czmq not parsed" >&2;}
+fi
+done ;;
+esac
+happy_header=no
+# Check for header.
+fncs_check_package_save_CPPFLAGS="$CPPFLAGS"; CPPFLAGS="$CPPFLAGS $CZMQ_CPPFLAGS"
+ac_fn_cxx_check_header_mongrel "$LINENO" "czmq.h" "ac_cv_header_czmq_h" "$ac_includes_default"
+if test "x$ac_cv_header_czmq_h" = xyes; then :
+  happy_header=yes
+fi
+
+
+CPPFLAGS="$fncs_check_package_save_CPPFLAGS"
+happy_lib=no
+# Check for library.
+fncs_check_package_save_LIBS="$LIBS"; LIBS="$CZMQ_LIBS $LIBS"
+fncs_check_package_save_LDFLAGS="$LDFLAGS"; LDFLAGS="$LDFLAGS $CZMQ_LDFLAGS"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing zctx_new" >&5
+$as_echo_n "checking for library containing zctx_new... " >&6; }
+if ${ac_cv_search_zctx_new+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char zctx_new ();
+int
+main ()
+{
+return zctx_new ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' czmq; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_search_zctx_new=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_zctx_new+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_zctx_new+:} false; then :
+
+else
+  ac_cv_search_zctx_new=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_zctx_new" >&5
+$as_echo "$ac_cv_search_zctx_new" >&6; }
+ac_res=$ac_cv_search_zctx_new
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  happy_lib=yes
+fi
+
+LIBS="$fncs_check_package_save_LIBS"
+LDFLAGS="$fncs_check_package_save_LDFLAGS"
+case $ac_cv_search_zctx_new in #(
+  *none*) :
+     ;; #(
+  no) :
+     ;; #(
+  *) :
+    as_fn_append CZMQ_LIBS $ac_cv_search_zctx_new ;;
+esac
+if test "x$happy_header" = xyes && test "x$happy_lib" = xyes; then :
+
+
+$as_echo "#define HAVE_CZMQ 1" >>confdefs.h
+
+
+
+
+
+fi
+ if test "x$happy_header" = xyes && test "x$happy_lib" = xyes; then
+  HAVE_CZMQ_TRUE=
+  HAVE_CZMQ_FALSE='#'
+else
+  HAVE_CZMQ_TRUE='#'
+  HAVE_CZMQ_FALSE=
+fi
+
+
+
+
+
+
+CPPFLAGS="$fncs_save_CPPFLAGS"
+LDFLAGS="$fncs_save_LDFLAGS"
+LIBS="$fncs_save_LIBS"
 
 # Checks for header files.
 for ac_header in cstdint
@@ -16937,6 +17206,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${HAVE_ZMQ_TRUE}" && test -z "${HAVE_ZMQ_FALSE}"; then
   as_fn_error $? "conditional \"HAVE_ZMQ\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${HAVE_CZMQ_TRUE}" && test -z "${HAVE_CZMQ_FALSE}"; then
+  as_fn_error $? "conditional \"HAVE_CZMQ\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then

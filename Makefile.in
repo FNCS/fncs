@@ -52,7 +52,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS =
+bin_PROGRAMS = fncs_broker$(EXEEXT)
 check_PROGRAMS = tests/test$(EXEEXT)
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
@@ -123,11 +123,17 @@ am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
 PROGRAMS = $(bin_PROGRAMS)
+am_fncs_broker_OBJECTS = src/broker.$(OBJEXT)
+fncs_broker_OBJECTS = $(am_fncs_broker_OBJECTS)
+fncs_broker_LDADD = $(LDADD)
+am__DEPENDENCIES_1 =
+fncs_broker_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 am_tests_test_OBJECTS = tests/test.$(OBJEXT)
 tests_test_OBJECTS = $(am_tests_test_OBJECTS)
 tests_test_LDADD = $(LDADD)
-am__DEPENDENCIES_1 =
-tests_test_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1)
+tests_test_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -162,8 +168,10 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(libfncs_la_SOURCES) $(tests_test_SOURCES)
-DIST_SOURCES = $(libfncs_la_SOURCES) $(tests_test_SOURCES)
+SOURCES = $(libfncs_la_SOURCES) $(fncs_broker_SOURCES) \
+	$(tests_test_SOURCES)
+DIST_SOURCES = $(libfncs_la_SOURCES) $(fncs_broker_SOURCES) \
+	$(tests_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -226,6 +234,9 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+CZMQ_CPPFLAGS = @CZMQ_CPPFLAGS@
+CZMQ_LDFLAGS = @CZMQ_LDFLAGS@
+CZMQ_LIBS = @CZMQ_LIBS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
@@ -336,11 +347,12 @@ lib_LTLIBRARIES = libfncs.la
 EXTRA_DIST = README
 AM_CXXFLAGS = 
 AM_CPPFLAGS = -I$(top_srcdir)/contrib -I$(top_srcdir)/src \
-	$(ZMQ_CPPFLAGS)
-AM_LDFLAGS = $(ZMQ_LDFLAGS)
-LDADD = libfncs.la $(ZMQ_LIBS)
+	$(CZMQ_CPPFLAGS) $(ZMQ_CPPFLAGS)
+AM_LDFLAGS = $(CZMQ_LDFLAGS) $(ZMQ_LDFLAGS)
+LDADD = libfncs.la $(CZMQ_LIBS) $(ZMQ_LIBS)
 libfncs_la_SOURCES = src/fncs.cpp
 tests_test_SOURCES = tests/test.cpp
+fncs_broker_SOURCES = src/broker.cpp
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -497,6 +509,11 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+src/broker.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+fncs_broker$(EXEEXT): $(fncs_broker_OBJECTS) $(fncs_broker_DEPENDENCIES) $(EXTRA_fncs_broker_DEPENDENCIES) 
+	@rm -f fncs_broker$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(fncs_broker_OBJECTS) $(fncs_broker_LDADD) $(LIBS)
 tests/$(am__dirstamp):
 	@$(MKDIR_P) tests
 	@: > tests/$(am__dirstamp)
@@ -518,6 +535,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/broker.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test.Po@am__quote@
 

@@ -12,7 +12,7 @@ AC_INIT([Framework for Network Co-Simulation 2],
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_SRCDIR([include/fncs.hpp])
+AC_CONFIG_SRCDIR([src/fncs.hpp])
 
 ###############################################################################
 # Init automake
@@ -44,6 +44,16 @@ AC_PROG_CXX
 
 # Checks for libraries.
 FNCS_CHECK_PACKAGE([zmq], [zmq.h], [zmq], [zmq_ctx_new])
+fncs_save_CPPFLAGS="$CPPFLAGS"
+fncs_save_LDFLAGS="$LDFLAGS"
+fncs_save_LIBS="$LIBS"
+CPPFLAGS="$CPPFLAGS $ZMQ_CPPFLAGS"
+LDFLAGS="$LDFLAGS $ZMQ_LDFLAGS"
+LIBS="$LIBS $ZMQ_LIBS"
+FNCS_CHECK_PACKAGE([czmq], [czmq.h], [czmq], [zctx_new])
+CPPFLAGS="$fncs_save_CPPFLAGS"
+LDFLAGS="$fncs_save_LDFLAGS"
+LIBS="$fncs_save_LIBS"
 
 # Checks for header files.
 FNCS_CHECK_HEADERS([cstdint])

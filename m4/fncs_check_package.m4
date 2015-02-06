@@ -25,16 +25,16 @@ AS_CASE([$with_$1],
                 [PKG_CPPFLAGS])])
 happy_header=no
 # Check for header.
-fncs_save_CPPFLAGS="$CPPFLAGS"; CPPFLAGS="$CPPFLAGS $PKG_CPPFLAGS"
+fncs_check_package_save_CPPFLAGS="$CPPFLAGS"; CPPFLAGS="$CPPFLAGS $PKG_CPPFLAGS"
 AC_CHECK_HEADER([$2], [happy_header=yes], [$7])
-CPPFLAGS="$fncs_save_CPPFLAGS"
+CPPFLAGS="$fncs_check_package_save_CPPFLAGS"
 happy_lib=no
 # Check for library.
-fncs_save_LIBS="$LIBS"; LIBS="$PKG_LIBS $LIBS"
-fncs_save_LDFLAGS="$LDFLAGS"; LDFLAGS="$LDFLAGS $PKG_LDFLAGS"
+fncs_check_package_save_LIBS="$LIBS"; LIBS="$PKG_LIBS $LIBS"
+fncs_check_package_save_LDFLAGS="$LDFLAGS"; LDFLAGS="$LDFLAGS $PKG_LDFLAGS"
 AC_SEARCH_LIBS([$4], [$3], [happy_lib=yes], [], [$5])
-LIBS="$fncs_save_LIBS"
-LDFLAGS="$fncs_save_LDFLAGS"
+LIBS="$fncs_check_package_save_LIBS"
+LDFLAGS="$fncs_check_package_save_LDFLAGS"
 AS_CASE([$ac_cv_search_$4],
     [*none*], [],
     [no], [],

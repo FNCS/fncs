@@ -3,6 +3,9 @@
 /* Define to 1 if you have the <cstdint> header file, 0 if you don't */
 #undef HAVE_CSTDINT
 
+/* set to 1 if we have the indicated package */
+#undef HAVE_CZMQ
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
