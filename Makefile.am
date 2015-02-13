@@ -27,6 +27,7 @@ include_HEADERS += src/fncs.hpp
 lib_LTLIBRARIES += libfncs.la
 libfncs_la_SOURCES =
 libfncs_la_SOURCES += src/fncs.cpp
+libfncs_la_SOURCES += src/fncs_internal.hpp
 
 check_PROGRAMS += tests/test
 tests_test_SOURCES = tests/test.cpp

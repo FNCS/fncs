@@ -8,12 +8,15 @@ using namespace easyloggingpp;
 
 int main(int argc, char **argv)
 {
-    Loggers::setFilename("test.log");
-    Loggers::reconfigureAllLoggers(ConfigurationType::ToStandardOutput, "false");
-    LINFO << "This is my first info";
-    LTRACE << "This is my first trace";
+    fncs::time granted = 0;
 
     fncs::initialize();
+
+    fncs::publish("key", "value");
+
+    granted = fncs::time_request(10);
+
+    fncs::finalize();
 
     return 0;
 }

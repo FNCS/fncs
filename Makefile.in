@@ -168,6 +168,24 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
+AM_V_CC = $(am__v_CC_@AM_V@)
+am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
+am__v_CC_0 = @echo "  CC      " $@;
+am__v_CC_1 = 
+CCLD = $(CC)
+LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+AM_V_CCLD = $(am__v_CCLD_@AM_V@)
+am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
+am__v_CCLD_0 = @echo "  CCLD    " $@;
+am__v_CCLD_1 = 
 SOURCES = $(libfncs_la_SOURCES) $(fncs_broker_SOURCES) \
 	$(tests_test_SOURCES)
 DIST_SOURCES = $(libfncs_la_SOURCES) $(fncs_broker_SOURCES) \
@@ -350,7 +368,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/contrib -I$(top_srcdir)/src \
 	$(CZMQ_CPPFLAGS) $(ZMQ_CPPFLAGS)
 AM_LDFLAGS = $(CZMQ_LDFLAGS) $(ZMQ_LDFLAGS)
 LDADD = libfncs.la $(CZMQ_LIBS) $(ZMQ_LIBS)
-libfncs_la_SOURCES = src/fncs.cpp
+libfncs_la_SOURCES = src/fncs.cpp src/fncs_internal.hpp
 tests_test_SOURCES = tests/test.cpp
 fncs_broker_SOURCES = src/broker.cpp
 all: config.h
