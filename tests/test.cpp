@@ -13,6 +13,8 @@ int main(int argc, char **argv)
     fncs::initialize();
 
     fncs::publish("key", "value");
+    fncs::route("objA", "objB", "key", "value");
+    fncs::publish("yet", "again");
 
     granted = fncs::time_request(10);
 

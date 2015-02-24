@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <functional>
 #include <string>
+#include <vector>
 
 /* 3rd party headers */
 #include "czmq.h"
@@ -22,11 +23,16 @@ using namespace ::easyloggingpp;
 using namespace ::std;
 
 
-static char *simulation_name = NULL;
+static string simulation_name = "";
 static fncs::time time_delta_multiplier = 0;
 static fncs::time time_delta = 0;
 static fncs::time time_granted = 0;
 static zsock_t *client = NULL;
+static map<string,string> cache;
+static map<string,vector<string> > cache_list;
+
+typedef map<zrex_t*,fncs::Subscription> zsub_t;
+static zsub_t subscriptions;
 
 
 void fncs::start_logging()
@@ -39,11 +45,14 @@ void fncs::start_logging()
     if (!fncs_log_file) {
         fncs_log_file = "fncs.log";
     }
-    LTRACE << "FNCS_LOG_FILE: " << fncs_log_file;
 
     /* start our logger */
     Loggers::setFilename(fncs_log_file);
+    Loggers::reconfigureAllLoggers(ConfigurationType::Format,
+            "%datetime %level %log");
     //Loggers::reconfigureAllLoggers(ConfigurationType::ToStandardOutput, "false");
+
+    LTRACE << "FNCS_LOG_FILE: " << fncs_log_file;
 }
 
 
@@ -52,7 +61,7 @@ void fncs::start_logging()
 void fncs::initialize()
 {
     const char *fncs_config_file = NULL;
-    zconfig_t *zconfig = NULL;
+    zconfig_t *config = NULL;
 
     start_logging();
 
@@ -64,14 +73,14 @@ void fncs::initialize()
     LTRACE << "FNCS_CONFIG_FILE: " << fncs_config_file;
 
     /* open and parse fncs configuration */
-    zconfig = zconfig_load(fncs_config_file);
-    if (!zconfig) {
+    config = zconfig_load(fncs_config_file);
+    if (!config) {
         LFATAL << "could not open " << fncs_config_file;
         die();
     }
 
-    initialize(zconfig);
-    zconfig_destroy(&zconfig);
+    initialize(config);
+    zconfig_destroy(&config);
 }
 
 
@@ -80,7 +89,7 @@ void fncs::initialize()
 void fncs::initialize(const string &configuration)
 {
     zchunk_t *zchunk = NULL;
-    zconfig_t *zconfig = NULL;
+    zconfig_t *config = NULL;
 
     start_logging();
 
@@ -88,19 +97,19 @@ void fncs::initialize(const string &configuration)
     zchunk = zchunk_new(configuration.c_str(), configuration.size());
 
     /* open and parse fncs configuration */
-    zconfig = zconfig_chunk_load(zchunk);
-    if (!zconfig) {
+    config = zconfig_chunk_load(zchunk);
+    if (!config) {
         LFATAL << "could not load configuration chunk";
         die();
     }
     zchunk_destroy(&zchunk);
 
-    initialize(zconfig);
-    zconfig_destroy(&zconfig);
+    initialize(config);
+    zconfig_destroy(&config);
 }
 
 
-void fncs::initialize(zconfig_t *zconfig)
+void fncs::initialize(zconfig_t *config)
 {
     const char *name = NULL;
     const char *broker_endpoint = NULL;
@@ -108,12 +117,13 @@ void fncs::initialize(zconfig_t *zconfig)
     int rc;
     zmsg_t *msg = NULL;
     zchunk_t *zchunk = NULL;
+    zconfig_t *config_values = NULL;
 
     /* name from env var is tried first */
     name = getenv("FNCS_NAME");
     if (!name) {
         /* read sim name from config */
-        name = zconfig_resolve(zconfig, "/name", NULL);
+        name = zconfig_resolve(config, "/name", NULL);
         if (!name) {
             LFATAL << "FNCS_NAME env var not set and";
             LFATAL << "fncs config does not contain 'name'";
@@ -123,10 +133,11 @@ void fncs::initialize(zconfig_t *zconfig)
     else {
         LTRACE << "FNCS_NAME env var sets the name";
     }
+    simulation_name = name;
     LTRACE << "name = '" << name << "'";
 
     /* read broker location from config */
-    broker_endpoint = zconfig_resolve(zconfig, "/broker", NULL);
+    broker_endpoint = zconfig_resolve(config, "/broker", NULL);
     if (!broker_endpoint) {
         LFATAL << "fncs config does not contain 'broker'";
         die();
@@ -134,7 +145,7 @@ void fncs::initialize(zconfig_t *zconfig)
     LTRACE << "broker = " << broker_endpoint;
 
     /* read time delta from config */
-    time_delta_string = zconfig_resolve(zconfig, "/time_delta", NULL);
+    time_delta_string = zconfig_resolve(config, "/time_delta", NULL);
     if (!time_delta_string) {
         LFATAL << "fncs config does not contain 'time_delta'";
         die();
@@ -144,6 +155,22 @@ void fncs::initialize(zconfig_t *zconfig)
     LTRACE << "time_delta = " << time_delta;
     time_delta_multiplier = time_unit_to_multiplier(time_delta_string);
     LTRACE << "time_delta_multiplier = " << time_delta_multiplier;
+
+    /* parse subscriptions */
+    config_values = zconfig_locate(config, "/values");
+    if (config_values) {
+        vector<fncs::Subscription> subs =
+            fncs::subscriptions_parse(config_values);
+        for (size_t i=0; i<subs.size(); ++i) {
+            LTRACE << "compiling re'" << subs[i].topic << "'";
+            subscriptions.insert(make_pair(
+                        zrex_new(subs[i].topic.c_str()),
+                        subs[i]));
+        }
+    }
+    else {
+        LTRACE << "no subscriptions";
+    }
 
     /* create zmq context and client socket */
     client = zsock_new(ZMQ_DEALER);
@@ -167,7 +194,7 @@ void fncs::initialize(zconfig_t *zconfig)
         die();
     }
 
-    /* construct HELLO message; entire zconfig goes with it */
+    /* construct HELLO message; entire config goes with it */
     msg = zmsg_new();
     if (!msg) {
         LFATAL << "could not construct HELLO message";
@@ -178,14 +205,14 @@ void fncs::initialize(zconfig_t *zconfig)
         LFATAL << "failed to append HELLO to message";
         die();
     }
-    zchunk = zconfig_chunk_save(zconfig);
+    zchunk = zconfig_chunk_save(config);
     if (!zchunk) {
-        LFATAL << "failed to save zconfig for HELLO message";
+        LFATAL << "failed to save config for HELLO message";
         die();
     }
     rc = zmsg_addmem(msg, zchunk_data(zchunk), zchunk_size(zchunk));
     if (rc) {
-        LFATAL << "failed to add zconfig to HELLO message";
+        LFATAL << "failed to add config to HELLO message";
         die();
     }
     zchunk_destroy(&zchunk);
@@ -222,6 +249,10 @@ fncs::time fncs::time_request(fncs::time next)
     LTRACE << "sending TIME_REQUEST of " << next;
     zstr_sendm(client, fncs::TIME_REQUEST);
     zstr_sendf(client, "%lu", next);
+
+    /* sending of the time request implies we are done with the cache
+     * list, but the other cache remains as a last value cache */
+    cache_list.clear();
 
     /* receive TIME_REQUEST and perhaps other message types */
     zmq_pollitem_t items[] = { { zsock_resolve(client), 0, ZMQ_POLLIN, 0 } };
@@ -281,7 +312,50 @@ fncs::time fncs::time_request(fncs::time next)
                 break;
             }
             else if (fncs::PUBLISH == message_type) {
+                string topic;
+                string value;
+                bool found = false;
+
                 LTRACE << "PUBLISH received";
+
+                /* next frame is topic */
+                frame = zmsg_next(msg);
+                if (!frame) {
+                    LFATAL << "message missing topic";
+                    die();
+                }
+                LTRACE << frame;
+                topic = fncs::to_string(frame);
+
+                /* next frame is value payload */
+                frame = zmsg_next(msg);
+                if (!frame) {
+                    LFATAL << "message missing value";
+                    die();
+                }
+                LTRACE << frame;
+                value = fncs::to_string(frame);
+
+                /* find cache short key */
+                for (zsub_t::const_iterator it=subscriptions.begin();
+                        it!=subscriptions.end(); ++it) {
+                    if (zrex_matches(it->first, topic.c_str())) {
+                        found = true;
+                        /* store in cache */
+                        if (it->second.is_list()) {
+                            cache_list[it->second.key].push_back(value);
+                        }
+                        else {
+                            cache[it->second.key] = value;
+                        }
+                        LTRACE << "updated cache topic='" << topic
+                            << "' '" << it->second.key << "=" << value << "'";
+                    }
+                }
+                if (!found) {
+                    LWARNING << "dropping PUBLISH message topic='"
+                        << topic << "'";
+                }
             }
             else {
                 LFATAL << "unrecognized message type";
@@ -299,10 +373,11 @@ fncs::time fncs::time_request(fncs::time next)
 
 void fncs::publish(const string &key, const string &value)
 {
+    string new_key = simulation_name + '/' + key;
     zstr_sendm(client, fncs::PUBLISH);
-    zstr_sendm(client, key.c_str());
+    zstr_sendm(client, new_key.c_str());
     zstr_send(client, value.c_str());
-    LTRACE << "sent PUBLISH '" << key << "':'" << value << "'";
+    LTRACE << "sent PUBLISH '" << new_key << "'='" << value << "'";
 }
 
 
@@ -312,16 +387,11 @@ void fncs::route(
         const string &key,
         const string &value)
 {
-    zstr_sendm(client, fncs::ROUTE);
-    zstr_sendm(client, from.c_str());
-    zstr_sendm(client, to.c_str());
-    zstr_sendm(client, key.c_str());
+    string new_key = simulation_name + '/' + from + ':' + to + '/' + key;
+    zstr_sendm(client, fncs::PUBLISH);
+    zstr_sendm(client, new_key.c_str());
     zstr_send(client, value.c_str());
-    LTRACE << "sent ROUTE "
-        << "'"  << key << "'"
-        << ":'" << value << "'"
-        << ":'" << from << "'"
-        << ":'" << to << "'";
+    LTRACE << "sent PUBLISH '" << new_key << "'='" << value << "'";
 }
 
 
@@ -490,6 +560,28 @@ fncs::Subscription fncs::subscription_parse(zconfig_t *config)
     sub.list = value? value : "false";
 
     return sub;
+}
+
+
+vector<fncs::Subscription> fncs::subscriptions_parse(zconfig_t *config)
+{
+    vector<fncs::Subscription> subs;
+    string name;
+    zconfig_t *child = NULL;
+
+    name = zconfig_name(config);
+    if (name != "values") {
+        LFATAL << "error parsing 'values', wrong config object '" << name << "'";
+        die();
+    }
+
+    child = zconfig_child(config);
+    while (child) {
+        subs.push_back(subscription_parse(child));
+        child = zconfig_next(child);
+    }
+
+    return subs;
 }
 
 

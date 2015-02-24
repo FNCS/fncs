@@ -4,8 +4,10 @@
 #ifndef _FNCS_INTERNAL_H_
 #define _FNCS_INTERNAL_H_
  
+#include <cctype>
 #include <ostream>
 #include <string>
+#include <vector>
 
 #include "czmq.h"
 
@@ -13,6 +15,8 @@
 
 using ::std::ostream;
 using ::std::string;
+using ::std::toupper;
+using ::std::vector;
 
 
 ostream& operator << (ostream& os, zframe_t *self);
@@ -35,6 +39,8 @@ namespace fncs {
             string def;
             string type;
             string list;
+
+            bool is_list() const { return toupper(list[0]) == 'T'; }
     };
 
     static const char * HELLO = "hello";
@@ -60,6 +66,9 @@ namespace fncs {
 
     /** Converts given 'value' zconfig into a fncs Subscription value. */
     fncs::Subscription subscription_parse(zconfig_t *config);
+
+    /** Converts all 'values' zconfig items into fncs Subscription values. */
+    vector<fncs::Subscription> subscriptions_parse(zconfig_t *config);
 
     /** Converts given czmq frame into a string. */
     string to_string(zframe_t *frame);

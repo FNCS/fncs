@@ -41,6 +41,7 @@ class SimulatorState {
         fncs::time time_last_processed;
         bool processing;
         bool messages_pending;
+        vector<zrex_t*> subscriptions;
 };
 
 typedef map<string,size_t> SimIndex;
@@ -154,6 +155,7 @@ int main(int argc, char **argv)
                 SimulatorState state;
                 zchunk_t *chunk = NULL;
                 zconfig_t *config = NULL;
+                zconfig_t *config_values = NULL;
                 const char * time_delta = NULL;
 
                 LTRACE << "HELLO received";
@@ -197,6 +199,22 @@ int main(int argc, char **argv)
                     broker_die(simulators, server);
                 }
 
+                /* parse subscriptions */
+                vector<zrex_t*> subscriptions;
+                config_values = zconfig_locate(config, "/values");
+                if (config_values) {
+                    vector<fncs::Subscription> subs =
+                        fncs::subscriptions_parse(config_values);
+                    for (size_t i=0; i<subs.size(); ++i) {
+                        LTRACE << "compiling re'" << subs[i].topic << "'";
+                        subscriptions.push_back(
+                                zrex_new(subs[i].topic.c_str()));
+                    }
+                }
+                else {
+                    LTRACE << "no subscriptions";
+                }
+
                 /* populate sim state object */
                 state.name = sender;
                 state.time_delta = fncs::time_parse(time_delta);
@@ -204,6 +222,7 @@ int main(int argc, char **argv)
                 state.time_last_processed = 0;
                 state.processing = false;
                 state.messages_pending = false;
+                state.subscriptions = subscriptions;
                 name_to_index[sender] = simulators.size();
                 simulators.push_back(state);
 
@@ -277,6 +296,7 @@ int main(int argc, char **argv)
                         if (time_granted == time_actionable[i]) {
                             ++n_processing;
                             simulators[i].processing = true;
+                            simulators[i].messages_pending = false;
                             zstr_sendm(server, simulators[i].name.c_str());
                             zstr_sendm(server, fncs::TIME_REQUEST);
                             zstr_sendf(server, "%lu", time_granted);
@@ -285,6 +305,9 @@ int main(int argc, char **argv)
                 }
             }
             else if (fncs::PUBLISH == message_type) {
+                string topic = "";
+                bool found_one = false;
+
                 LTRACE << "PUBLISH received";
 
                 /* did we receive message from a connected sim? */
@@ -293,19 +316,43 @@ int main(int argc, char **argv)
                     broker_die(simulators, server);
                 }
 
-                /* send the message to all connected sims */
+                /* next frame is topic */
+                frame = zmsg_next(msg);
+                if (!frame) {
+                    LFATAL << "PUBLISH message missing topic";
+                    broker_die(simulators, server);
+                }
+                LTRACE << frame;
+                topic = fncs::to_string(frame);
+
+                /* send the message to subscribed sims */
                 for (size_t i=0; i<n_sims; ++i) {
-                    zmsg_t *msg_copy = zmsg_dup(msg);
-                    if (!msg_copy) {
-                        LFATAL << "failed to copy pub message";
-                        broker_die(simulators, server);
+                    for (size_t j=0; j<simulators[i].subscriptions.size(); ++j) {
+                        if (zrex_matches(
+                                    simulators[i].subscriptions[j],
+                                    topic.c_str())) {
+                            zmsg_t *msg_copy = zmsg_dup(msg);
+                            if (!msg_copy) {
+                                LFATAL << "failed to copy pub message";
+                                broker_die(simulators, server);
+                            }
+                            /* swap out original sender with new destiation */
+                            zframe_reset(zmsg_first(msg_copy),
+                                    simulators[i].name.c_str(),
+                                    simulators[i].name.size());
+                            /* send it on */
+                            zmsg_send(&msg_copy, server);
+                            found_one = true;
+                            simulators[i].messages_pending = true;
+                            /* even if multiple subscriptions for the
+                             * current simulator match this message, we
+                             * only want to send it once */
+                            break;
+                        }
                     }
-                    /* swap out original sender with new destiation */
-                    zframe_reset(zmsg_first(msg_copy),
-                            simulators[i].name.c_str(),
-                            simulators[i].name.size());
-                    /* send it on */
-                    zmsg_send(&msg_copy, server);
+                }
+                if (!found_one) {
+                    LWARNING << "dropping PUBLISH message '" << topic << "'";
                 }
             }
             else if (fncs::DIE == message_type) {
