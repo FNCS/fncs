@@ -5,8 +5,10 @@
 #define _FNCS_H_
  
 #include <string>
+#include <vector>
 
 using ::std::string;
+using ::std::vector;
 
 namespace fncs {
 
@@ -32,6 +34,14 @@ namespace fncs {
 
     /** Close the connection to the broker. */
     void finalize();
+
+    /** Get a value from the cache with the given key.
+     * Will hard fault if key is not found. */
+    string get_value(const string &key);
+
+    /** Get a vector of values from the cache with the given key.
+     * Will return a vector of size 1 if only a single value exists. */
+    vector<string> get_values(const string &key);
 
 }
 

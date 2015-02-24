@@ -29,7 +29,9 @@ static fncs::time time_delta = 0;
 static fncs::time time_granted = 0;
 static zsock_t *client = NULL;
 static map<string,string> cache;
-static map<string,vector<string> > cache_list;
+
+typedef map<string,vector<string> > clist_t;
+static clist_t cache_list;
 
 typedef map<zrex_t*,fncs::Subscription> zsub_t;
 static zsub_t subscriptions;
@@ -166,6 +168,14 @@ void fncs::initialize(zconfig_t *config)
             subscriptions.insert(make_pair(
                         zrex_new(subs[i].topic.c_str()),
                         subs[i]));
+            LTRACE << "initializing cache for '" << subs[i].key << "'='"
+                << subs[i].def << "'";
+            if (subs[i].is_list()) {
+                cache_list[subs[i].key] = vector<string>(1, subs[i].def);
+            }
+            else {
+                cache[subs[i].key] = subs[i].def;
+            }
         }
     }
     else {
@@ -252,7 +262,11 @@ fncs::time fncs::time_request(fncs::time next)
 
     /* sending of the time request implies we are done with the cache
      * list, but the other cache remains as a last value cache */
-    cache_list.clear();
+    /* only clear the vectors associated with cache list keys because
+     * the keys should remain valid i.e. empty lists are meaningful */
+    for (clist_t::iterator it=cache_list.begin(); it!=cache_list.end(); ++it) {
+        it->second.clear();
+    }
 
     /* receive TIME_REQUEST and perhaps other message types */
     zmq_pollitem_t items[] = { { zsock_resolve(client), 0, ZMQ_POLLIN, 0 } };
@@ -590,3 +604,60 @@ string fncs::to_string(zframe_t *frame)
     return string((const char *)zframe_data(frame), zframe_size(frame));
 }
 
+
+/* I don't think the following behavior is what is wanted. */
+#if 0
+
+string fncs::get_value(const string &key)
+{
+    if (0 == cache.count(key)) {
+        LWARNING << "key '" << key << "' not found in cache";
+        if (0 == cache_list.count(key)) {
+            LFATAL << "key '" << key << "' not found in cache or cache list";
+            die();
+        }
+        else {
+            return get_values(key).back();
+        }
+    }
+    return cache[key];
+}
+
+
+vector<string> fncs::get_values(const string &key)
+{
+    if (0 == cache_list.count(key)) {
+        LWARNING << "key '" << key << "' not found in cache list";
+        if (0 == cache.count(key)) {
+            LFATAL << "key '" << key << "' not found in cache list or cache";
+            die();
+        }
+        else {
+            return vector<string>(1, get_value(key));
+        }
+    }
+    return cache_list[key];
+}
+
+#else
+/* This seems like clearer semantics. */
+
+string fncs::get_value(const string &key)
+{
+    if (0 == cache.count(key)) {
+        LFATAL << "key '" << key << "' not found in cache";
+        die();
+    }
+    return cache[key];
+}
+
+
+vector<string> fncs::get_values(const string &key)
+{
+    if (0 == cache_list.count(key)) {
+        LFATAL << "key '" << key << "' not found in cache list";
+        die();
+    }
+    return cache_list[key];
+}
+#endif
