@@ -171,7 +171,12 @@ void fncs::initialize(zconfig_t *config)
             LTRACE << "initializing cache for '" << subs[i].key << "'='"
                 << subs[i].def << "'";
             if (subs[i].is_list()) {
-                cache_list[subs[i].key] = vector<string>(1, subs[i].def);
+                if (subs[i].def.empty()) {
+                    cache_list[subs[i].key] = vector<string>();
+                }
+                else {
+                    cache_list[subs[i].key] = vector<string>(1, subs[i].def);
+                }
             }
             else {
                 cache[subs[i].key] = subs[i].def;
@@ -556,10 +561,9 @@ fncs::Subscription fncs::subscription_parse(zconfig_t *config)
 
     value = zconfig_resolve(config, "default", NULL);
     if (!value) {
-        LFATAL << "error parsing value '" << sub.key << "', missing 'default'";
-        die();
+        LDEBUG << "parsing value '" << sub.key << "', missing 'default'";
     }
-    sub.def = value;
+    sub.def = value? value : "";
 
     value = zconfig_resolve(config, "type", NULL);
     if (!value) {
