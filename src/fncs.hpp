@@ -12,7 +12,7 @@ using ::std::vector;
 
 namespace fncs {
 
-    typedef unsigned long time;
+    typedef unsigned long long time;
 
     /** Connect to broker and parse config file. */
     void initialize();
