@@ -114,7 +114,8 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libfncs_la_LIBADD =
+am__DEPENDENCIES_1 =
+libfncs_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am__dirstamp = $(am__leading_dot)dirstamp
 am_libfncs_la_OBJECTS = src/fncs.lo
 libfncs_la_OBJECTS = $(am_libfncs_la_OBJECTS)
@@ -126,7 +127,6 @@ PROGRAMS = $(bin_PROGRAMS)
 am_fncs_broker_OBJECTS = src/broker.$(OBJEXT)
 fncs_broker_OBJECTS = $(am_fncs_broker_OBJECTS)
 fncs_broker_LDADD = $(LDADD)
-am__DEPENDENCIES_1 =
 fncs_broker_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 am_tests_test_OBJECTS = tests/test.$(OBJEXT)
@@ -370,6 +370,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/contrib -I$(top_srcdir)/src \
 AM_LDFLAGS = $(CZMQ_LDFLAGS) $(ZMQ_LDFLAGS)
 LDADD = libfncs.la $(CZMQ_LIBS) $(ZMQ_LIBS)
 libfncs_la_SOURCES = src/fncs.cpp src/fncs_internal.hpp
+libfncs_la_LIBADD = $(CZMQ_LIBS) $(ZMQ_LIBS)
 tests_test_SOURCES = tests/test.cpp
 fncs_broker_SOURCES = src/broker.cpp
 all: config.h

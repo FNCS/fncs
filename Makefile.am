@@ -28,6 +28,9 @@ lib_LTLIBRARIES += libfncs.la
 libfncs_la_SOURCES =
 libfncs_la_SOURCES += src/fncs.cpp
 libfncs_la_SOURCES += src/fncs_internal.hpp
+libfncs_la_LIBADD =
+libfncs_la_LIBADD += $(CZMQ_LIBS)
+libfncs_la_LIBADD += $(ZMQ_LIBS)
 
 check_PROGRAMS += tests/test
 tests_test_SOURCES = tests/test.cpp
