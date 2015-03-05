@@ -26,7 +26,6 @@ using namespace ::std;
 static string simulation_name = "";
 static fncs::time time_delta_multiplier = 0;
 static fncs::time time_delta = 0;
-static fncs::time time_granted = 0;
 static zsock_t *client = NULL;
 static map<string,string> cache;
 
@@ -40,7 +39,6 @@ static zsub_t subscriptions;
 void fncs::start_logging()
 {
     const char *fncs_log_file = NULL;
-    int rc;
 
     /* name for fncs log file from environment */
     fncs_log_file = getenv("FNCS_LOG_FILE");
@@ -263,7 +261,7 @@ fncs::time fncs::time_request(fncs::time next)
     next *= time_delta_multiplier;
     LTRACE << "sending TIME_REQUEST of " << next;
     zstr_sendm(client, fncs::TIME_REQUEST);
-    zstr_sendf(client, "%lu", next);
+    zstr_sendf(client, "%llu", next);
 
     /* sending of the time request implies we are done with the cache
      * list, but the other cache remains as a last value cache */
@@ -308,8 +306,6 @@ fncs::time fncs::time_request(fncs::time next)
 
             /* dispatcher */
             if (fncs::TIME_REQUEST == message_type) {
-                char *time_str = NULL;
-
                 LTRACE << "TIME_REQUEST received";
 
                 /* next frame is time */
@@ -457,6 +453,8 @@ ostream& operator << (ostream& os, zframe_t *self) {
     }
 
     os << buffer;
+
+    return os;
 }
 
 
@@ -466,9 +464,6 @@ fncs::time fncs::time_unit_to_multiplier(const string &value)
     fncs::time ignore; 
     string unit;
     istringstream iss(value);
-    int rc = 0;
-    long unsigned _value = 0;
-    char _unit[256] = {0};
 
     iss >> ignore;
     if (!iss) {

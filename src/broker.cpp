@@ -62,7 +62,7 @@ static inline void broker_die(const SimVec &simulators, zsock_t *server) {
 int main(int argc, char **argv)
 {
     /* declare all variables */
-    int n_sims = 0;             /* how many sims will connect */
+    unsigned int n_sims = 0;    /* how many sims will connect */
     set<string> byes;           /* which sims have disconnected */
     int n_processing = 0;       /* how many sims are processing a time step */
     const char *endpoint = NULL;/* broker location */
@@ -83,13 +83,15 @@ int main(int argc, char **argv)
         exit(1);
     }
     else {
+        int n_sims_signed = 0;
         istringstream iss(argv[1]);
-        iss >> n_sims;
-        LTRACE << "n_sims = " << n_sims;
-    }
-    if (n_sims <= 0) {
-        LFATAL << "number of simulators arg must be >= 1";
-        exit(1);
+        iss >> n_sims_signed;
+        LTRACE << "n_sims_signed = " << n_sims_signed;
+        if (n_sims_signed <= 0) {
+            LFATAL << "number of simulators arg must be >= 1";
+            exit(1);
+        }
+        n_sims = static_cast<unsigned int>(n_sims_signed);
     }
 
     /* broker endpoint may come from env var */
@@ -299,7 +301,7 @@ int main(int argc, char **argv)
                             simulators[i].messages_pending = false;
                             zstr_sendm(server, simulators[i].name.c_str());
                             zstr_sendm(server, fncs::TIME_REQUEST);
-                            zstr_sendf(server, "%lu", time_granted);
+                            zstr_sendf(server, "%llu", time_granted);
                         }
                     }
                 }
