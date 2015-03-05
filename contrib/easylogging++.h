@@ -120,6 +120,14 @@
 #   define SPRINTF sprintf
 #   define STRTOK(a,b,c) strtok(a,b)
 #endif
+
+// HACK FOR FNCS
+// We assume very old compilers.
+#undef _ELPP_CXX0X
+#define _ELPP_CXX0X 0
+#undef _ELPP_CXX11
+#define _ELPP_CXX11 0
+
 // std::thread availablity
 #if defined(__GNUC__) && (!_ELPP_NDK) && (_ELPP_CXX0X || _ELPP_CXX11)
 #   define _ELPP_STD_THREAD_AVAILABLE 1
