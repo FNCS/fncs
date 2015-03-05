@@ -30,6 +30,8 @@ cd "$FNCS_TOP_BUILDDIR"
 AS_IF([test "$FNCS_TOP_BUILDDIR" != "$FNCS_TOP_SRCDIR"],
       [AC_MSG_NOTICE([Detected VPATH build])])
 
+AM_MAINTAINER_MODE
+
 AC_LANG([C++])
 
 ###############################################################################
