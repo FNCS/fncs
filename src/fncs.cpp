@@ -24,6 +24,8 @@ using namespace ::std;
 
 
 static string simulation_name = "";
+static int simulation_id = 0;
+static int n_sims = 0;
 static fncs::time time_delta_multiplier = 0;
 static fncs::time time_delta = 0;
 static zsock_t *client = NULL;
@@ -249,6 +251,26 @@ void fncs::initialize(zconfig_t *config)
         die();
     }
     LTRACE << "received ACK";
+    /* next frame is connetion order ID */
+    frame = zmsg_next(msg);
+    if (!frame) {
+        LFATAL << "ACK message missing order ID";
+        die();
+    }
+    LTRACE << frame;
+    simulation_id = atoi(fncs::to_string(frame).c_str());
+    LTRACE << "connection order ID is " << simulation_id;
+
+    /* next frame is n_sims */
+    frame = zmsg_next(msg);
+    if (!frame) {
+        LFATAL << "ACK message missing n_sims";
+        die();
+    }
+    LTRACE << frame;
+    n_sims = atoi(fncs::to_string(frame).c_str());
+    LTRACE << "n_sims is " << n_sims;
+
     zmsg_destroy(&msg);
 }
 
@@ -422,7 +444,28 @@ void fncs::die()
 
 void fncs::finalize()
 {
+    zmsg_t *msg = NULL;
+    zframe_t *frame = NULL;
+
     zstr_send(client, fncs::BYE);
+
+    /* receive BYE back */
+    msg = zmsg_recv(client);
+    if (!msg) {
+        LFATAL << "null message received";
+        die();
+    }
+
+    /* first frame is type identifier */
+    frame = zmsg_first(msg);
+    if (!zframe_streq(frame, BYE)) {
+        LFATAL << "BYE expected, got " << frame;
+        die();
+    }
+    LTRACE << "received BYE";
+
+    zmsg_destroy(&msg);
+
     zsock_destroy(&client);
 }
 
@@ -660,3 +703,22 @@ vector<string> fncs::get_values(const string &key)
     return cache_list[key];
 }
 #endif
+
+
+string fncs::get_name()
+{
+    return simulation_name;
+}
+
+
+int fncs::get_id()
+{
+    return simulation_id;
+}
+
+
+int fncs::get_simulator_count()
+{
+    return n_sims;
+}
+

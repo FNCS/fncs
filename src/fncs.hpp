@@ -43,6 +43,15 @@ namespace fncs {
      * Will return a vector of size 1 if only a single value exists. */
     vector<string> get_values(const string &key);
 
+    /** Return the name of the simulator. */
+    string get_name();
+
+    /** Return a unique numeric ID for the simulator. */
+    int get_id();
+
+    /** Return the number of simulators connected to the broker. */
+    int get_simulator_count();
+
 }
 
 #endif /* _FNCS_H_ */

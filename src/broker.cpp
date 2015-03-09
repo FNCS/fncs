@@ -238,7 +238,9 @@ int main(int argc, char **argv)
                     for (size_t i=0; i<n_sims; ++i) {
                         simulators[i].processing = true;
                         zstr_sendm(server, simulators[i].name.c_str());
-                        zstr_send(server, fncs::ACK);
+                        zstr_sendm(server, fncs::ACK);
+                        zstr_sendfm(server, "%llu", (unsigned long long)i);
+                        zstr_sendf(server, "%llu", (unsigned long long)n_sims);
                         LTRACE << "ACK sent to '" << simulators[i].name;
                     }
                 }
@@ -369,6 +371,8 @@ int main(int argc, char **argv)
                 broker_die(simulators, server);
             }
             else if (fncs::BYE == message_type) {
+                size_t index = 0; /* index of sim state */
+
                 LTRACE << "BYE received";
 
                 /* did we receive message from a connected sim? */
@@ -377,14 +381,28 @@ int main(int argc, char **argv)
                     broker_die(simulators, server);
                 }
 
+                /* index of sim state */
+                index = name_to_index[sender];
+
                 /* soft error if muliple byes received */
                 if (byes.count(sender)) {
                     LERROR << "duplicate BYE from '" << sender << "'";
                 }
 
-                /* if all byes received, then exit */
+                /* add sender to list of leaving sims */
                 byes.insert(sender);
+                simulators[index].processing = false;
+
+                /* if all byes received, then exit */
                 if (byes.size() == n_sims) {
+                    /* let all sims know that globally we are finished */
+                    for (size_t i=0; i<n_sims; ++i) {
+                        zstr_sendm(server, simulators[i].name.c_str());
+                        zstr_send(server, fncs::BYE);
+                        LTRACE << "BYE sent to '" << simulators[i].name;
+                    }
+                    /* need to delete msg since we are breaking from loop */
+                    zmsg_destroy(&msg);
                     break;
                 }
             }
