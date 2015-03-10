@@ -206,7 +206,7 @@ int main(int argc, char **argv)
                 config_values = zconfig_locate(config, "/values");
                 if (config_values) {
                     vector<fncs::Subscription> subs =
-                        fncs::subscriptions_parse(config_values);
+                        fncs::parse_values(config_values);
                     for (size_t i=0; i<subs.size(); ++i) {
                         LTRACE << "compiling re'" << subs[i].topic << "'";
                         subscriptions.push_back(
@@ -216,10 +216,23 @@ int main(int argc, char **argv)
                 else {
                     LTRACE << "no subscriptions";
                 }
+                config_values = zconfig_locate(config, "/matches");
+                if (config_values) {
+                    vector<fncs::Subscription> subs =
+                        fncs::parse_matches(config_values);
+                    for (size_t i=0; i<subs.size(); ++i) {
+                        LTRACE << "compiling re'" << subs[i].topic << "'";
+                        subscriptions.push_back(
+                                zrex_new(subs[i].topic.c_str()));
+                    }
+                }
+                else {
+                    LTRACE << "no matches";
+                }
 
                 /* populate sim state object */
                 state.name = sender;
-                state.time_delta = fncs::time_parse(time_delta);
+                state.time_delta = fncs::parse_time(time_delta);
                 state.time_requested = 0;
                 state.time_last_processed = 0;
                 state.processing = false;

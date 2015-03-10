@@ -34,6 +34,9 @@ static map<string,string> cache;
 typedef map<string,vector<string> > clist_t;
 static clist_t cache_list;
 
+typedef map<string,vector<pair<string,string> > > mlist_t;
+static mlist_t match_list;
+
 typedef map<zrex_t*,fncs::Subscription> zsub_t;
 static zsub_t subscriptions;
 
@@ -153,7 +156,7 @@ void fncs::initialize(zconfig_t *config)
         die();
     }
     LTRACE << "time_delta_string = " << time_delta_string;
-    time_delta = time_parse(time_delta_string);
+    time_delta = parse_time(time_delta_string);
     LTRACE << "time_delta = " << time_delta;
     time_delta_multiplier = time_unit_to_multiplier(time_delta_string);
     LTRACE << "time_delta_multiplier = " << time_delta_multiplier;
@@ -162,7 +165,7 @@ void fncs::initialize(zconfig_t *config)
     config_values = zconfig_locate(config, "/values");
     if (config_values) {
         vector<fncs::Subscription> subs =
-            fncs::subscriptions_parse(config_values);
+            fncs::parse_values(config_values);
         for (size_t i=0; i<subs.size(); ++i) {
             LTRACE << "compiling re'" << subs[i].topic << "'";
             subscriptions.insert(make_pair(
@@ -181,6 +184,28 @@ void fncs::initialize(zconfig_t *config)
             else {
                 cache[subs[i].key] = subs[i].def;
             }
+        }
+        if (subs.empty()) {
+            LWARNING << "'values' appears in config but no subscriptions";
+        }
+    }
+    else {
+        LTRACE << "no subscriptions";
+    }
+    config_values = zconfig_locate(config, "/matches");
+    if (config_values) {
+        vector<fncs::Subscription> subs =
+            fncs::parse_matches(config_values);
+        for (size_t i=0; i<subs.size(); ++i) {
+            LTRACE << "compiling re'" << subs[i].topic << "'";
+            subscriptions.insert(make_pair(
+                        zrex_new(subs[i].topic.c_str()),
+                        subs[i]));
+            LTRACE << "initializing match cache for '" << subs[i].key << "'";
+            match_list[subs[i].key] = vector<pair<string,string> >();
+        }
+        if (subs.empty()) {
+            LWARNING << "'matches' appears in config but no subscriptions";
         }
     }
     else {
@@ -292,6 +317,9 @@ fncs::time fncs::time_request(fncs::time next)
     for (clist_t::iterator it=cache_list.begin(); it!=cache_list.end(); ++it) {
         it->second.clear();
     }
+    for (mlist_t::iterator it=match_list.begin(); it!=match_list.end(); ++it) {
+        it->second.clear();
+    }
 
     /* receive TIME_REQUEST and perhaps other message types */
     zmq_pollitem_t items[] = { { zsock_resolve(client), 0, ZMQ_POLLIN, 0 } };
@@ -379,11 +407,17 @@ fncs::time fncs::time_request(fncs::time next)
                     if (zrex_matches(it->first, topic.c_str())) {
                         found = true;
                         /* store in cache */
-                        if (it->second.is_list()) {
-                            cache_list[it->second.key].push_back(value);
+                        if (it->second.is_match()) {
+                            match_list[it->second.key].push_back(
+                                    make_pair(topic,value));
                         }
                         else {
-                            cache[it->second.key] = value;
+                            if (it->second.is_list()) {
+                                cache_list[it->second.key].push_back(value);
+                            }
+                            else {
+                                cache[it->second.key] = value;
+                            }
                         }
                         LTRACE << "updated cache topic='" << topic
                             << "' '" << it->second.key << "=" << value << "'";
@@ -565,7 +599,7 @@ fncs::time fncs::time_unit_to_multiplier(const string &value)
 }
 
 
-fncs::time fncs::time_parse(const string &value)
+fncs::time fncs::parse_time(const string &value)
 {
     fncs::time retval; 
     string unit;
@@ -583,7 +617,7 @@ fncs::time fncs::time_parse(const string &value)
 }
 
 
-fncs::Subscription fncs::subscription_parse(zconfig_t *config)
+fncs::Subscription fncs::parse_value(zconfig_t *config)
 {
     fncs::Subscription sub;
     const char *value = NULL;
@@ -619,7 +653,26 @@ fncs::Subscription fncs::subscription_parse(zconfig_t *config)
 }
 
 
-vector<fncs::Subscription> fncs::subscriptions_parse(zconfig_t *config)
+fncs::Subscription fncs::parse_match(zconfig_t *config)
+{
+    fncs::Subscription sub;
+    const char *value = NULL;
+
+    sub.key = zconfig_name(config);
+    sub.match = true;
+
+    value = zconfig_resolve(config, "topic", NULL);
+    if (!value) {
+        LFATAL << "error parsing value '" << sub.key << "', missing 'topic'";
+        die();
+    }
+    sub.topic = value;
+
+    return sub;
+}
+
+
+vector<fncs::Subscription> fncs::parse_values(zconfig_t *config)
 {
     vector<fncs::Subscription> subs;
     string name;
@@ -633,7 +686,29 @@ vector<fncs::Subscription> fncs::subscriptions_parse(zconfig_t *config)
 
     child = zconfig_child(config);
     while (child) {
-        subs.push_back(subscription_parse(child));
+        subs.push_back(parse_value(child));
+        child = zconfig_next(child);
+    }
+
+    return subs;
+}
+
+
+vector<fncs::Subscription> fncs::parse_matches(zconfig_t *config)
+{
+    vector<fncs::Subscription> subs;
+    string name;
+    zconfig_t *child = NULL;
+
+    name = zconfig_name(config);
+    if (name != "matches") {
+        LFATAL << "error parsing 'matches', wrong config object '" << name << "'";
+        die();
+    }
+
+    child = zconfig_child(config);
+    while (child) {
+        subs.push_back(parse_match(child));
         child = zconfig_next(child);
     }
 
@@ -701,6 +776,16 @@ vector<string> fncs::get_values(const string &key)
         die();
     }
     return cache_list[key];
+}
+
+
+vector<pair<string,string> > fncs::get_matches(const string &key)
+{
+    if (0 == match_list.count(key)) {
+        LFATAL << "key '" << key << "' not found in match list";
+        die();
+    }
+    return match_list[key];
 }
 #endif
 

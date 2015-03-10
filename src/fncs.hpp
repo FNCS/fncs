@@ -5,8 +5,10 @@
 #define _FNCS_H_
  
 #include <string>
+#include <utility>
 #include <vector>
 
+using ::std::pair;
 using ::std::string;
 using ::std::vector;
 
@@ -42,6 +44,10 @@ namespace fncs {
     /** Get a vector of values from the cache with the given key.
      * Will return a vector of size 1 if only a single value exists. */
     vector<string> get_values(const string &key);
+
+    /** Get a vector of topic-value pairs from the cache with the given key.
+     * Will return a vector of size 1 if only a single value exists. */
+    vector<pair<string,string> > get_matches(const string &key);
 
     /** Return the name of the simulator. */
     string get_name();

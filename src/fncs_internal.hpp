@@ -32,6 +32,7 @@ namespace fncs {
                 , def("")
                 , type("")
                 , list("")
+                , match(false)
             {}
 
             string key;
@@ -39,8 +40,13 @@ namespace fncs {
             string def;
             string type;
             string list;
+            bool match;
 
-            bool is_list() const { return toupper(list[0]) == 'T'; }
+            bool is_list() const {
+                return toupper(list[0]) == 'T' || toupper(list[0]) == 'Y';
+            }
+
+            bool is_match() const { return match; }
     };
 
     static const char * HELLO = "hello";
@@ -62,13 +68,19 @@ namespace fncs {
     fncs::time time_unit_to_multiplier(const string &value);
 
     /** Converts given time string, e.g., 1s, into a fncs time value. */
-    fncs::time time_parse(const string &value);
+    fncs::time parse_time(const string &value);
 
     /** Converts given 'value' zconfig into a fncs Subscription value. */
-    fncs::Subscription subscription_parse(zconfig_t *config);
+    fncs::Subscription parse_value(zconfig_t *config);
 
     /** Converts all 'values' zconfig items into fncs Subscription values. */
-    vector<fncs::Subscription> subscriptions_parse(zconfig_t *config);
+    vector<fncs::Subscription> parse_values(zconfig_t *config);
+
+    /** Converts given 'match' zconfig into a fncs Subscription value. */
+    fncs::Subscription parse_match(zconfig_t *config);
+
+    /** Converts all 'matches' zconfig items into fncs Subscription matches. */
+    vector<fncs::Subscription> parse_matches(zconfig_t *config);
 
     /** Converts given czmq frame into a string. */
     string to_string(zframe_t *frame);
