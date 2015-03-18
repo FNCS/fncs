@@ -70,6 +70,9 @@ namespace fncs {
     /** Converts given time string, e.g., 1s, into a fncs time value. */
     fncs::time parse_time(const string &value);
 
+    /** Converts given time value, assumed in ns, to sim's unit. */
+    fncs::time convert_broker_to_sim_time(fncs::time value);
+
     /** Converts given 'value' zconfig into a fncs Subscription value. */
     fncs::Subscription parse_value(zconfig_t *config);
 

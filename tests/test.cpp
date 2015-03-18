@@ -16,9 +16,11 @@ int main(int argc, char **argv)
 
     fncs::initialize();
 
+#if 0
     /* test default values work */
     value = fncs::get_value("baz");
     values = fncs::get_values("bazl");
+#endif
 
     /* test sending of messages */
     fncs::publish("key", "value");
@@ -28,16 +30,24 @@ int main(int argc, char **argv)
     /* time request */
     granted = fncs::time_request(10);
 
+#if 0
     /* should be updated cache after request */
     value = fncs::get_value("baz");
     values = fncs::get_values("bazl");
+#endif
+
+    fncs::publish("key", "value2");
 
     /* time request */
     granted = fncs::time_request(15);
 
+#if 0
     /* cache lists empty now */
     values = fncs::get_values("bazl");
     assert(0 == values.size());
+#endif
+
+    fncs::publish("key2", "value");
 
     fncs::finalize();
 

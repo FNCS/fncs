@@ -305,8 +305,9 @@ fncs::time fncs::time_request(fncs::time next)
     fncs::time granted;
 
     /* send TIME_REQUEST */
+    LTRACE << "sending TIME_REQUEST of " << next << " in sim units";
     next *= time_delta_multiplier;
-    LTRACE << "sending TIME_REQUEST of " << next;
+    LTRACE << "sending TIME_REQUEST of " << next << " nanoseconds";
     zstr_sendm(client, fncs::TIME_REQUEST);
     zstr_sendf(client, "%llu", next);
 
@@ -365,7 +366,7 @@ fncs::time fncs::time_request(fncs::time next)
                     die();
                 }
                 LTRACE << frame;
-                /* convert time string */
+                /* convert time string to nanoseconds */
                 {
                     istringstream iss(fncs::to_string(frame));
                     iss >> granted;
@@ -437,7 +438,10 @@ fncs::time fncs::time_request(fncs::time next)
         }
     }
 
-    LTRACE << "granted " << granted;
+    LTRACE << "granted " << granted << " nanoseonds";
+    /* convert nanoseonds to sim's time unit */
+    granted = convert_broker_to_sim_time(granted);
+    LTRACE << "granted " << granted << " in sim units";
     return granted;
 }
 
@@ -805,5 +809,11 @@ int fncs::get_id()
 int fncs::get_simulator_count()
 {
     return n_sims;
+}
+
+
+fncs::time fncs::convert_broker_to_sim_time(fncs::time value)
+{
+    return value / time_delta_multiplier;
 }
 

@@ -311,6 +311,8 @@ int main(int argc, char **argv)
                     LTRACE << "time_granted = " << time_granted;
                     for (size_t i=0; i<n_sims; ++i) {
                         if (time_granted == time_actionable[i]) {
+                            LTRACE << "granting " << time_granted
+                                << " to " << simulators[i].name;
                             ++n_processing;
                             simulators[i].processing = true;
                             simulators[i].messages_pending = false;
@@ -364,6 +366,7 @@ int main(int argc, char **argv)
                             /* even if multiple subscriptions for the
                              * current simulator match this message, we
                              * only want to send it once */
+                            LTRACE << "pub to " << simulators[i].name;
                             break;
                         }
                     }
