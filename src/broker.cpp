@@ -258,11 +258,17 @@ int main(int argc, char **argv)
                     }
                 }
             }
-            else if (fncs::TIME_REQUEST == message_type) {
+            else if (fncs::TIME_REQUEST == message_type
+                    || fncs::BYE == message_type) {
                 size_t index = 0; /* index of sim state */
                 fncs::time time_requested;
 
-                LTRACE << "TIME_REQUEST received";
+                if (fncs::TIME_REQUEST == message_type) {
+                    LTRACE << "TIME_REQUEST received";
+                }
+                else if (fncs::BYE == message_type) {
+                    LTRACE << "BYE received";
+                }
 
                 /* did we receive message from a connected sim? */
                 if (name_to_index.count(sender) == 0) {
@@ -273,21 +279,50 @@ int main(int argc, char **argv)
                 /* index of sim state */
                 index = name_to_index[sender];
 
-                /* next frame is time */
-                frame = zmsg_next(msg);
-                if (!frame) {
-                    LFATAL << "TIME_REQUEST message missing time frame";
-                    broker_die(simulators, server);
+                if (fncs::BYE == message_type) {
+                    /* soft error if muliple byes received */
+                    if (byes.count(sender)) {
+                        LERROR << "duplicate BYE from '" << sender << "'";
+                    }
+
+                    /* add sender to list of leaving sims */
+                    byes.insert(sender);
+
+                    /* if all byes received, then exit */
+                    if (byes.size() == n_sims) {
+                        /* let all sims know that globally we are finished */
+                        for (size_t i=0; i<n_sims; ++i) {
+                            zstr_sendm(server, simulators[i].name.c_str());
+                            zstr_send(server, fncs::BYE);
+                            LTRACE << "BYE sent to '" << simulators[i].name;
+                        }
+                        /* need to delete msg since we are breaking from loop */
+                        zmsg_destroy(&msg);
+                        break;
+                    }
+
+                    /* update sim state */
+                    simulators[index].time_requested = ULLONG_MAX;
                 }
-                LTRACE << frame;
-                /* convert time string */
-                {
-                    istringstream iss(fncs::to_string(frame));
-                    iss >> time_requested;
+                else if (fncs::TIME_REQUEST == message_type) {
+                    /* next frame is time */
+                    frame = zmsg_next(msg);
+                    if (!frame) {
+                        LFATAL << "TIME_REQUEST message missing time frame";
+                        broker_die(simulators, server);
+                    }
+                    LTRACE << frame;
+                    /* convert time string */
+                    {
+                        istringstream iss(fncs::to_string(frame));
+                        iss >> time_requested;
+                    }
+
+                    /* update sim state */
+                    simulators[index].time_requested = time_requested;
                 }
 
                 /* update sim state */
-                simulators[index].time_requested = time_requested;
                 simulators[index].time_last_processed = time_granted;
                 simulators[index].processing = false;
 
@@ -319,6 +354,14 @@ int main(int argc, char **argv)
                             zstr_sendm(server, simulators[i].name.c_str());
                             zstr_sendm(server, fncs::TIME_REQUEST);
                             zstr_sendf(server, "%llu", time_granted);
+                        }
+                        else {
+                            /* fast forward time last processed */
+                            while (simulators[i].time_last_processed <=
+                                    time_granted - simulators[i].time_delta) {
+                                simulators[i].time_last_processed +=
+                                    simulators[i].time_delta;
+                            }
                         }
                     }
                 }
@@ -385,42 +428,6 @@ int main(int argc, char **argv)
                 }
 
                 broker_die(simulators, server);
-            }
-            else if (fncs::BYE == message_type) {
-                size_t index = 0; /* index of sim state */
-
-                LTRACE << "BYE received";
-
-                /* did we receive message from a connected sim? */
-                if (name_to_index.count(sender) == 0) {
-                    LFATAL << "simulator '" << sender << "' not connected";
-                    broker_die(simulators, server);
-                }
-
-                /* index of sim state */
-                index = name_to_index[sender];
-
-                /* soft error if muliple byes received */
-                if (byes.count(sender)) {
-                    LERROR << "duplicate BYE from '" << sender << "'";
-                }
-
-                /* add sender to list of leaving sims */
-                byes.insert(sender);
-                simulators[index].processing = false;
-
-                /* if all byes received, then exit */
-                if (byes.size() == n_sims) {
-                    /* let all sims know that globally we are finished */
-                    for (size_t i=0; i<n_sims; ++i) {
-                        zstr_sendm(server, simulators[i].name.c_str());
-                        zstr_send(server, fncs::BYE);
-                        LTRACE << "BYE sent to '" << simulators[i].name;
-                    }
-                    /* need to delete msg since we are breaking from loop */
-                    zmsg_destroy(&msg);
-                    break;
-                }
             }
             else {
                 LFATAL << "received unknown message type '"
