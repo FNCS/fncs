@@ -26,6 +26,7 @@ using std::vector;
 typedef pair<string,string> kv_t;
 typedef vector<kv_t> matches_t;
 
+
 int main(int argc, char **argv)
 {
     string param_time_stop = "";
@@ -34,13 +35,14 @@ int main(int argc, char **argv)
     fncs::time time_stop = 0;
     vector<pair<string,string> > matches;
     ofstream fout;
+    ostream out(cout.rdbuf()); /* share cout's stream buffer */
 
-    if (argc < 3) {
-        cerr << "Missing stop time and/or output filename parameters." << endl;
-        cerr << "Usage: tracer <stop time> <output file>" << endl;
+    if (argc < 2) {
+        cerr << "Missing stop time parameter." << endl;
+        cerr << "Usage: tracer <stop time> [output file]" << endl;
         exit(EXIT_FAILURE);
     }
-    
+
     if (argc > 3) {
         cerr << "Too many parameters." << endl;
         cerr << "Usage: tracer <stop time> <output file>" << endl;
@@ -49,19 +51,18 @@ int main(int argc, char **argv)
 
 
     param_time_stop = argv[1];
-    param_file_name = argv[2];
-
-    fout.open(param_file_name.c_str());
-    if (!fout) {
-        cerr << "Could not open output file '" << param_file_name << "'." << endl;
-        exit(EXIT_FAILURE);
+    if (argc == 3) {
+        param_file_name = argv[2];
+        fout.open(param_file_name.c_str());
+        if (!fout) {
+            cerr << "Could not open output file '" << param_file_name << "'." << endl;
+            exit(EXIT_FAILURE);
+        }
+        out.rdbuf(fout.rdbuf()); /* redirect out to use file buffer */
     }
 
-    fout << "#nanoseconds\ttopic\tvalue" << endl;
+    out << "#nanoseconds\ttopic\tvalue" << endl;
 
-#if 0
-    fncs::initialize();
-#else
     fncs::initialize(
             "name = tracer\n"
             "time_delta = 1ns\n"
@@ -70,7 +71,6 @@ int main(int argc, char **argv)
             "    all\n"
             "        topic = .*\n"
             );
-#endif
 
     time_stop = fncs::parse_time(argv[1]);
     cout << "stops at " << time_stop << " nanoseconds" << endl;
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
         cout << "time_granted is " << time_granted << endl;
         matches = fncs::get_matches("all");
         for (matches_t::iterator it=matches.begin(); it!=matches.end(); ++it) {
-            fout << time_granted
+            out << time_granted
                 << "\t" << it->first
                 << "\t" << it->second
                 << endl;;
