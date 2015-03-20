@@ -141,19 +141,33 @@ void fncs::initialize(zconfig_t *config)
     simulation_name = name;
     LTRACE << "name = '" << name << "'";
 
-    /* read broker location from config */
-    broker_endpoint = zconfig_resolve(config, "/broker", NULL);
+    /* broker location from env var is tried first */
+    broker_endpoint = getenv("FNCS_BROKER");
     if (!broker_endpoint) {
-        LFATAL << "fncs config does not contain 'broker'";
-        die();
+        /* read broker location from config */
+        broker_endpoint = zconfig_resolve(config, "/broker", NULL);
+        if (!broker_endpoint) {
+            LFATAL << "fncs config does not contain 'broker'";
+            die();
+        }
+    }
+    else {
+        LTRACE << "FNCS_BROKER env var sets the broker endpoint location";
     }
     LTRACE << "broker = " << broker_endpoint;
 
-    /* read time delta from config */
-    time_delta_string = zconfig_resolve(config, "/time_delta", NULL);
+    /* time_delta from env var is tried first */
+    time_delta_string = getenv("FNCS_TIME_DELTA");
     if (!time_delta_string) {
-        LFATAL << "fncs config does not contain 'time_delta'";
-        die();
+        /* read time delta from config */
+        time_delta_string = zconfig_resolve(config, "/time_delta", NULL);
+        if (!time_delta_string) {
+            LFATAL << "fncs config does not contain 'time_delta'";
+            die();
+        }
+    }
+    else {
+        LTRACE << "FNCS_TIME_DELTA env var sets the time_delta_string";
     }
     LTRACE << "time_delta_string = " << time_delta_string;
     time_delta = parse_time(time_delta_string);

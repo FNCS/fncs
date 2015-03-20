@@ -357,11 +357,8 @@ int main(int argc, char **argv)
                         }
                         else {
                             /* fast forward time last processed */
-                            while (simulators[i].time_last_processed <=
-                                    time_granted - simulators[i].time_delta) {
-                                simulators[i].time_last_processed +=
-                                    simulators[i].time_delta;
-                            }
+                            fncs::time jump = (time_granted - simulators[i].time_last_processed) / simulators[i].time_delta;
+                            simulators[i].time_last_processed += simulators[i].time_delta * jump;
                         }
                     }
                 }
