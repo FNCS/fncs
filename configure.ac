@@ -32,6 +32,8 @@ AS_IF([test "$FNCS_TOP_BUILDDIR" != "$FNCS_TOP_SRCDIR"],
 
 AM_MAINTAINER_MODE
 
+AC_CANONICAL_HOST
+
 AC_LANG([C++])
 
 ###############################################################################
@@ -95,6 +97,28 @@ FNCS_CXX_NULLPTR
 # Checks for library functions.
 FNCS_CHECK_FUNCS([gettimeofday])
 
+# OS-specific tests
+
+libfncs_on_mingw32="no"
+
+case "${host_os}" in
+    *mingw32*)
+        AC_CHECK_HEADERS(windows.h)
+        AC_CHECK_LIB(ws2_32, main, ,
+            [AC_MSG_ERROR([cannot link with ws2_32.dll.])])
+        AC_CHECK_LIB(rpcrt4, main, ,
+            [AC_MSG_ERROR([cannot link with rpcrt4.dll.])])
+        AC_CHECK_LIB(iphlpapi, main, ,
+            [AC_MSG_ERROR([cannot link with iphlpapi.dll.])])
+        libfncs_on_mingw32="yes"
+        if test "x$enable_static" = "xyes"; then
+            AC_MSG_ERROR([Building static libraries is not supported under MinGW32])
+        fi
+        ;;
+esac
+
+AM_CONDITIONAL(ON_MINGW, test "x$libfncs_on_mingw32" = "xyes")
+
 ###############################################################################
 # C compiler
 ###############################################################################
@@ -125,7 +149,19 @@ AC_MSG_NOTICE
 
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
 
-LT_INIT
+# Libtool configuration for different targets
+case "${host_os}" in
+    *mingw32*|*cygwin*)
+        # Disable static build by default
+        AC_DISABLE_STATIC
+    ;;
+    *)
+        # Everything else with static enabled
+        AC_ENABLE_STATIC
+    ;;
+esac
+
+LT_INIT([win32-dll])
 
 ###############################################################################
 # The End

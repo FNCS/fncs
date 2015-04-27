@@ -12,51 +12,70 @@ using ::std::pair;
 using ::std::string;
 using ::std::vector;
 
+#if defined _WIN32 && !defined __GNUC__
+# ifdef LIBFNCS_BUILD
+#  ifdef DLL_EXPORT
+#   define LIBFNCS_SCOPE            __declspec (dllexport)
+#   define LIBFNCS_SCOPE_VAR extern __declspec (dllexport)
+#  endif
+# elif defined _MSC_VER
+#  define LIBFNCS_SCOPE
+#  define LIBFNCS_SCOPE_VAR  extern __declspec (dllimport)
+# elif defined DLL_EXPORT
+#  define LIBFNCS_SCOPE             __declspec (dllimport)
+#  define LIBFNCS_SCOPE_VAR  extern __declspec (dllimport)
+# endif
+#endif
+#ifndef LIBFNCS_SCOPE
+# define LIBFNCS_SCOPE
+# define LIBFNCS_SCOPE_VAR extern
+#endif
+
 namespace fncs {
 
     typedef unsigned long long time;
 
     /** Connect to broker and parse config file. */
-    void initialize();
+    LIBFNCS_SCOPE void initialize();
 
     /** Connect to broker and parse inline configuration. */
-    void initialize(const string &configuration);
+    LIBFNCS_SCOPE void initialize(const string &configuration);
 
     /** Request the next time step to process. */
-    time time_request(time next);
+    LIBFNCS_SCOPE time time_request(time next);
 
     /** Publish value using the given key. */
-    void publish(const string &key, const string &value);
+    LIBFNCS_SCOPE void publish(const string &key, const string &value);
 
     /** Publish value using the given key, adding from:to into the key. */
-    void route(const string &from, const string &to, const string &key, const string &value);
+    LIBFNCS_SCOPE void route(const string &from, const string &to, const string &key, const string &value);
 
     /** Tell broker of a fatal client error. */
-    void die();
+    LIBFNCS_SCOPE void die();
 
     /** Close the connection to the broker. */
-    void finalize();
+    LIBFNCS_SCOPE void finalize();
 
     /** Get a value from the cache with the given key.
      * Will hard fault if key is not found. */
-    string get_value(const string &key);
+    LIBFNCS_SCOPE string get_value(const string &key);
 
     /** Get a vector of values from the cache with the given key.
      * Will return a vector of size 1 if only a single value exists. */
-    vector<string> get_values(const string &key);
+    LIBFNCS_SCOPE vector<string> get_values(const string &key);
 
     /** Get a vector of topic-value pairs from the cache with the given key.
      * Will return a vector of size 1 if only a single value exists. */
-    vector<pair<string,string> > get_matches(const string &key);
+    LIBFNCS_SCOPE vector<pair<string,string> > get_matches(const string &key);
 
     /** Return the name of the simulator. */
-    string get_name();
+    LIBFNCS_SCOPE string get_name();
 
     /** Return a unique numeric ID for the simulator. */
-    int get_id();
+    LIBFNCS_SCOPE int get_id();
 
     /** Return the number of simulators connected to the broker. */
-    int get_simulator_count();
+    LIBFNCS_SCOPE int get_simulator_count();
 
 }
 

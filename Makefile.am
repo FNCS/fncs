@@ -32,6 +32,12 @@ libfncs_la_LIBADD =
 libfncs_la_LIBADD += $(CZMQ_LIBS)
 libfncs_la_LIBADD += $(ZMQ_LIBS)
 
+if ON_MINGW
+libfncs_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined -avoid-version
+else
+libfncs_la_LDFLAGS = $(AM_LDFLAGS)
+endif
+
 check_PROGRAMS += tests/test
 tests_test_SOURCES = tests/test.cpp
 
