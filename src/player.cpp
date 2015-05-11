@@ -44,15 +44,21 @@ int main(int argc, char **argv)
     string line = "";
     size_t counter = 0;
 
+#ifdef FNCS_ANON
+    const char * usage = "Usage: fncs_player_anon <stop time> <input file>";
+#else
+    const char * usage = "Usage: fncs_player <stop time> <input file>";
+#endif
+
     if (argc < 3) {
         cerr << "Missing stop time and/or input filename parameters." << endl;
-        cerr << "Usage: player <stop time> <input file>" << endl;
+        cerr << usage << endl;
         exit(EXIT_FAILURE);
     }
     
     if (argc > 3) {
         cerr << "Too many parameters." << endl;
-        cerr << "Usage: player <stop time> <input file>" << endl;
+        cerr << usage << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -66,7 +72,11 @@ int main(int argc, char **argv)
     }
 
     fncs::initialize(
+#ifdef FNCS_ANON
+            "name = player_anon\n"
+#else
             "name = player\n"
+#endif
             "time_delta = 1ns\n"
             "broker = tcp://localhost:5570\n"
             );
@@ -123,7 +133,11 @@ int main(int argc, char **argv)
         }
 
         /* create event */
+#ifdef FNCS_ANON
+        fncs::publish_anon(tokens[1], tokens[2]);
+#else
         fncs::publish(tokens[1], tokens[2]);
+#endif
 
         /* read next line */
         getline(fin, line);

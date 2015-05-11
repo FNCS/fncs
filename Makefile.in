@@ -81,7 +81,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = fncs_broker$(EXEEXT) fncs_tracer$(EXEEXT) \
-	fncs_player$(EXEEXT)
+	fncs_player$(EXEEXT) fncs_player_anon$(EXEEXT)
 check_PROGRAMS = tests/test$(EXEEXT)
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
@@ -166,6 +166,11 @@ fncs_player_OBJECTS = $(am_fncs_player_OBJECTS)
 fncs_player_LDADD = $(LDADD)
 fncs_player_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
+am_fncs_player_anon_OBJECTS = src/fncs_player_anon-player.$(OBJEXT)
+fncs_player_anon_OBJECTS = $(am_fncs_player_anon_OBJECTS)
+fncs_player_anon_LDADD = $(LDADD)
+fncs_player_anon_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 am_fncs_tracer_OBJECTS = src/tracer.$(OBJEXT)
 fncs_tracer_OBJECTS = $(am_fncs_tracer_OBJECTS)
 fncs_tracer_LDADD = $(LDADD)
@@ -229,11 +234,11 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libfncs_la_SOURCES) $(fncs_broker_SOURCES) \
-	$(fncs_player_SOURCES) $(fncs_tracer_SOURCES) \
-	$(tests_test_SOURCES)
+	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
+	$(fncs_tracer_SOURCES) $(tests_test_SOURCES)
 DIST_SOURCES = $(libfncs_la_SOURCES) $(fncs_broker_SOURCES) \
-	$(fncs_player_SOURCES) $(fncs_tracer_SOURCES) \
-	$(tests_test_SOURCES)
+	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
+	$(fncs_tracer_SOURCES) $(tests_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -422,6 +427,8 @@ tests_test_SOURCES = tests/test.cpp
 fncs_broker_SOURCES = src/broker.cpp
 fncs_tracer_SOURCES = src/tracer.cpp
 fncs_player_SOURCES = src/player.cpp
+fncs_player_anon_SOURCES = src/player.cpp
+fncs_player_anon_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_ANON
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -591,6 +598,12 @@ src/player.$(OBJEXT): src/$(am__dirstamp) \
 fncs_player$(EXEEXT): $(fncs_player_OBJECTS) $(fncs_player_DEPENDENCIES) $(EXTRA_fncs_player_DEPENDENCIES) 
 	@rm -f fncs_player$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(fncs_player_OBJECTS) $(fncs_player_LDADD) $(LIBS)
+src/fncs_player_anon-player.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+
+fncs_player_anon$(EXEEXT): $(fncs_player_anon_OBJECTS) $(fncs_player_anon_DEPENDENCIES) $(EXTRA_fncs_player_anon_DEPENDENCIES) 
+	@rm -f fncs_player_anon$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(fncs_player_anon_OBJECTS) $(fncs_player_anon_LDADD) $(LIBS)
 src/tracer.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 
@@ -621,6 +634,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/broker.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_player_anon-player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tracer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test.Po@am__quote@
@@ -648,6 +662,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
+
+src/fncs_player_anon-player.o: src/player.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fncs_player_anon_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/fncs_player_anon-player.o -MD -MP -MF src/$(DEPDIR)/fncs_player_anon-player.Tpo -c -o src/fncs_player_anon-player.o `test -f 'src/player.cpp' || echo '$(srcdir)/'`src/player.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/fncs_player_anon-player.Tpo src/$(DEPDIR)/fncs_player_anon-player.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/player.cpp' object='src/fncs_player_anon-player.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fncs_player_anon_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/fncs_player_anon-player.o `test -f 'src/player.cpp' || echo '$(srcdir)/'`src/player.cpp
+
+src/fncs_player_anon-player.obj: src/player.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fncs_player_anon_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/fncs_player_anon-player.obj -MD -MP -MF src/$(DEPDIR)/fncs_player_anon-player.Tpo -c -o src/fncs_player_anon-player.obj `if test -f 'src/player.cpp'; then $(CYGPATH_W) 'src/player.cpp'; else $(CYGPATH_W) '$(srcdir)/src/player.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/fncs_player_anon-player.Tpo src/$(DEPDIR)/fncs_player_anon-player.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/player.cpp' object='src/fncs_player_anon-player.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fncs_player_anon_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/fncs_player_anon-player.obj `if test -f 'src/player.cpp'; then $(CYGPATH_W) 'src/player.cpp'; else $(CYGPATH_W) '$(srcdir)/src/player.cpp'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

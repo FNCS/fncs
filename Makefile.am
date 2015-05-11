@@ -49,3 +49,7 @@ fncs_tracer_SOURCES = src/tracer.cpp
 
 bin_PROGRAMS += fncs_player
 fncs_player_SOURCES = src/player.cpp
+
+bin_PROGRAMS += fncs_player_anon
+fncs_player_anon_SOURCES = src/player.cpp
+fncs_player_anon_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_ANON
