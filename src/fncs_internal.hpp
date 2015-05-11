@@ -87,6 +87,10 @@ namespace fncs {
 
     /** Converts given czmq frame into a string. */
     string to_string(zframe_t *frame);
+
+    /** Publish value anonymously using the given key. */
+    void publish_anon(const string &key, const string &value);
+
 }
 
 #endif /* _FNCS_INTERNAL_H_ */

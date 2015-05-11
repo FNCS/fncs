@@ -147,8 +147,8 @@ void fncs::initialize(zconfig_t *config)
         /* read broker location from config */
         broker_endpoint = zconfig_resolve(config, "/broker", NULL);
         if (!broker_endpoint) {
-            LFATAL << "fncs config does not contain 'broker'";
-            die();
+            LWARNING << "fncs config does not contain 'broker'";
+            broker_endpoint = "tcp://localhost:5570";
         }
     }
     else {
@@ -467,6 +467,15 @@ void fncs::publish(const string &key, const string &value)
     zstr_sendm(client, new_key.c_str());
     zstr_send(client, value.c_str());
     LTRACE << "sent PUBLISH '" << new_key << "'='" << value << "'";
+}
+
+
+void fncs::publish_anon(const string &key, const string &value)
+{
+    zstr_sendm(client, fncs::PUBLISH);
+    zstr_sendm(client, key.c_str());
+    zstr_send(client, value.c_str());
+    LTRACE << "sent PUBLISH anon '" << key << "'='" << value << "'";
 }
 
 
