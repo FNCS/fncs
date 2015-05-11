@@ -49,7 +49,6 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-
     param_time_stop = argv[1];
     if (argc == 3) {
         param_file_name = argv[2];
@@ -72,7 +71,7 @@ int main(int argc, char **argv)
             "        topic = .*\n"
             );
 
-    time_stop = fncs::parse_time(argv[1]);
+    time_stop = fncs::parse_time(param_time_stop);
     cout << "stops at " << time_stop << " nanoseconds" << endl;
     time_stop = fncs::convert_broker_to_sim_time(time_stop);
     cout << "stops at " << time_stop << " in sim time" << endl;

@@ -49,13 +49,12 @@ namespace fncs {
             bool is_match() const { return match; }
     };
 
-    static const char * HELLO = "hello";
-    static const char * ACK = "ack";
-    static const char * TIME_REQUEST = "time_request";
-    static const char * PUBLISH = "publish";
-    static const char * ROUTE = "route";
-    static const char * DIE = "die";
-    static const char * BYE = "bye";
+    extern const char * HELLO;
+    extern const char * ACK;
+    extern const char * TIME_REQUEST;
+    extern const char * PUBLISH;
+    extern const char * DIE;
+    extern const char * BYE;
 
     /** Connects to broker and parses the given config object. */
     void initialize(zconfig_t *zconfig);

@@ -71,7 +71,7 @@ int main(int argc, char **argv)
             "broker = tcp://localhost:5570\n"
             );
 
-    time_stop = fncs::parse_time(argv[1]);
+    time_stop = fncs::parse_time(param_time_stop);
     cout << "stops at " << time_stop << " nanoseconds" << endl;
     time_stop = fncs::convert_broker_to_sim_time(time_stop);
     cout << "stops at " << time_stop << " in sim time" << endl;
