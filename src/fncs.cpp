@@ -10,6 +10,17 @@
 #include <string>
 #include <vector>
 
+/* for fncs::timer() */
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#elif defined(__FreeBSD__)
+#include <time.h>
+#else
+#include <time.h>
+#endif
+#include <assert.h>
+
 /* 3rd party headers */
 #include "czmq.h"
 #include "easylogging++.h"
@@ -51,6 +62,7 @@ static zsub_t subscriptions;
 void fncs::start_logging()
 {
     const char *fncs_log_file = NULL;
+    const char *fncs_log_stdout = NULL;
 
     /* name for fncs log file from environment */
     fncs_log_file = getenv("FNCS_LOG_FILE");
@@ -58,11 +70,22 @@ void fncs::start_logging()
         fncs_log_file = "fncs.log";
     }
 
+    /* whether to echo to stdout from environment */
+    fncs_log_stdout = getenv("FNCS_LOG_STDOUT");
+    if (!fncs_log_stdout) {
+        fncs_log_stdout = "yes";
+    }
+
     /* start our logger */
     Loggers::setFilename(fncs_log_file);
     Loggers::reconfigureAllLoggers(ConfigurationType::Format,
             "%datetime %level %log");
-    //Loggers::reconfigureAllLoggers(ConfigurationType::ToStandardOutput, "false");
+    if (fncs_log_stdout[0] == 'N'
+            || fncs_log_stdout[0] == 'n'
+            || fncs_log_stdout[0] == 'F'
+            || fncs_log_stdout[0] == 'f') {
+        Loggers::reconfigureAllLoggers(ConfigurationType::ToStandardOutput, "false");
+    }
 
     LTRACE << "FNCS_LOG_FILE: " << fncs_log_file;
 }
@@ -845,5 +868,30 @@ int fncs::get_simulator_count()
 fncs::time fncs::convert_broker_to_sim_time(fncs::time value)
 {
     return value / time_delta_multiplier;
+}
+
+double fncs::timer()
+{
+#ifdef __MACH__
+    /* OS X does not have clock_gettime, use clock_get_time */
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    return (double)(mts.tv_sec) + (double)(mts.tv_nsec)/1000000000.0;
+#elif defined(__FreeBSD__)
+    struct timespec ts;
+    /* Works on FreeBSD */
+    long retval = clock_gettime(CLOCK_MONOTONIC, &ts);
+    assert(0 == retval);
+    return (double)(ts.tv_sec) + (double)(ts.tv_nsec)/1000000000.0;
+#else
+    struct timespec ts;
+    /* Works on Linux */
+    long retval = clock_gettime(CLOCK_REALTIME, &ts);
+    assert(0 == retval);
+    return (double)(ts.tv_sec) + (double)(ts.tv_nsec)/1000000000.0;
+#endif
 }
 

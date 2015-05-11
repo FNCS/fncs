@@ -90,6 +90,8 @@ namespace fncs {
     /** Publish value anonymously using the given key. */
     void publish_anon(const string &key, const string &value);
 
+    /** Current time in seconds with nanosecond precision. */
+    double timer();
 }
 
 #endif /* _FNCS_INTERNAL_H_ */
