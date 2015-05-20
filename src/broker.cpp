@@ -41,7 +41,8 @@ class SimulatorState {
         fncs::time time_last_processed;
         bool processing;
         bool messages_pending;
-        vector<zrex_t*> subscriptions;
+        set<string> subscription_values;
+        vector<zrex_t*> subscription_matches;
 };
 
 typedef map<string,size_t> SimIndex;
@@ -201,28 +202,30 @@ int main(int argc, char **argv)
                     broker_die(simulators, server);
                 }
 
-                /* parse subscriptions */
-                vector<zrex_t*> subscriptions;
+                /* parse subscription values */
+                set<string> subscription_values;
                 config_values = zconfig_locate(config, "/values");
                 if (config_values) {
                     vector<fncs::Subscription> subs =
                         fncs::parse_values(config_values);
                     for (size_t i=0; i<subs.size(); ++i) {
-                        LTRACE << "compiling re'" << subs[i].topic << "'";
-                        subscriptions.push_back(
-                                zrex_new(subs[i].topic.c_str()));
+                        LTRACE << "adding value '" << subs[i].topic << "'";
+                        subscription_values.insert(subs[i].topic);
                     }
                 }
                 else {
-                    LTRACE << "no subscriptions";
+                    LTRACE << "no subscription values";
                 }
+
+                /* parse subscription matches */
+                vector<zrex_t*> subscription_matches;
                 config_values = zconfig_locate(config, "/matches");
                 if (config_values) {
                     vector<fncs::Subscription> subs =
                         fncs::parse_matches(config_values);
                     for (size_t i=0; i<subs.size(); ++i) {
                         LTRACE << "compiling re'" << subs[i].topic << "'";
-                        subscriptions.push_back(
+                        subscription_matches.push_back(
                                 zrex_new(subs[i].topic.c_str()));
                     }
                 }
@@ -237,7 +240,8 @@ int main(int argc, char **argv)
                 state.time_last_processed = 0;
                 state.processing = false;
                 state.messages_pending = false;
-                state.subscriptions = subscriptions;
+                state.subscription_values = subscription_values;
+                state.subscription_matches = subscription_matches;
                 name_to_index[sender] = simulators.size();
                 simulators.push_back(state);
 
@@ -386,29 +390,40 @@ int main(int argc, char **argv)
 
                 /* send the message to subscribed sims */
                 for (size_t i=0; i<n_sims; ++i) {
-                    for (size_t j=0; j<simulators[i].subscriptions.size(); ++j) {
-                        if (zrex_matches(
-                                    simulators[i].subscriptions[j],
-                                    topic.c_str())) {
-                            zmsg_t *msg_copy = zmsg_dup(msg);
-                            if (!msg_copy) {
-                                LFATAL << "failed to copy pub message";
-                                broker_die(simulators, server);
+                    bool found = false;
+                    if (simulators[i].subscription_values.count(topic)) {
+                        found = true;
+                    }
+                    else {
+                        for (size_t j=0;
+                                j<simulators[i].subscription_matches.size();
+                                ++j) {
+                            if (zrex_matches(
+                                        simulators[i].subscription_matches[j],
+                                        topic.c_str())) {
+                                found = true;
+                                break;
                             }
-                            /* swap out original sender with new destiation */
-                            zframe_reset(zmsg_first(msg_copy),
-                                    simulators[i].name.c_str(),
-                                    simulators[i].name.size());
-                            /* send it on */
-                            zmsg_send(&msg_copy, server);
-                            found_one = true;
-                            simulators[i].messages_pending = true;
-                            /* even if multiple subscriptions for the
-                             * current simulator match this message, we
-                             * only want to send it once */
-                            LTRACE << "pub to " << simulators[i].name;
-                            break;
                         }
+                    }
+                    if (found) {
+                        zmsg_t *msg_copy = zmsg_dup(msg);
+                        if (!msg_copy) {
+                            LFATAL << "failed to copy pub message";
+                            broker_die(simulators, server);
+                        }
+                        /* swap out original sender with new destiation */
+                        zframe_reset(zmsg_first(msg_copy),
+                                simulators[i].name.c_str(),
+                                simulators[i].name.size());
+                        /* send it on */
+                        zmsg_send(&msg_copy, server);
+                        found_one = true;
+                        simulators[i].messages_pending = true;
+                        /* even if multiple subscriptions for the
+                         * current simulator match this message, we
+                         * only want to send it once */
+                        LTRACE << "pub to " << simulators[i].name;
                     }
                 }
                 if (!found_one) {

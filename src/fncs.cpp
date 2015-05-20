@@ -55,8 +55,11 @@ static clist_t cache_list;
 typedef map<string,vector<pair<string,string> > > mlist_t;
 static mlist_t match_list;
 
-typedef map<zrex_t*,fncs::Subscription> zsub_t;
-static zsub_t subscriptions;
+typedef map<string,fncs::Subscription> sub_string_t;
+static sub_string_t subs_string;
+
+typedef map<zrex_t*,fncs::Subscription> sub_zrex_t;
+static sub_zrex_t subs_zrex;
 
 
 void fncs::start_logging()
@@ -211,10 +214,7 @@ void fncs::initialize(zconfig_t *config)
         vector<fncs::Subscription> subs =
             fncs::parse_values(config_values);
         for (size_t i=0; i<subs.size(); ++i) {
-            LTRACE << "compiling re'" << subs[i].topic << "'";
-            subscriptions.insert(make_pair(
-                        zrex_new(subs[i].topic.c_str()),
-                        subs[i]));
+            subs_string.insert(make_pair(subs[i].topic, subs[i]));
             LTRACE << "initializing cache for '" << subs[i].key << "'='"
                 << subs[i].def << "'";
             if (subs[i].is_list()) {
@@ -242,7 +242,7 @@ void fncs::initialize(zconfig_t *config)
             fncs::parse_matches(config_values);
         for (size_t i=0; i<subs.size(); ++i) {
             LTRACE << "compiling re'" << subs[i].topic << "'";
-            subscriptions.insert(make_pair(
+            subs_zrex.insert(make_pair(
                         zrex_new(subs[i].topic.c_str()),
                         subs[i]));
             LTRACE << "initializing match cache for '" << subs[i].key << "'";
@@ -424,6 +424,8 @@ fncs::time fncs::time_request(fncs::time next)
             else if (fncs::PUBLISH == message_type) {
                 string topic;
                 string value;
+                sub_string_t::const_iterator sub_str_itr;
+                fncs::Subscription subscription;
                 bool found = false;
 
                 LTRACE << "PUBLISH received";
@@ -447,28 +449,38 @@ fncs::time fncs::time_request(fncs::time next)
                 value = fncs::to_string(frame);
 
                 /* find cache short key */
-                for (zsub_t::const_iterator it=subscriptions.begin();
-                        it!=subscriptions.end(); ++it) {
-                    if (zrex_matches(it->first, topic.c_str())) {
-                        found = true;
-                        /* store in cache */
-                        if (it->second.is_match()) {
-                            match_list[it->second.key].push_back(
-                                    make_pair(topic,value));
+                sub_str_itr = subs_string.find(topic);
+                if (sub_str_itr != subs_string.end()) {
+                    found = true;
+                    subscription = sub_str_itr->second;
+                }
+                else {
+                    for (sub_zrex_t::const_iterator it=subs_zrex.begin();
+                            it!=subs_zrex.end(); ++it) {
+                        if (zrex_matches(it->first, topic.c_str())) {
+                            found = true;
+                            subscription = it->second;
                         }
-                        else {
-                            if (it->second.is_list()) {
-                                cache_list[it->second.key].push_back(value);
-                            }
-                            else {
-                                cache[it->second.key] = value;
-                            }
-                        }
-                        LTRACE << "updated cache topic='" << topic
-                            << "' '" << it->second.key << "=" << value << "'";
                     }
                 }
-                if (!found) {
+                /* if found then store in cache */
+                if (found) {
+                    if (subscription.is_match()) {
+                        match_list[subscription.key].push_back(
+                                make_pair(topic,value));
+                    }
+                    else {
+                        if (subscription.is_list()) {
+                            cache_list[subscription.key].push_back(value);
+                        }
+                        else {
+                            cache[subscription.key] = value;
+                        }
+                    }
+                    LTRACE << "updated cache topic='" << topic
+                        << "' '" << subscription.key << "=" << value << "'";
+                }
+                else {
                     LWARNING << "dropping PUBLISH message topic='"
                         << topic << "'";
                 }
