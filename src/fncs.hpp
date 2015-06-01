@@ -56,6 +56,10 @@ namespace fncs {
     /** Close the connection to the broker. */
     LIBFNCS_SCOPE void finalize();
 
+    /** Update minimum time delta after connection to broker is made.
+     * Assumes time unit is not changing. */
+    LIBFNCS_SCOPE void update_time_delta(time delta);
+
     /** Get a value from the cache with the given key.
      * Will hard fault if key is not found. */
     LIBFNCS_SCOPE string get_value(const string &key);

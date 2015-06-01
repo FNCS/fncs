@@ -55,6 +55,7 @@ namespace fncs {
     extern const char * PUBLISH;
     extern const char * DIE;
     extern const char * BYE;
+    extern const char * TIME_DELTA;
 
     /** Connects to broker and parses the given config object. */
     void initialize(zconfig_t *zconfig);

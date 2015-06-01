@@ -441,6 +441,37 @@ int main(int argc, char **argv)
 
                 broker_die(simulators, server);
             }
+            else if (fncs::TIME_DELTA == message_type) {
+                size_t index = 0; /* index of sim state */
+                fncs::time time_delta;
+
+                LTRACE << "TIME_DELTA received";
+
+                /* did we receive message from a connected sim? */
+                if (name_to_index.count(sender) == 0) {
+                    LFATAL << "simulator '" << sender << "' not connected";
+                    broker_die(simulators, server);
+                }
+
+                /* index of sim state */
+                index = name_to_index[sender];
+
+                /* next frame is time */
+                frame = zmsg_next(msg);
+                if (!frame) {
+                    LFATAL << "TIME_DELTA message missing time frame";
+                    broker_die(simulators, server);
+                }
+                LTRACE << frame;
+                /* convert time string */
+                {
+                    istringstream iss(fncs::to_string(frame));
+                    iss >> time_delta;
+                }
+
+                /* update sim state */
+                simulators[index].time_delta = time_delta;
+            }
             else {
                 LFATAL << "received unknown message type '"
                     << message_type << "'";

@@ -40,6 +40,7 @@ const char * fncs::TIME_REQUEST = "time_request";
 const char * fncs::PUBLISH = "publish";
 const char * fncs::DIE = "die";
 const char * fncs::BYE = "bye";
+const char * fncs::TIME_DELTA = "time_delta";
 
 static string simulation_name = "";
 static int simulation_id = 0;
@@ -103,6 +104,8 @@ void fncs::initialize()
 
     start_logging();
 
+    LTRACE << "fncs::initialize()";
+
     /* name for fncs config file from environment */
     fncs_config_file = getenv("FNCS_CONFIG_FILE");
     if (!fncs_config_file) {
@@ -131,6 +134,8 @@ void fncs::initialize(const string &configuration)
 
     start_logging();
 
+    LTRACE << "fncs::initialize(string)";
+
     /* create a zchunk for parsing */
     zchunk = zchunk_new(configuration.c_str(), configuration.size());
 
@@ -157,6 +162,8 @@ void fncs::initialize(zconfig_t *config)
     zchunk_t *zchunk = NULL;
     zconfig_t *config_values = NULL;
 
+    LTRACE << "fncs::initialize(zconfig_t*)";
+
     /* name from env var is tried first */
     name = getenv("FNCS_NAME");
     if (!name) {
@@ -170,6 +177,8 @@ void fncs::initialize(zconfig_t *config)
     }
     else {
         LTRACE << "FNCS_NAME env var sets the name";
+        /* put what we got from env var so it sends on to broker */
+        zconfig_put(config, "/name", name);
     }
     simulation_name = name;
     LTRACE << "name = '" << name << "'";
@@ -186,6 +195,8 @@ void fncs::initialize(zconfig_t *config)
     }
     else {
         LTRACE << "FNCS_BROKER env var sets the broker endpoint location";
+        /* don't need to send broker address to broker */
+        /*zconfig_put(config, "/broker", broker_endpoint);*/
     }
     LTRACE << "broker = " << broker_endpoint;
 
@@ -201,6 +212,8 @@ void fncs::initialize(zconfig_t *config)
     }
     else {
         LTRACE << "FNCS_TIME_DELTA env var sets the time_delta_string";
+        /* put what we got from env var so it sends on to broker */
+        zconfig_put(config, "/time_delta", time_delta_string);
     }
     LTRACE << "time_delta_string = " << time_delta_string;
     time_delta = parse_time(time_delta_string);
@@ -348,6 +361,8 @@ fncs::time fncs::time_request(fncs::time next)
 {
     fncs::time granted;
 
+    LTRACE << "fncs::time_request(fncs::time)";
+
     /* send TIME_REQUEST */
     LTRACE << "sending TIME_REQUEST of " << next << " in sim units";
     next *= time_delta_multiplier;
@@ -468,17 +483,29 @@ fncs::time fncs::time_request(fncs::time next)
                     if (subscription.is_match()) {
                         match_list[subscription.key].push_back(
                                 make_pair(topic,value));
+                        LTRACE << "updated match_list "
+                            << "key='" << subscription.key << "' "
+                            << "topic='" << topic << "' "
+                            << "value='" << value << "' "
+                            << "count=" << match_list[subscription.key].size();
                     }
                     else {
                         if (subscription.is_list()) {
                             cache_list[subscription.key].push_back(value);
+                            LTRACE << "updated cache_list "
+                                << "key='" << subscription.key << "' "
+                                << "topic='" << topic << "' "
+                                << "value='" << value << "' "
+                                << "count=" << match_list[subscription.key].size();
                         }
                         else {
                             cache[subscription.key] = value;
+                            LTRACE << "updated cache "
+                                << "key='" << subscription.key << "' "
+                                << "topic='" << topic << "' "
+                                << "value='" << value << "' ";
                         }
                     }
-                    LTRACE << "updated cache topic='" << topic
-                        << "' '" << subscription.key << "=" << value << "'";
                 }
                 else {
                     LWARNING << "dropping PUBLISH message topic='"
@@ -505,6 +532,7 @@ fncs::time fncs::time_request(fncs::time next)
 void fncs::publish(const string &key, const string &value)
 {
     string new_key = simulation_name + '/' + key;
+    LTRACE << "fncs::publish(string,string)";
     zstr_sendm(client, fncs::PUBLISH);
     zstr_sendm(client, new_key.c_str());
     zstr_send(client, value.c_str());
@@ -514,6 +542,7 @@ void fncs::publish(const string &key, const string &value)
 
 void fncs::publish_anon(const string &key, const string &value)
 {
+    LTRACE << "fncs::publish_anon(string,string)";
     zstr_sendm(client, fncs::PUBLISH);
     zstr_sendm(client, key.c_str());
     zstr_send(client, value.c_str());
@@ -528,6 +557,7 @@ void fncs::route(
         const string &value)
 {
     string new_key = simulation_name + '/' + from + ':' + to + '/' + key;
+    LTRACE << "fncs::route(string,string,string,string)";
     zstr_sendm(client, fncs::PUBLISH);
     zstr_sendm(client, new_key.c_str());
     zstr_send(client, value.c_str());
@@ -537,6 +567,7 @@ void fncs::route(
 
 void fncs::die()
 {
+    LTRACE << "fncs::die()";
     if (client) {
         zstr_send(client, fncs::DIE);
         zsock_destroy(&client);
@@ -549,6 +580,8 @@ void fncs::finalize()
 {
     zmsg_t *msg = NULL;
     zframe_t *frame = NULL;
+
+    LTRACE << "fncs::finalize()";
 
     zstr_send(client, fncs::BYE);
 
@@ -570,6 +603,17 @@ void fncs::finalize()
     zmsg_destroy(&msg);
 
     zsock_destroy(&client);
+}
+
+
+void fncs::update_time_delta(fncs::time delta)
+{
+    /* send TIME_DELTA */
+    LTRACE << "sending TIME_DELTA of " << delta << " in sim units";
+    delta *= time_delta_multiplier;
+    LTRACE << "sending TIME_DELTA of " << delta << " nanoseconds";
+    zstr_sendm(client, fncs::TIME_DELTA);
+    zstr_sendf(client, "%llu", delta);
 }
 
 
@@ -610,6 +654,8 @@ fncs::time fncs::time_unit_to_multiplier(const string &value)
     fncs::time ignore; 
     string unit;
     istringstream iss(value);
+
+    LTRACE << "fncs::time_unit_to_multiplier(string)";
 
     iss >> ignore;
     if (!iss) {
@@ -674,6 +720,8 @@ fncs::time fncs::parse_time(const string &value)
     string unit;
     istringstream iss(value);
 
+    LTRACE << "fncs::parse_time(string)";
+
     iss >> retval;
     if (!iss) {
         LFATAL << "could not parse time value";
@@ -690,6 +738,8 @@ fncs::Subscription fncs::parse_value(zconfig_t *config)
 {
     fncs::Subscription sub;
     const char *value = NULL;
+
+    LTRACE << "fncs::parse_value(zconfig_t*)";
 
     sub.key = zconfig_name(config);
 
@@ -727,6 +777,8 @@ fncs::Subscription fncs::parse_match(zconfig_t *config)
     fncs::Subscription sub;
     const char *value = NULL;
 
+    LTRACE << "fncs::parse_match(zconfig_t*)";
+
     sub.key = zconfig_name(config);
     sub.match = true;
 
@@ -746,6 +798,8 @@ vector<fncs::Subscription> fncs::parse_values(zconfig_t *config)
     vector<fncs::Subscription> subs;
     string name;
     zconfig_t *child = NULL;
+
+    LTRACE << "fncs::parse_values(zconfig_t*)";
 
     name = zconfig_name(config);
     if (name != "values") {
@@ -768,6 +822,8 @@ vector<fncs::Subscription> fncs::parse_matches(zconfig_t *config)
     vector<fncs::Subscription> subs;
     string name;
     zconfig_t *child = NULL;
+
+    LTRACE << "fncs::parse_matches(zconfig_t*)";
 
     name = zconfig_name(config);
     if (name != "matches") {
@@ -830,6 +886,7 @@ vector<string> fncs::get_values(const string &key)
 
 string fncs::get_value(const string &key)
 {
+    LTRACE << "fncs::get_value(" << key << ")";
     if (0 == cache.count(key)) {
         LFATAL << "key '" << key << "' not found in cache";
         die();
@@ -840,21 +897,35 @@ string fncs::get_value(const string &key)
 
 vector<string> fncs::get_values(const string &key)
 {
+    vector<string> values;
+
+    LTRACE << "fncs::get_values(" << key << ")";
+
     if (0 == cache_list.count(key)) {
         LFATAL << "key '" << key << "' not found in cache list";
         die();
     }
-    return cache_list[key];
+
+    values = cache_list[key];
+    LTRACE << "key '" << key << "' has " << values.size() << " values";
+    return values;
 }
 
 
 vector<pair<string,string> > fncs::get_matches(const string &key)
 {
+    vector<pair<string,string> > values;
+
+    LTRACE << "fncs::get_matches(" << key << ")";
+
     if (0 == match_list.count(key)) {
         LFATAL << "key '" << key << "' not found in match list";
         die();
     }
-    return match_list[key];
+
+    values = match_list[key];
+    LTRACE << "key '" << key << "' has " << values.size() << " values";
+    return values;
 }
 #endif
 
