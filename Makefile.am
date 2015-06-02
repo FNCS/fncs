@@ -10,6 +10,8 @@ AM_CPPFLAGS =
 AM_LDFLAGS =
 LDADD =
 
+pkgconfig_DATA = src/libfncs.pc
+
 AM_CPPFLAGS += -I$(top_srcdir)/contrib
 AM_CPPFLAGS += -I$(top_srcdir)/src
 AM_CPPFLAGS += $(CZMQ_CPPFLAGS)

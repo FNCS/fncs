@@ -59,6 +59,12 @@ CPPFLAGS="$fncs_save_CPPFLAGS"
 LDFLAGS="$fncs_save_LDFLAGS"
 LIBS="$fncs_save_LIBS"
 
+# Set pkgconfigdir
+AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=PATH],
+    [Path to the pkgconfig directory [[LIBDIR/pkgconfig]]]),
+    [pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
+AC_SUBST([pkgconfigdir])
+
 # Checks for header files.
 FNCS_CHECK_HEADERS([cstdint])
 FNCS_CHECK_HEADERS([stdint.h])
@@ -166,7 +172,7 @@ LT_INIT([win32-dll])
 ###############################################################################
 # The End
 ###############################################################################
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile src/libfncs.pc])
 AC_OUTPUT
 
 # Report on what we found.

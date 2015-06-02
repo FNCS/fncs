@@ -664,6 +664,7 @@ CFLAGS
 CC
 ON_MINGW_FALSE
 ON_MINGW_TRUE
+pkgconfigdir
 HAVE_CZMQ_FALSE
 HAVE_CZMQ_TRUE
 CZMQ_CPPFLAGS
@@ -778,6 +779,7 @@ enable_maintainer_mode
 enable_dependency_tracking
 with_zmq
 with_czmq
+with_pkgconfigdir
 enable_static
 enable_shared
 with_pic
@@ -1436,6 +1438,8 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-zmq[=ARG]        specify location of zmq install and/or other flags
   --with-czmq[=ARG]       specify location of czmq install and/or other flags
+  --with-pkgconfigdir=PATH
+                          Path to the pkgconfig directory [[LIBDIR/pkgconfig]]
   --with-pic[=PKGS]       try to use only PIC/non-PIC objects [default=use
                           both]
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
@@ -5081,6 +5085,17 @@ fi
 CPPFLAGS="$fncs_save_CPPFLAGS"
 LDFLAGS="$fncs_save_LDFLAGS"
 LIBS="$fncs_save_LIBS"
+
+# Set pkgconfigdir
+
+# Check whether --with-pkgconfigdir was given.
+if test "${with_pkgconfigdir+set}" = set; then :
+  withval=$with_pkgconfigdir; pkgconfigdir="$withval"
+else
+  pkgconfigdir='${libdir}/pkgconfig'
+fi
+
+
 
 # Checks for header files.
 for ac_header in cstdint
@@ -17597,7 +17612,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ###############################################################################
 # The End
 ###############################################################################
-ac_config_files="$ac_config_files Makefile"
+ac_config_files="$ac_config_files Makefile src/libfncs.pc"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -18725,6 +18740,7 @@ do
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "src/libfncs.pc") CONFIG_FILES="$CONFIG_FILES src/libfncs.pc" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
