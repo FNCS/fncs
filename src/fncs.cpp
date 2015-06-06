@@ -277,6 +277,7 @@ void fncs::initialize(zconfig_t *config)
     }
     if (!(zsock_resolve(client) != client)) {
         LFATAL << "socket failed to resolve";
+        die();
     }
     /* set client identity */
     rc = zmq_setsockopt(zsock_resolve(client), ZMQ_IDENTITY, name, strlen(name));
@@ -668,46 +669,52 @@ fncs::time fncs::time_unit_to_multiplier(const string &value)
         die();
     }
 
-    if ("h" == unit
+    if ("d" == unit
+            || "day" == unit
+            || "days" == unit) {
+        retval = 24ULL * 60ULL * 60ULL * 1000000000ULL;
+    }
+    else if ("h" == unit
             || "hour" == unit
             || "hours" == unit) {
-        retval = 24U * 60U * 1000000000U;
+        retval = 60ULL * 60ULL * 1000000000ULL;
     }
     else if ("m" == unit
             || "min" == unit
             || "minute" == unit
             || "minutes" == unit) {
-        retval = 60U * 1000000000U;
+        retval = 60ULL * 1000000000ULL;
     }
     else if ("s" == unit
             || "sec" == unit
             || "second" == unit
             || "seconds" == unit) {
-        retval = 1000000000U;
+        retval = 1000000000ULL;
     }
     else if ("ms" == unit
             || "msec" == unit
             || "millisec" == unit
             || "millisecond" == unit
             || "milliseconds" == unit) {
-        retval = 1000000U;
+        retval = 1000000ULL;
     }
     else if ("us" == unit
             || "usec" == unit
             || "microsec" == unit
             || "microsecond" == unit
             || "microseconds" == unit) {
-        retval = 1000U;
+        retval = 1000ULL;
     }
     else if ("ns" == unit
             || "nsec" == unit
             || "nanosec" == unit
             || "nanosecond" == unit
             || "nanoseconds" == unit) {
-        retval = 1U;
+        retval = 1ULL;
     }
     else {
         LFATAL << "unrecognized time unit '" << unit << "'";
+        die();
     }
 
     return retval;
