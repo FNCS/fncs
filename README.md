@@ -177,8 +177,8 @@ The list of regular-expression matching topic subscriptions is considerably diff
 |-------------------|-----------------------|-------------------------------------------------------------------------------------------|
 |FNCS_LOG_FILE      |fncs.log               |File where log messages go.  Currently echoed to stdout as well as this file.              |
 |FNCS_CONFIG_FILE   |fncs.zpl               |File where configuration stuff goes.                                                       |
-|FNCS_NAME          |<N/A>                  |Same meaning as what is in the ZPL file. Name of the simulator. Must be globally unique.   |
+|FNCS_NAME          |N/A                    |Same meaning as what is in the ZPL file. Name of the simulator. Must be globally unique.   |
 |FNCS_BROKER\*      |tcp://localhost:5570   |Same meaning as what is in the ZPL file. Location of broker endpoint.                      |
-|FNCS_TIME_DELTA    |<N/A>                  |Same meaning as what is in the ZPL file.                                                   |
+|FNCS_TIME_DELTA    |N/A                    |Same meaning as what is in the ZPL file.                                                   |
 
 \* If this environment variable is used with the fncs_broker application, it is best to specify tcp://*:PPPP where PPPP is the port number. If this environment variable is used with a FNCS-ready application, it is best to specify tcp://hostname:PPPP where hostname is the name of the host, e.g., localhost, and PPPP is the port number.
