@@ -67,6 +67,7 @@ void fncs::start_logging()
 {
     const char *fncs_log_file = NULL;
     const char *fncs_log_stdout = NULL;
+    const char *fncs_log_enabled = NULL;
 
     /* name for fncs log file from environment */
     fncs_log_file = getenv("FNCS_LOG_FILE");
@@ -80,6 +81,12 @@ void fncs::start_logging()
         fncs_log_stdout = "yes";
     }
 
+    /* whether to enable logging at all from environment */
+    fncs_log_enabled = getenv("FNCS_LOG_ENABLED");
+    if (!fncs_log_enabled) {
+        fncs_log_enabled = "yes";
+    }
+
     /* start our logger */
     Loggers::setFilename(fncs_log_file);
     Loggers::reconfigureAllLoggers(ConfigurationType::Format,
@@ -89,6 +96,12 @@ void fncs::start_logging()
             || fncs_log_stdout[0] == 'F'
             || fncs_log_stdout[0] == 'f') {
         Loggers::reconfigureAllLoggers(ConfigurationType::ToStandardOutput, "false");
+    }
+    if (fncs_log_enabled[0] == 'N'
+            || fncs_log_enabled[0] == 'n'
+            || fncs_log_enabled[0] == 'F'
+            || fncs_log_enabled[0] == 'f') {
+        Loggers::reconfigureAllLoggers(ConfigurationType::Enabled, "false");
     }
 
     LTRACE << "FNCS_LOG_FILE: " << fncs_log_file;
