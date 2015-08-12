@@ -49,6 +49,7 @@ static fncs::time time_delta_multiplier = 0;
 static fncs::time time_delta = 0;
 static zsock_t *client = NULL;
 static map<string,string> cache;
+static vector<string> events;
 
 typedef map<string,vector<string> > clist_t;
 static clist_t cache_list;
@@ -388,6 +389,7 @@ fncs::time fncs::time_request(fncs::time next)
      * list, but the other cache remains as a last value cache */
     /* only clear the vectors associated with cache list keys because
      * the keys should remain valid i.e. empty lists are meaningful */
+    events.clear();
     for (clist_t::iterator it=cache_list.begin(); it!=cache_list.end(); ++it) {
         it->second.clear();
     }
@@ -494,6 +496,7 @@ fncs::time fncs::time_request(fncs::time next)
                 }
                 /* if found then store in cache */
                 if (found) {
+                    events.push_back(subscription.key);
                     if (subscription.is_match()) {
                         match_list[subscription.key].push_back(
                                 make_pair(topic,value));
@@ -503,22 +506,19 @@ fncs::time fncs::time_request(fncs::time next)
                             << "value='" << value << "' "
                             << "count=" << match_list[subscription.key].size();
                     }
-                    else {
-                        if (subscription.is_list()) {
-                            cache_list[subscription.key].push_back(value);
-                            LTRACE << "updated cache_list "
-                                << "key='" << subscription.key << "' "
-                                << "topic='" << topic << "' "
-                                << "value='" << value << "' "
-                                << "count=" << match_list[subscription.key].size();
-                        }
-                        else {
-                            cache[subscription.key] = value;
-                            LTRACE << "updated cache "
-                                << "key='" << subscription.key << "' "
-                                << "topic='" << topic << "' "
-                                << "value='" << value << "' ";
-                        }
+                    else if (subscription.is_list()) {
+                        cache_list[subscription.key].push_back(value);
+                        LTRACE << "updated cache_list "
+                            << "key='" << subscription.key << "' "
+                            << "topic='" << topic << "' "
+                            << "value='" << value << "' "
+                            << "count=" << match_list[subscription.key].size();
+                    } else {
+                        cache[subscription.key] = value;
+                        LTRACE << "updated cache "
+                            << "key='" << subscription.key << "' "
+                            << "topic='" << topic << "' "
+                            << "value='" << value << "' ";
                     }
                 }
                 else {
@@ -866,6 +866,12 @@ string fncs::to_string(zframe_t *frame)
     return string((const char *)zframe_data(frame), zframe_size(frame));
 }
 
+
+vector<string> fncs::get_events()
+{
+    LTRACE << "fncs::get_events() [" << events.size() << "]";
+    return events;
+}
 
 /* I don't think the following behavior is what is wanted. */
 #if 0

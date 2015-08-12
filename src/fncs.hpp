@@ -60,6 +60,10 @@ namespace fncs {
      * Assumes time unit is not changing. */
     LIBFNCS_SCOPE void update_time_delta(time delta);
 
+    /** Get the keys for all values that were updated during the last
+     * time_request. */
+    LIBFNCS_SCOPE vector<string> get_events();
+
     /** Get a value from the cache with the given key.
      * Will hard fault if key is not found. */
     LIBFNCS_SCOPE string get_value(const string &key);
