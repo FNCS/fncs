@@ -147,7 +147,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libfncs_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am__dirstamp = $(am__leading_dot)dirstamp
-am_libfncs_la_OBJECTS = src/fncs.lo
+am_libfncs_la_OBJECTS = src/fncs.lo src/fncs_capi.lo
 libfncs_la_OBJECTS = $(am_libfncs_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -415,7 +415,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
-include_HEADERS = src/fncs.hpp
+include_HEADERS = src/fncs.hpp src/fncs.h
 lib_LTLIBRARIES = libfncs.la
 EXTRA_DIST = README
 AM_CXXFLAGS = 
@@ -424,7 +424,8 @@ AM_CPPFLAGS = -I$(top_srcdir)/contrib -I$(top_srcdir)/src \
 AM_LDFLAGS = $(CZMQ_LDFLAGS) $(ZMQ_LDFLAGS)
 LDADD = libfncs.la $(CZMQ_LIBS) $(ZMQ_LIBS)
 pkgconfig_DATA = src/libfncs.pc
-libfncs_la_SOURCES = src/fncs.cpp src/fncs_internal.hpp
+libfncs_la_SOURCES = src/fncs.cpp src/fncs_capi.cpp \
+	src/fncs_internal.hpp
 libfncs_la_LIBADD = $(CZMQ_LIBS) $(ZMQ_LIBS)
 @ON_MINGW_FALSE@libfncs_la_LDFLAGS = $(AM_LDFLAGS)
 @ON_MINGW_TRUE@libfncs_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined -avoid-version
@@ -532,6 +533,7 @@ src/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) src/$(DEPDIR)
 	@: > src/$(DEPDIR)/$(am__dirstamp)
 src/fncs.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/fncs_capi.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
 
 libfncs.la: $(libfncs_la_OBJECTS) $(libfncs_la_DEPENDENCIES) $(EXTRA_libfncs_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(libfncs_la_LINK) -rpath $(libdir) $(libfncs_la_OBJECTS) $(libfncs_la_LIBADD) $(LIBS)
@@ -641,6 +643,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/broker.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_capi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_player_anon-player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tracer.Po@am__quote@

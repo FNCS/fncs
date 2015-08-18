@@ -1,8 +1,8 @@
 /**
  * TODO.
  */
-#ifndef _FNCS_H_
-#define _FNCS_H_
+#ifndef _FNCS_HPP_
+#define _FNCS_HPP_
  
 #include <string>
 #include <utility>
@@ -87,5 +87,5 @@ namespace fncs {
 
 }
 
-#endif /* _FNCS_H_ */
+#endif /* _FNCS_HPP_ */
 

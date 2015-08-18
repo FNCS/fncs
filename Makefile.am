@@ -25,10 +25,12 @@ LDADD += $(CZMQ_LIBS)
 LDADD += $(ZMQ_LIBS)
 
 include_HEADERS += src/fncs.hpp
+include_HEADERS += src/fncs.h
 
 lib_LTLIBRARIES += libfncs.la
 libfncs_la_SOURCES =
 libfncs_la_SOURCES += src/fncs.cpp
+libfncs_la_SOURCES += src/fncs_capi.cpp
 libfncs_la_SOURCES += src/fncs_internal.hpp
 libfncs_la_LIBADD =
 libfncs_la_LIBADD += $(CZMQ_LIBS)
