@@ -90,7 +90,9 @@ extern "C" {
     /** Return the number of simulators connected to the broker. */
     LIBFNCS_SCOPE int fncs_get_simulator_count();
 
+#ifdef __cplusplus
 }
+#endif
 
 #endif /* _FNCS_H_ */
 
