@@ -16,6 +16,8 @@
 #include <mach/mach.h>
 #elif defined(__FreeBSD__)
 #include <time.h>
+#elif defined(_WIN32)
+//#include <windows.h>
 #else
 #include <time.h>
 #endif
@@ -995,6 +997,18 @@ double fncs::timer()
     long retval = clock_gettime(CLOCK_MONOTONIC, &ts);
     assert(0 == retval);
     return (double)(ts.tv_sec) + (double)(ts.tv_nsec)/1000000000.0;
+#elif defined(_WIN32)
+    static LARGE_INTEGER freq, start;
+    LARGE_INTEGER count;
+    BOOL retval;
+    retval = QueryPerformanceCounter(&count);
+    assert(retval);
+    if (!freq.QuadPart) { // one time initialization
+        retval = QueryPerformanceFrequency(&freq);
+        assert(retval);
+        start = count;
+    }
+    return (double)(count.QuadPart - start.QuadPart) / freq.QuadPart;
 #else
     struct timespec ts;
     /* Works on Linux */

@@ -15,3 +15,6 @@ libfncs.la
 libtool
 stamp-h1
 bld*/
+/bin/
+/obj/
+/lib/
