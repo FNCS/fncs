@@ -36,14 +36,6 @@ using namespace ::easyloggingpp;
 using namespace ::std;
 
 
-const char * fncs::HELLO = "hello";
-const char * fncs::ACK = "ack";
-const char * fncs::TIME_REQUEST = "time_request";
-const char * fncs::PUBLISH = "publish";
-const char * fncs::DIE = "die";
-const char * fncs::BYE = "bye";
-const char * fncs::TIME_DELTA = "time_delta";
-
 static string simulation_name = "";
 static int simulation_id = 0;
 static int n_sims = 0;
