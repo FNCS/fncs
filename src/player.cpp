@@ -1,9 +1,7 @@
+/* autoconf header */
 #include "config.h"
 
-#include "easylogging++.h"
-_INITIALIZE_EASYLOGGINGPP
-using namespace easyloggingpp;
-
+/* C++ standard headers */
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
@@ -14,21 +12,17 @@ using namespace easyloggingpp;
 #include <utility>
 #include <vector>
 
+/* 3rd party headers */
+#include "czmq.h"
+#include "easylogging++.h"
+//_INITIALIZE_EASYLOGGINGPP
+
+/* fncs headers */
 #include "fncs.hpp"
 #include "fncs_internal.hpp"
 
-using std::back_inserter;
-using std::cerr;
-using std::copy;
-using std::cout;
-using std::exit;
-using std::endl;
-using std::ifstream;
-using std::istream_iterator;
-using std::istringstream;
-using std::pair;
-using std::string;
-using std::vector;
+using namespace ::easyloggingpp;
+using namespace ::std;
 
 typedef pair<string,string> kv_t;
 typedef vector<kv_t> matches_t;

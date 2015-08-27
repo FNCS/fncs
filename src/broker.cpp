@@ -14,7 +14,7 @@
 /* 3rd party headers */
 #include "czmq.h"
 #include "easylogging++.h"
-_INITIALIZE_EASYLOGGINGPP
+//_INITIALIZE_EASYLOGGINGPP
 
 /* fncs headers */
 #include "fncs.hpp"
