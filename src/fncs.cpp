@@ -7,6 +7,8 @@
 #include <cctype>
 #include <cstdlib>
 #include <functional>
+#include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -25,15 +27,14 @@
 
 /* 3rd party headers */
 #include "czmq.h"
-#include "easylogging++.h"
-_INITIALIZE_EASYLOGGINGPP
 
 /* fncs headers */
+#include "echo.hpp"
 #include "fncs.hpp"
 #include "fncs_internal.hpp"
 
-using namespace ::easyloggingpp;
 using namespace ::std;
+using fncs::Echo;
 
 
 static string simulation_name = "";
@@ -44,6 +45,7 @@ static fncs::time time_delta = 0;
 static zsock_t *client = NULL;
 static map<string,string> cache;
 static vector<string> events;
+static Echo echo;
 
 typedef map<string,vector<string> > clist_t;
 static clist_t cache_list;
@@ -58,16 +60,16 @@ typedef map<zrex_t*,fncs::Subscription> sub_zrex_t;
 static sub_zrex_t subs_zrex;
 
 
-void fncs::start_logging()
+void fncs::start_logging(Echo &echo)
 {
-    const char *fncs_log_file = NULL;
+    const char *fncs_log_filename = NULL;
     const char *fncs_log_stdout = NULL;
-    const char *fncs_log_enabled = NULL;
+    const char *fncs_log_file = NULL;
 
     /* name for fncs log file from environment */
-    fncs_log_file = getenv("FNCS_LOG_FILE");
-    if (!fncs_log_file) {
-        fncs_log_file = "fncs.log";
+    fncs_log_filename = getenv("FNCS_LOG_FILENAME");
+    if (!fncs_log_filename) {
+        fncs_log_filename = "fncs.log";
     }
 
     /* whether to echo to stdout from environment */
@@ -77,29 +79,29 @@ void fncs::start_logging()
     }
 
     /* whether to enable logging at all from environment */
-    fncs_log_enabled = getenv("FNCS_LOG_ENABLED");
-    if (!fncs_log_enabled) {
-        fncs_log_enabled = "yes";
+    fncs_log_file = getenv("FNCS_LOG_FILE");
+    if (!fncs_log_file) {
+        fncs_log_file = "yes";
     }
 
     /* start our logger */
-    Loggers::setFilename(fncs_log_file);
-    Loggers::reconfigureAllLoggers(ConfigurationType::Format,
-            "%datetime %level %log");
     if (fncs_log_stdout[0] == 'N'
             || fncs_log_stdout[0] == 'n'
             || fncs_log_stdout[0] == 'F'
             || fncs_log_stdout[0] == 'f') {
-        Loggers::reconfigureAllLoggers(ConfigurationType::ToStandardOutput, "false");
     }
-    if (fncs_log_enabled[0] == 'N'
-            || fncs_log_enabled[0] == 'n'
-            || fncs_log_enabled[0] == 'F'
-            || fncs_log_enabled[0] == 'f') {
-        Loggers::reconfigureAllLoggers(ConfigurationType::Enabled, "false");
+    else {
+        echo.enable_stdout();
     }
 
-    LTRACE << "FNCS_LOG_FILE: " << fncs_log_file;
+    if (fncs_log_file[0] == 'N'
+            || fncs_log_file[0] == 'n'
+            || fncs_log_file[0] == 'F'
+            || fncs_log_file[0] == 'f') {
+    }
+    else {
+        echo.open(fncs_log_filename);
+    }
 }
 
 
@@ -110,21 +112,21 @@ void fncs::initialize()
     const char *fncs_config_file = NULL;
     zconfig_t *config = NULL;
 
-    start_logging();
+    start_logging(echo);
 
-    LTRACE << "fncs::initialize()";
+    echo << "fncs::initialize()" << endl;
 
     /* name for fncs config file from environment */
     fncs_config_file = getenv("FNCS_CONFIG_FILE");
     if (!fncs_config_file) {
         fncs_config_file = "fncs.zpl";
     }
-    LTRACE << "FNCS_CONFIG_FILE: " << fncs_config_file;
+    echo << "FNCS_CONFIG_FILE: " << fncs_config_file << endl;
 
     /* open and parse fncs configuration */
     config = zconfig_load(fncs_config_file);
     if (!config) {
-        LFATAL << "could not open " << fncs_config_file;
+        echo << "could not open " << fncs_config_file << endl;
         die();
     }
 
@@ -140,9 +142,9 @@ void fncs::initialize(const string &configuration)
     zchunk_t *zchunk = NULL;
     zconfig_t *config = NULL;
 
-    start_logging();
+    start_logging(echo);
 
-    LTRACE << "fncs::initialize(string)";
+    echo << "fncs::initialize(string)" << endl;
 
     /* create a zchunk for parsing */
     zchunk = zchunk_new(configuration.c_str(), configuration.size());
@@ -150,7 +152,7 @@ void fncs::initialize(const string &configuration)
     /* open and parse fncs configuration */
     config = zconfig_chunk_load(zchunk);
     if (!config) {
-        LFATAL << "could not load configuration chunk";
+        echo << "could not load configuration chunk" << endl;
         die();
     }
     zchunk_destroy(&zchunk);
@@ -170,7 +172,7 @@ void fncs::initialize(zconfig_t *config)
     zchunk_t *zchunk = NULL;
     zconfig_t *config_values = NULL;
 
-    LTRACE << "fncs::initialize(zconfig_t*)";
+    echo << "fncs::initialize(zconfig_t*)" << endl;
 
     /* name from env var is tried first */
     name = getenv("FNCS_NAME");
@@ -178,18 +180,18 @@ void fncs::initialize(zconfig_t *config)
         /* read sim name from config */
         name = zconfig_resolve(config, "/name", NULL);
         if (!name) {
-            LFATAL << "FNCS_NAME env var not set and";
-            LFATAL << "fncs config does not contain 'name'";
+            echo << "FNCS_NAME env var not set and" << endl;
+            echo << "fncs config does not contain 'name'" << endl;
             die();
         }
     }
     else {
-        LTRACE << "FNCS_NAME env var sets the name";
+        echo << "FNCS_NAME env var sets the name" << endl;
         /* put what we got from env var so it sends on to broker */
         zconfig_put(config, "/name", name);
     }
     simulation_name = name;
-    LTRACE << "name = '" << name << "'";
+    echo << "name = '" << name << "'" << endl;
 
     /* broker location from env var is tried first */
     broker_endpoint = getenv("FNCS_BROKER");
@@ -197,16 +199,16 @@ void fncs::initialize(zconfig_t *config)
         /* read broker location from config */
         broker_endpoint = zconfig_resolve(config, "/broker", NULL);
         if (!broker_endpoint) {
-            LWARNING << "fncs config does not contain 'broker'";
+            echo << "fncs config does not contain 'broker'" << endl;
             broker_endpoint = "tcp://localhost:5570";
         }
     }
     else {
-        LTRACE << "FNCS_BROKER env var sets the broker endpoint location";
+        echo << "FNCS_BROKER env var sets the broker endpoint location" << endl;
         /* don't need to send broker address to broker */
         /*zconfig_put(config, "/broker", broker_endpoint);*/
     }
-    LTRACE << "broker = " << broker_endpoint;
+    echo << "broker = " << broker_endpoint << endl;
 
     /* time_delta from env var is tried first */
     time_delta_string = getenv("FNCS_TIME_DELTA");
@@ -214,20 +216,20 @@ void fncs::initialize(zconfig_t *config)
         /* read time delta from config */
         time_delta_string = zconfig_resolve(config, "/time_delta", NULL);
         if (!time_delta_string) {
-            LFATAL << "fncs config does not contain 'time_delta'";
+            echo << "fncs config does not contain 'time_delta'" << endl;
             die();
         }
     }
     else {
-        LTRACE << "FNCS_TIME_DELTA env var sets the time_delta_string";
+        echo << "FNCS_TIME_DELTA env var sets the time_delta_string" << endl;
         /* put what we got from env var so it sends on to broker */
         zconfig_put(config, "/time_delta", time_delta_string);
     }
-    LTRACE << "time_delta_string = " << time_delta_string;
+    echo << "time_delta_string = " << time_delta_string << endl;
     time_delta = parse_time(time_delta_string);
-    LTRACE << "time_delta = " << time_delta;
+    echo << "time_delta = " << time_delta << endl;
     time_delta_multiplier = time_unit_to_multiplier(time_delta_string);
-    LTRACE << "time_delta_multiplier = " << time_delta_multiplier;
+    echo << "time_delta_multiplier = " << time_delta_multiplier << endl;
 
     /* parse subscriptions */
     config_values = zconfig_locate(config, "/values");
@@ -236,8 +238,8 @@ void fncs::initialize(zconfig_t *config)
             fncs::parse_values(config_values);
         for (size_t i=0; i<subs.size(); ++i) {
             subs_string.insert(make_pair(subs[i].topic, subs[i]));
-            LTRACE << "initializing cache for '" << subs[i].key << "'='"
-                << subs[i].def << "'";
+            echo << "initializing cache for '" << subs[i].key << "'='"
+                << subs[i].def << "'" << endl;
             if (subs[i].is_list()) {
                 if (subs[i].def.empty()) {
                     cache_list[subs[i].key] = vector<string>();
@@ -251,116 +253,116 @@ void fncs::initialize(zconfig_t *config)
             }
         }
         if (subs.empty()) {
-            LWARNING << "'values' appears in config but no subscriptions";
+            echo << "'values' appears in config but no subscriptions" << endl;
         }
     }
     else {
-        LTRACE << "no subscriptions";
+        echo << "no subscriptions" << endl;
     }
     config_values = zconfig_locate(config, "/matches");
     if (config_values) {
         vector<fncs::Subscription> subs =
             fncs::parse_matches(config_values);
         for (size_t i=0; i<subs.size(); ++i) {
-            LTRACE << "compiling re'" << subs[i].topic << "'";
+            echo << "compiling re'" << subs[i].topic << "'" << endl;
             subs_zrex.insert(make_pair(
                         zrex_new(subs[i].topic.c_str()),
                         subs[i]));
-            LTRACE << "initializing match cache for '" << subs[i].key << "'";
+            echo << "initializing match cache for '" << subs[i].key << "'" << endl;
             match_list[subs[i].key] = vector<pair<string,string> >();
         }
         if (subs.empty()) {
-            LWARNING << "'matches' appears in config but no subscriptions";
+            echo << "'matches' appears in config but no subscriptions" << endl;
         }
     }
     else {
-        LTRACE << "no subscriptions";
+        echo << "no subscriptions" << endl;
     }
 
     /* create zmq context and client socket */
     client = zsock_new(ZMQ_DEALER);
     if (!client) {
-        LFATAL << "socket creation failed";
+        echo << "socket creation failed" << endl;
         die();
     }
     if (!(zsock_resolve(client) != client)) {
-        LFATAL << "socket failed to resolve";
+        echo << "socket failed to resolve" << endl;
         die();
     }
     /* set client identity */
     rc = zmq_setsockopt(zsock_resolve(client), ZMQ_IDENTITY, name, strlen(name));
     if (rc) {
-        LFATAL << "socket identity failed";
+        echo << "socket identity failed" << endl;
         die();
     }
     /* finally connect to broker */
     rc = zsock_attach(client, broker_endpoint, false);
     if (rc) {
-        LFATAL << "socket connection to broker failed";
+        echo << "socket connection to broker failed" << endl;
         die();
     }
 
     /* construct HELLO message; entire config goes with it */
     msg = zmsg_new();
     if (!msg) {
-        LFATAL << "could not construct HELLO message";
+        echo << "could not construct HELLO message" << endl;
         die();
     }
     rc = zmsg_addstr(msg, HELLO);
     if (rc) {
-        LFATAL << "failed to append HELLO to message";
+        echo << "failed to append HELLO to message" << endl;
         die();
     }
     zchunk = zconfig_chunk_save(config);
     if (!zchunk) {
-        LFATAL << "failed to save config for HELLO message";
+        echo << "failed to save config for HELLO message" << endl;
         die();
     }
     rc = zmsg_addmem(msg, zchunk_data(zchunk), zchunk_size(zchunk));
     if (rc) {
-        LFATAL << "failed to add config to HELLO message";
+        echo << "failed to add config to HELLO message" << endl;
         die();
     }
     zchunk_destroy(&zchunk);
-    LTRACE << "sending HELLO";
+    echo << "sending HELLO" << endl;
     rc = zmsg_send(&msg, client);
     if (rc) {
-        LFATAL << "failed to send HELLO message";
+        echo << "failed to send HELLO message" << endl;
         die();
     }
 
     /* receive ack */
     msg = zmsg_recv(client);
     if (!msg) {
-        LFATAL << "null message received";
+        echo << "null message received" << endl;
         die();
     }
     /* first frame is type identifier */
     zframe_t *frame = zmsg_first(msg);
     if (!zframe_streq(frame, ACK)) {
-        LFATAL << "ACK expected, got " << frame;
+        echo << "ACK expected, got " << frame << endl;
         die();
     }
-    LTRACE << "received ACK";
+    echo << "received ACK" << endl;
     /* next frame is connetion order ID */
     frame = zmsg_next(msg);
     if (!frame) {
-        LFATAL << "ACK message missing order ID";
+        echo << "ACK message missing order ID" << endl;
         die();
     }
-    LTRACE << frame;
+    echo << frame << endl;
     simulation_id = atoi(fncs::to_string(frame).c_str());
-    LTRACE << "connection order ID is " << simulation_id;
+    echo << "connection order ID is " << simulation_id << endl;
 
     /* next frame is n_sims */
     frame = zmsg_next(msg);
     if (!frame) {
-        LFATAL << "ACK message missing n_sims";
+        echo << "ACK message missing n_sims" << endl;
         die();
     }
-    LTRACE << frame;
+    echo << frame << endl;
     n_sims = atoi(fncs::to_string(frame).c_str());
-    LTRACE << "n_sims is " << n_sims;
+    echo << "n_sims is " << n_sims << endl;
 
     zmsg_destroy(&msg);
 }
@@ -370,12 +372,12 @@ fncs::time fncs::time_request(fncs::time next)
 {
     fncs::time granted;
 
-    LTRACE << "fncs::time_request(fncs::time)";
+    echo << "fncs::time_request(fncs::time)" << endl;
 
     /* send TIME_REQUEST */
-    LTRACE << "sending TIME_REQUEST of " << next << " in sim units";
+    echo << "sending TIME_REQUEST of " << next << " in sim units" << endl;
     next *= time_delta_multiplier;
-    LTRACE << "sending TIME_REQUEST of " << next << " nanoseconds";
+    echo << "sending TIME_REQUEST of " << next << " nanoseconds" << endl;
     zstr_sendm(client, fncs::TIME_REQUEST);
     zstr_sendf(client, "%llu", next);
 
@@ -396,10 +398,10 @@ fncs::time fncs::time_request(fncs::time next)
     while (true) {
         int rc = 0;
 
-        LTRACE << "entering blocking poll";
+        echo << "entering blocking poll" << endl;
         rc = zmq_poll(items, 1, -1);
         if (rc == -1) {
-            LTRACE << "client polling error: " << strerror(errno);
+            echo << "client polling error: " << strerror(errno) << endl;
             die(); /* interrupted */
         }
 
@@ -408,33 +410,33 @@ fncs::time fncs::time_request(fncs::time next)
             zframe_t *frame = NULL;
             string message_type;
 
-            LTRACE << "incoming message";
+            echo << "incoming message" << endl;
             msg = zmsg_recv(client);
             if (!msg) {
-                LFATAL << "null message received";
+                echo << "null message received" << endl;
                 die();
             }
 
             /* first frame is message type identifier */
             frame = zmsg_first(msg);
             if (!frame) {
-                LFATAL << "message missing type identifier";
+                echo << "message missing type identifier" << endl;
                 die();
             }
-            LTRACE << frame;
+            echo << frame << endl;
             message_type = fncs::to_string(frame);
 
             /* dispatcher */
             if (fncs::TIME_REQUEST == message_type) {
-                LTRACE << "TIME_REQUEST received";
+                echo << "TIME_REQUEST received" << endl;
 
                 /* next frame is time */
                 frame = zmsg_next(msg);
                 if (!frame) {
-                    LFATAL << "message missing time";
+                    echo << "message missing time" << endl;
                     die();
                 }
-                LTRACE << frame;
+                echo << frame << endl;
                 /* convert time string to nanoseconds */
                 {
                     istringstream iss(fncs::to_string(frame));
@@ -453,24 +455,24 @@ fncs::time fncs::time_request(fncs::time next)
                 fncs::Subscription subscription;
                 bool found = false;
 
-                LTRACE << "PUBLISH received";
+                echo << "PUBLISH received" << endl;
 
                 /* next frame is topic */
                 frame = zmsg_next(msg);
                 if (!frame) {
-                    LFATAL << "message missing topic";
+                    echo << "message missing topic" << endl;
                     die();
                 }
-                LTRACE << frame;
+                echo << frame << endl;
                 topic = fncs::to_string(frame);
 
                 /* next frame is value payload */
                 frame = zmsg_next(msg);
                 if (!frame) {
-                    LFATAL << "message missing value";
+                    echo << "message missing value" << endl;
                     die();
                 }
-                LTRACE << frame;
+                echo << frame << endl;
                 value = fncs::to_string(frame);
 
                 /* find cache short key */
@@ -494,34 +496,34 @@ fncs::time fncs::time_request(fncs::time next)
                     if (subscription.is_match()) {
                         match_list[subscription.key].push_back(
                                 make_pair(topic,value));
-                        LTRACE << "updated match_list "
+                        echo << "updated match_list "
                             << "key='" << subscription.key << "' "
                             << "topic='" << topic << "' "
                             << "value='" << value << "' "
-                            << "count=" << match_list[subscription.key].size();
+                            << "count=" << match_list[subscription.key].size() << endl;
                     }
                     else if (subscription.is_list()) {
                         cache_list[subscription.key].push_back(value);
-                        LTRACE << "updated cache_list "
+                        echo << "updated cache_list "
                             << "key='" << subscription.key << "' "
                             << "topic='" << topic << "' "
                             << "value='" << value << "' "
-                            << "count=" << match_list[subscription.key].size();
+                            << "count=" << match_list[subscription.key].size() << endl;
                     } else {
                         cache[subscription.key] = value;
-                        LTRACE << "updated cache "
+                        echo << "updated cache "
                             << "key='" << subscription.key << "' "
                             << "topic='" << topic << "' "
-                            << "value='" << value << "' ";
+                            << "value='" << value << "' " << endl;
                     }
                 }
                 else {
-                    LWARNING << "dropping PUBLISH message topic='"
-                        << topic << "'";
+                    echo << "dropping PUBLISH message topic='"
+                        << topic << "'" << endl;
                 }
             }
             else {
-                LFATAL << "unrecognized message type";
+                echo << "unrecognized message type" << endl;
                 die();
             }
 
@@ -529,10 +531,10 @@ fncs::time fncs::time_request(fncs::time next)
         }
     }
 
-    LTRACE << "granted " << granted << " nanoseonds";
+    echo << "granted " << granted << " nanoseonds" << endl;
     /* convert nanoseonds to sim's time unit */
     granted = convert_broker_to_sim_time(granted);
-    LTRACE << "granted " << granted << " in sim units";
+    echo << "granted " << granted << " in sim units" << endl;
     return granted;
 }
 
@@ -540,21 +542,21 @@ fncs::time fncs::time_request(fncs::time next)
 void fncs::publish(const string &key, const string &value)
 {
     string new_key = simulation_name + '/' + key;
-    LTRACE << "fncs::publish(string,string)";
+    echo << "fncs::publish(string,string)" << endl;
     zstr_sendm(client, fncs::PUBLISH);
     zstr_sendm(client, new_key.c_str());
     zstr_send(client, value.c_str());
-    LTRACE << "sent PUBLISH '" << new_key << "'='" << value << "'";
+    echo << "sent PUBLISH '" << new_key << "'='" << value << "'" << endl;
 }
 
 
 void fncs::publish_anon(const string &key, const string &value)
 {
-    LTRACE << "fncs::publish_anon(string,string)";
+    echo << "fncs::publish_anon(string,string)" << endl;
     zstr_sendm(client, fncs::PUBLISH);
     zstr_sendm(client, key.c_str());
     zstr_send(client, value.c_str());
-    LTRACE << "sent PUBLISH anon '" << key << "'='" << value << "'";
+    echo << "sent PUBLISH anon '" << key << "'='" << value << "'" << endl;
 }
 
 
@@ -565,17 +567,17 @@ void fncs::route(
         const string &value)
 {
     string new_key = simulation_name + '/' + from + ':' + to + '/' + key;
-    LTRACE << "fncs::route(string,string,string,string)";
+    echo << "fncs::route(string,string,string,string)" << endl;
     zstr_sendm(client, fncs::PUBLISH);
     zstr_sendm(client, new_key.c_str());
     zstr_send(client, value.c_str());
-    LTRACE << "sent PUBLISH '" << new_key << "'='" << value << "'";
+    echo << "sent PUBLISH '" << new_key << "'='" << value << "'" << endl;
 }
 
 
 void fncs::die()
 {
-    LTRACE << "fncs::die()";
+    echo << "fncs::die()" << endl;
     if (client) {
         zstr_send(client, fncs::DIE);
         zsock_destroy(&client);
@@ -589,24 +591,24 @@ void fncs::finalize()
     zmsg_t *msg = NULL;
     zframe_t *frame = NULL;
 
-    LTRACE << "fncs::finalize()";
+    echo << "fncs::finalize()" << endl;
 
     zstr_send(client, fncs::BYE);
 
     /* receive BYE back */
     msg = zmsg_recv(client);
     if (!msg) {
-        LFATAL << "null message received";
+        echo << "null message received" << endl;
         die();
     }
 
     /* first frame is type identifier */
     frame = zmsg_first(msg);
     if (!zframe_streq(frame, BYE)) {
-        LFATAL << "BYE expected, got " << frame;
+        echo << "BYE expected, got " << frame << endl;
         die();
     }
-    LTRACE << "received BYE";
+    echo << "received BYE" << endl;
 
     zmsg_destroy(&msg);
 
@@ -617,9 +619,9 @@ void fncs::finalize()
 void fncs::update_time_delta(fncs::time delta)
 {
     /* send TIME_DELTA */
-    LTRACE << "sending TIME_DELTA of " << delta << " in sim units";
+    echo << "sending TIME_DELTA of " << delta << " in sim units" << endl;
     delta *= time_delta_multiplier;
-    LTRACE << "sending TIME_DELTA of " << delta << " nanoseconds";
+    echo << "sending TIME_DELTA of " << delta << " nanoseconds" << endl;
     zstr_sendm(client, fncs::TIME_DELTA);
     zstr_sendf(client, "%llu", delta);
 }
@@ -663,16 +665,16 @@ fncs::time fncs::time_unit_to_multiplier(const string &value)
     string unit;
     istringstream iss(value);
 
-    LTRACE << "fncs::time_unit_to_multiplier(string)";
+    echo << "fncs::time_unit_to_multiplier(string)" << endl;
 
     iss >> ignore;
     if (!iss) {
-        LFATAL << "could not parse time value";
+        echo << "could not parse time value" << endl;
         die();
     }
     iss >> unit;
     if (!iss) {
-        LFATAL << "could not parse time unit";
+        echo << "could not parse time unit" << endl;
         die();
     }
 
@@ -720,7 +722,7 @@ fncs::time fncs::time_unit_to_multiplier(const string &value)
         retval = 1ULL;
     }
     else {
-        LFATAL << "unrecognized time unit '" << unit << "'";
+        echo << "unrecognized time unit '" << unit << "'" << endl;
         die();
     }
 
@@ -734,11 +736,11 @@ fncs::time fncs::parse_time(const string &value)
     string unit;
     istringstream iss(value);
 
-    LTRACE << "fncs::parse_time(string)";
+    echo << "fncs::parse_time(string)" << endl;
 
     iss >> retval;
     if (!iss) {
-        LFATAL << "could not parse time value";
+        echo << "could not parse time value" << endl;
         die();
     }
 
@@ -753,32 +755,32 @@ fncs::Subscription fncs::parse_value(zconfig_t *config)
     fncs::Subscription sub;
     const char *value = NULL;
 
-    LTRACE << "fncs::parse_value(zconfig_t*)";
+    echo << "fncs::parse_value(zconfig_t*)" << endl;
 
     sub.key = zconfig_name(config);
 
     value = zconfig_resolve(config, "topic", NULL);
     if (!value) {
-        LFATAL << "error parsing value '" << sub.key << "', missing 'topic'";
+        echo << "error parsing value '" << sub.key << "', missing 'topic'" << endl;
         die();
     }
     sub.topic = value;
 
     value = zconfig_resolve(config, "default", NULL);
     if (!value) {
-        LDEBUG << "parsing value '" << sub.key << "', missing 'default'";
+        echo << "parsing value '" << sub.key << "', missing 'default'" << endl;
     }
     sub.def = value? value : "";
 
     value = zconfig_resolve(config, "type", NULL);
     if (!value) {
-        LDEBUG << "parsing value '" << sub.key << "', missing 'type'";
+        echo << "parsing value '" << sub.key << "', missing 'type'" << endl;
     }
     sub.type = value? value : "double";
 
     value = zconfig_resolve(config, "list", NULL);
     if (!value) {
-        LDEBUG << "parsing value '" << sub.key << "', missing 'list'";
+        echo << "parsing value '" << sub.key << "', missing 'list'" << endl;
     }
     sub.list = value? value : "false";
 
@@ -791,14 +793,14 @@ fncs::Subscription fncs::parse_match(zconfig_t *config)
     fncs::Subscription sub;
     const char *value = NULL;
 
-    LTRACE << "fncs::parse_match(zconfig_t*)";
+    echo << "fncs::parse_match(zconfig_t*)" << endl;
 
     sub.key = zconfig_name(config);
     sub.match = true;
 
     value = zconfig_resolve(config, "topic", NULL);
     if (!value) {
-        LFATAL << "error parsing value '" << sub.key << "', missing 'topic'";
+        echo << "error parsing value '" << sub.key << "', missing 'topic'" << endl;
         die();
     }
     sub.topic = value;
@@ -813,11 +815,11 @@ vector<fncs::Subscription> fncs::parse_values(zconfig_t *config)
     string name;
     zconfig_t *child = NULL;
 
-    LTRACE << "fncs::parse_values(zconfig_t*)";
+    echo << "fncs::parse_values(zconfig_t*)" << endl;
 
     name = zconfig_name(config);
     if (name != "values") {
-        LFATAL << "error parsing 'values', wrong config object '" << name << "'";
+        echo << "error parsing 'values', wrong config object '" << name << "'" << endl;
         die();
     }
 
@@ -837,11 +839,11 @@ vector<fncs::Subscription> fncs::parse_matches(zconfig_t *config)
     string name;
     zconfig_t *child = NULL;
 
-    LTRACE << "fncs::parse_matches(zconfig_t*)";
+    echo << "fncs::parse_matches(zconfig_t*)" << endl;
 
     name = zconfig_name(config);
     if (name != "matches") {
-        LFATAL << "error parsing 'matches', wrong config object '" << name << "'";
+        echo << "error parsing 'matches', wrong config object '" << name << "'" << endl;
         die();
     }
 
@@ -863,7 +865,7 @@ string fncs::to_string(zframe_t *frame)
 
 vector<string> fncs::get_events()
 {
-    LTRACE << "fncs::get_events() [" << events.size() << "]";
+    echo << "fncs::get_events() [" << events.size() << "]" << endl;
     return events;
 }
 
@@ -873,9 +875,9 @@ vector<string> fncs::get_events()
 string fncs::get_value(const string &key)
 {
     if (0 == cache.count(key)) {
-        LWARNING << "key '" << key << "' not found in cache";
+        echo << "key '" << key << "' not found in cache" << endl;
         if (0 == cache_list.count(key)) {
-            LFATAL << "key '" << key << "' not found in cache or cache list";
+            echo << "key '" << key << "' not found in cache or cache list" << endl;
             die();
         }
         else {
@@ -889,9 +891,9 @@ string fncs::get_value(const string &key)
 vector<string> fncs::get_values(const string &key)
 {
     if (0 == cache_list.count(key)) {
-        LWARNING << "key '" << key << "' not found in cache list";
+        echo << "key '" << key << "' not found in cache list" << endl;
         if (0 == cache.count(key)) {
-            LFATAL << "key '" << key << "' not found in cache list or cache";
+            echo << "key '" << key << "' not found in cache list or cache" << endl;
             die();
         }
         else {
@@ -906,9 +908,9 @@ vector<string> fncs::get_values(const string &key)
 
 string fncs::get_value(const string &key)
 {
-    LTRACE << "fncs::get_value(" << key << ")";
+    echo << "fncs::get_value(" << key << ")" << endl;
     if (0 == cache.count(key)) {
-        LFATAL << "key '" << key << "' not found in cache";
+        echo << "key '" << key << "' not found in cache" << endl;
         die();
     }
     return cache[key];
@@ -919,15 +921,15 @@ vector<string> fncs::get_values(const string &key)
 {
     vector<string> values;
 
-    LTRACE << "fncs::get_values(" << key << ")";
+    echo << "fncs::get_values(" << key << ")" << endl;
 
     if (0 == cache_list.count(key)) {
-        LFATAL << "key '" << key << "' not found in cache list";
+        echo << "key '" << key << "' not found in cache list" << endl;
         die();
     }
 
     values = cache_list[key];
-    LTRACE << "key '" << key << "' has " << values.size() << " values";
+    echo << "key '" << key << "' has " << values.size() << " values" << endl;
     return values;
 }
 
@@ -936,15 +938,15 @@ vector<pair<string,string> > fncs::get_matches(const string &key)
 {
     vector<pair<string,string> > values;
 
-    LTRACE << "fncs::get_matches(" << key << ")";
+    echo << "fncs::get_matches(" << key << ")" << endl;
 
     if (0 == match_list.count(key)) {
-        LFATAL << "key '" << key << "' not found in match list";
+        echo << "key '" << key << "' not found in match list" << endl;
         die();
     }
 
     values = match_list[key];
-    LTRACE << "key '" << key << "' has " << values.size() << " values";
+    echo << "key '" << key << "' has " << values.size() << " values" << endl;
     return values;
 }
 #endif
