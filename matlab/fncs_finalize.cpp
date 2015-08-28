@@ -1,21 +1,21 @@
 #include "mex.h"
 
-#include <fncs.h>
+#include <fncs.hpp>
 
 void mexFunction( int nlhs, mxArray *plhs[],
         int nrhs, const mxArray *prhs[] )
 {
     /* Check for proper number of arguments. */
     if(nrhs>0) {
-        mexErrMsgIdAndTxt( "MATLAB:fncs_finalize:maxrhs",
+        mexErrMsgIdAndTxt( "MATLAB:fncs::finalize:maxrhs",
                 "Too many input arguments.");
     }
     if(nlhs>0) {
-        mexErrMsgIdAndTxt( "MATLAB:fncs_finalize:maxlhs",
+        mexErrMsgIdAndTxt( "MATLAB:fncs::finalize:maxlhs",
                 "Too many output arguments.");
     }
 
-    /* Call the fncs_finalize subroutine. */
-    fncs_finalize();
+    /* Call the fncs::finalize subroutine. */
+    fncs::finalize();
 }
 
