@@ -48,21 +48,26 @@ extern "C" {
      * Assumes time unit is not changing. */
     FNCS_EXPORT void fncs_update_time_delta(fncs_time delta);
 
+    /** Get the number of keys for all values that were updated during
+     * the last time_request. */
+    FNCS_EXPORT size_t fncs_get_events_size();
+
     /** Get the keys for all values that were updated during the last
      * time_request. */
-    FNCS_EXPORT void fncs_get_events(char*** events, size_t *size);
+    FNCS_EXPORT char** fncs_get_events();
 
     /** Get a value from the cache with the given key.
      * Will hard fault if key is not found. */
-    FNCS_EXPORT char * fncs_get_value(const char *key);
+    FNCS_EXPORT char* fncs_get_value(const char *key);
+
+    /** Get the number of values from the cache with the given key. */
+    FNCS_EXPORT size_t fncs_get_values_size(const char *key);
 
     /** Get an array of values from the cache with the given key.
      * Will return an array of size 1 if only a single value exists. */
-    FNCS_EXPORT void fncs_get_values(
-            const char *key,
-            char *** values,
-            size_t *size);
+    FNCS_EXPORT char** fncs_get_values(const char *key);
 
+#if 0
     /** Get an array of topic-value pairs from the cache with the given key.
      * Will return an array of size 1 if only a single value exists. */
     FNCS_EXPORT void fncs_get_matches(
@@ -70,6 +75,7 @@ extern "C" {
             char *** topics,
             char *** values,
             size_t *size);
+#endif
 
     /** Return the name of the simulator. */
     FNCS_EXPORT const char * fncs_get_name();

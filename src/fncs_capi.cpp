@@ -1,8 +1,12 @@
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+#include <vector>
 
 #include <fncs.hpp>
 #include <fncs.h>
+
+using namespace std;
 
 void fncs_initialize()
 {
@@ -48,61 +52,58 @@ void fncs_update_time_delta(fncs_time delta)
     fncs::update_time_delta(delta);
 }
 
-static char * convert(const std::string & the_string)
+static char* convert(const string & the_string)
 {
-   char *the_char = (char*)malloc(sizeof(char)*(the_string.size()+1));
-   strcpy(the_char, the_string.c_str());
-   return the_char; 
+    char *str = NULL;
+
+    str = (char*)malloc(sizeof(char)*(the_string.size()+1));
+    strcpy(str, the_string.c_str());
+
+    return str; 
 }
 
-void fncs_get_events(char*** events, size_t *size)
+static char** convert(const vector<string> & the_values)
 {
-    vector<string> events_vector = fncs::get_events();
+    char **values = NULL;
 
-    if (events_vector.empty()) {
-        *events = NULL;
-        *size = 0;
-    }
-    else {
-        *events = (char**)malloc(sizeof(char*)*events_vector.size());
-        for (size_t i=0; i<events_vector.size(); ++i) {
-            (*events)[i] = convert(events_vector[i]);
+    if (!the_values.empty()) {
+        size_t size = the_values.size();
+        values = (char**)malloc(sizeof(char*)*(size+1));
+        for (size_t i=0; i<size; ++i) {
+            values[i] = convert(the_values[i]);
         }
-        *size = events_vector.size();
+        values[size] = NULL; /* sentinal */
     }
+
+    return values;
 }
 
-char * fncs_get_value(const char *key)
+size_t fncs_get_events_size()
 {
-    string value = fncs::get_value(key);
-    if (value.empty()) {
-        return NULL;
-    }
-    else {
-        return convert(value);
-    }
+    return fncs::get_events().size();
 }
 
-void fncs_get_values(
-            const char *key,
-            char *** values,
-            size_t *size)
+char** fncs_get_events()
 {
-    vector<string> values_vector = fncs::get_values(key);
-
-    if (values_vector.empty()) {
-        *values = NULL;
-        *size = 0;
-    }
-    else {
-        *values = (char**)malloc(sizeof(char*)*values_vector.size());
-        for (size_t i=0; i<values_vector.size(); ++i) {
-            (*values)[i] = convert(values_vector[i]);
-        }
-        *size = values_vector.size();
-    }
+    return convert(fncs::get_events());
 }
 
+char* fncs_get_value(const char *key)
+{
+    return convert(fncs::get_value(key));
+}
+
+size_t fncs_get_values_size(const char *key)
+{
+    return fncs::get_values(key).size();
+}
+
+char** fncs_get_values(const char *key)
+{
+    return convert(fncs::get_values(key));
+}
+
+#if 0
 void fncs_get_matches(
             const char *key,
             char *** topics,
@@ -126,8 +127,9 @@ void fncs_get_matches(
         *size = matches_vector.size();
     }
 }
+#endif
 
-const char * fncs_get_name()
+const char* fncs_get_name()
 {
     return fncs::get_name().c_str();
 }
