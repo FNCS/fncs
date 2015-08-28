@@ -27,6 +27,10 @@ fncs::Echo::Echo(const char *filename, ios_base::openmode mode)
 {
 }
 
+fncs::Echo::~Echo()
+{
+}
+
 void fncs::Echo::open(const string &filename, ios_base::openmode mode) {
     this->os.open(filename.c_str(), mode);
 }

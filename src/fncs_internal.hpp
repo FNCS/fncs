@@ -1,6 +1,3 @@
-/**
- * TODO.
- */
 #ifndef _FNCS_INTERNAL_H_
 #define _FNCS_INTERNAL_H_
  

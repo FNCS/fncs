@@ -76,10 +76,15 @@
     <ClInclude Include="..\..\..\..\builds\msvc\config.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\src\fncs.h" />
+    <ClInclude Include="..\..\..\..\src\echo.hpp" />
     <ClInclude Include="..\..\..\..\src\fncs.hpp" />
+    <ClInclude Include="..\..\..\..\src\fncs_internal.hpp" />
+    <ClInclude Include="..\..\..\..\src\fncs.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\echo.cpp">
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\fncs.cpp">
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>

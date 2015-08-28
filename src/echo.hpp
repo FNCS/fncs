@@ -1,8 +1,3 @@
-/**
- * @file echo.hpp
- *
- * @author jeff.daily@pnnl.gov
- */
 #ifndef _ECHO_HPP_
 #define _ECHO_HPP_
 
@@ -11,7 +6,7 @@
 #include <streambuf>
 #include <string>
 
-#if defined (__WINDOWS__)
+#if (defined WIN32 || defined _WIN32)
 #   if defined LIBFNCS_STATIC
 #       define FNCS_EXPORT
 #   elif defined LIBFNCS_EXPORTS
@@ -25,44 +20,45 @@
 
 namespace fncs {
 
-class Echo
+class FNCS_EXPORT Echo
 {
     public:
-        FNCS_EXPORT explicit Echo();
-        FNCS_EXPORT explicit Echo(const std::string &filename,
+        explicit Echo();
+        explicit Echo(const std::string &filename,
                 std::ios_base::openmode mode=std::ios_base::out);
-        FNCS_EXPORT explicit Echo(const char *filename,
+        explicit Echo(const char *filename,
                 std::ios_base::openmode mode=std::ios_base::out);
-        FNCS_EXPORT void open(const std::string &filename,
+		~Echo();
+        void open(const std::string &filename,
                 std::ios_base::openmode mode=std::ios_base::out);
-        FNCS_EXPORT void open(const char *filename,
+        void open(const char *filename,
                 std::ios_base::openmode mode=std::ios_base::out);
-        FNCS_EXPORT void close();
-        FNCS_EXPORT void enable_stdout();
-        FNCS_EXPORT void disable_stdout();
-        FNCS_EXPORT Echo& operator<< (bool val);
-        FNCS_EXPORT Echo& operator<< (short val);
-        FNCS_EXPORT Echo& operator<< (unsigned short val);
-        FNCS_EXPORT Echo& operator<< (int val);
-        FNCS_EXPORT Echo& operator<< (unsigned int val);
-        FNCS_EXPORT Echo& operator<< (long val);
-        FNCS_EXPORT Echo& operator<< (unsigned long val);
-        FNCS_EXPORT Echo& operator<< (long long val);
-        FNCS_EXPORT Echo& operator<< (unsigned long long val);
-        FNCS_EXPORT Echo& operator<< (float val);
-        FNCS_EXPORT Echo& operator<< (double val);
-        FNCS_EXPORT Echo& operator<< (long double val);
-        FNCS_EXPORT Echo& operator<< (void* val);
-        FNCS_EXPORT Echo& operator<< (std::streambuf* val);
-        FNCS_EXPORT Echo& operator<< (std::ostream& (*pf)(std::ostream&));
-        FNCS_EXPORT Echo& operator<< (std::ios& (*pf)(std::ios&));
-        FNCS_EXPORT Echo& operator<< (std::ios_base& (*pf)(std::ios_base&));
-        FNCS_EXPORT Echo& operator<< (char val);
-        FNCS_EXPORT Echo& operator<< (signed char val);
-        FNCS_EXPORT Echo& operator<< (unsigned char val);
-        FNCS_EXPORT Echo& operator<< (const char* val);
-        FNCS_EXPORT Echo& operator<< (const signed char* val);
-        FNCS_EXPORT Echo& operator<< (const unsigned char* val);
+        void close();
+        void enable_stdout();
+        void disable_stdout();
+        Echo& operator<< (bool val);
+        Echo& operator<< (short val);
+        Echo& operator<< (unsigned short val);
+        Echo& operator<< (int val);
+        Echo& operator<< (unsigned int val);
+        Echo& operator<< (long val);
+        Echo& operator<< (unsigned long val);
+        Echo& operator<< (long long val);
+        Echo& operator<< (unsigned long long val);
+        Echo& operator<< (float val);
+        Echo& operator<< (double val);
+        Echo& operator<< (long double val);
+        Echo& operator<< (void* val);
+        Echo& operator<< (std::streambuf* val);
+        Echo& operator<< (std::ostream& (*pf)(std::ostream&));
+        Echo& operator<< (std::ios& (*pf)(std::ios&));
+        Echo& operator<< (std::ios_base& (*pf)(std::ios_base&));
+        Echo& operator<< (char val);
+        Echo& operator<< (signed char val);
+        Echo& operator<< (unsigned char val);
+        Echo& operator<< (const char* val);
+        Echo& operator<< (const signed char* val);
+        Echo& operator<< (const unsigned char* val);
 
         template <typename T>
         Echo& operator<< (const T &val);

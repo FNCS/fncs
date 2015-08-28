@@ -1,10 +1,7 @@
-/**
- * TODO.
- */
 #ifndef _FNCS_H_
 #define _FNCS_H_
  
-#if defined (__WINDOWS__)
+#if (defined WIN32 || defined _WIN32)
 #   if defined LIBFNCS_STATIC
 #       define FNCS_EXPORT
 #   elif defined LIBFNCS_EXPORTS

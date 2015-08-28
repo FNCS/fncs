@@ -7,6 +7,9 @@
 -->
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\echo.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\fncs.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -23,7 +26,13 @@
     <ClInclude Include="..\..\..\..\builds\msvc\config.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\src\echo.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\src\fncs.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\fncs_internal.hpp">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\fncs.h">
