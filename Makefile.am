@@ -12,7 +12,6 @@ LDADD =
 
 pkgconfig_DATA = src/libfncs.pc
 
-AM_CPPFLAGS += -I$(top_srcdir)/contrib
 AM_CPPFLAGS += -I$(top_srcdir)/src
 AM_CPPFLAGS += $(CZMQ_CPPFLAGS)
 AM_CPPFLAGS += $(ZMQ_CPPFLAGS)
@@ -29,6 +28,8 @@ include_HEADERS += src/fncs.h
 
 lib_LTLIBRARIES += libfncs.la
 libfncs_la_SOURCES =
+libfncs_la_SOURCES += src/echo.cpp
+libfncs_la_SOURCES += src/echo.hpp
 libfncs_la_SOURCES += src/fncs.cpp
 libfncs_la_SOURCES += src/fncs_capi.cpp
 libfncs_la_SOURCES += src/fncs_internal.hpp

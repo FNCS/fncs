@@ -1,6 +1,3 @@
-/**
- * TODO.
- */
 #ifndef _FNCS_INTERNAL_H_
 #define _FNCS_INTERNAL_H_
  
@@ -11,6 +8,7 @@
 
 #include "czmq.h"
 
+#include "echo.hpp"
 #include "fncs.hpp"
 
 using ::std::ostream;
@@ -61,7 +59,7 @@ namespace fncs {
     FNCS_EXPORT void initialize(zconfig_t *zconfig);
 
     /** Starts the FNCS logger. */
-    FNCS_EXPORT void start_logging();
+    FNCS_EXPORT void start_logging(Echo &echo);
 
     /** Converts given time string, e.g., '1ms', into a fncs time value.
      * Ignores the value; only converts the unit into a multiplier. */

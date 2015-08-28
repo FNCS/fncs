@@ -14,14 +14,11 @@
 
 /* 3rd party headers */
 #include "czmq.h"
-#include "easylogging++.h"
-//_INITIALIZE_EASYLOGGINGPP
 
 /* fncs headers */
 #include "fncs.hpp"
 #include "fncs_internal.hpp"
 
-using namespace ::easyloggingpp;
 using namespace ::std;
 
 typedef pair<string,string> kv_t;

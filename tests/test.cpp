@@ -1,9 +1,5 @@
 #include "config.h"
 
-#include "easylogging++.h"
-_INITIALIZE_EASYLOGGINGPP
-using namespace easyloggingpp;
-
 #include <cassert>
 #include <iostream>
 

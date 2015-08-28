@@ -1,6 +1,3 @@
-/**
- * TODO.
- */
 #ifndef _FNCS_HPP_
 #define _FNCS_HPP_
  
@@ -12,7 +9,7 @@ using ::std::pair;
 using ::std::string;
 using ::std::vector;
 
-#if defined (__WINDOWS__)
+#if (defined WIN32 || defined _WIN32)
 #   if defined LIBFNCS_STATIC
 #       define FNCS_EXPORT
 #   elif defined LIBFNCS_EXPORTS
