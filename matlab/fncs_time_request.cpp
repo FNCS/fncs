@@ -13,12 +13,12 @@ void mexFunction( int nlhs, mxArray *plhs[],
 
     /* Check for proper number of arguments. */
     if(nrhs!=1) {
-        mexErrMsgIdAndTxt( "MATLAB:fncs::time_request:maxrhs",
-                "Too many input arguments.");
+        mexErrMsgIdAndTxt( "MATLAB:fncs:time_request:nrhs",
+                "This function has one input argument.");
     }
     if(nlhs!=1) {
-        mexErrMsgIdAndTxt( "MATLAB:fncs::time_request:maxlhs",
-                "Too many output arguments.");
+        mexErrMsgIdAndTxt( "MATLAB:fncs:time_request:nlhs",
+                "This function has one output argument.");
     }
 
     /* Convert input argument. */
