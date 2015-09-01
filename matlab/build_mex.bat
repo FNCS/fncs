@@ -1,0 +1,1 @@
+FOR %%i IN (fncs_*.cpp) DO mex %%i -I. -L. -llibfncs
