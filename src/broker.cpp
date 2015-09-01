@@ -200,7 +200,8 @@ int main(int argc, char **argv)
                 time_delta = zconfig_resolve(config, "/time_delta", NULL);
                 if (!time_delta) {
                     echo << sender << " config does not contain 'time_delta'" << endl;
-                    broker_die(simulators, server);
+                    echo << sender << " time_delta defaulting to 1s" << endl;
+                    time_delta = "1s";
                 }
 
                 /* parse subscription values */

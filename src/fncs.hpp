@@ -31,6 +31,9 @@ namespace fncs {
     /** Connect to broker and parse inline configuration. */
     FNCS_EXPORT void initialize(const string &configuration);
 
+    /** Check whether simulator is configured and connected to broker. */
+    FNCS_EXPORT bool is_initialized();
+
     /** Request the next time step to process. */
     FNCS_EXPORT time time_request(time next);
 
