@@ -37,7 +37,6 @@ EOF
 if $MEX conftest.cpp > /dev/null 2>&1
 then
     echo "mex test file compiled successfully"
-    rm -f conftest.cpp
 else
     echo "unable to compile test file"
     rm -f conftest.*
@@ -45,10 +44,12 @@ else
 fi
 
 EXT=
+rm -f conftest.cpp
 for result in conftest.*
 do
     EXT="${result##*.}"
 done
+rm -f conftest.*
 
 if test "x$EXT" = x
 then
