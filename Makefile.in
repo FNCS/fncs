@@ -83,7 +83,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = fncs_broker$(EXEEXT) fncs_tracer$(EXEEXT) \
 	fncs_player$(EXEEXT) fncs_player_anon$(EXEEXT)
-check_PROGRAMS = tests/test$(EXEEXT)
+check_PROGRAMS = tests/test$(EXEEXT) tests/fncs_netdelay$(EXEEXT)
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
@@ -177,6 +177,11 @@ fncs_tracer_OBJECTS = $(am_fncs_tracer_OBJECTS)
 fncs_tracer_LDADD = $(LDADD)
 fncs_tracer_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
+am_tests_fncs_netdelay_OBJECTS = tests/netdelay.$(OBJEXT)
+tests_fncs_netdelay_OBJECTS = $(am_tests_fncs_netdelay_OBJECTS)
+tests_fncs_netdelay_LDADD = $(LDADD)
+tests_fncs_netdelay_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 am_tests_test_OBJECTS = tests/test.$(OBJEXT)
 tests_test_OBJECTS = $(am_tests_test_OBJECTS)
 tests_test_LDADD = $(LDADD)
@@ -236,10 +241,12 @@ am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libfncs_la_SOURCES) $(fncs_broker_SOURCES) \
 	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
-	$(fncs_tracer_SOURCES) $(tests_test_SOURCES)
+	$(fncs_tracer_SOURCES) $(tests_fncs_netdelay_SOURCES) \
+	$(tests_test_SOURCES)
 DIST_SOURCES = $(libfncs_la_SOURCES) $(fncs_broker_SOURCES) \
 	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
-	$(fncs_tracer_SOURCES) $(tests_test_SOURCES)
+	$(fncs_tracer_SOURCES) $(tests_fncs_netdelay_SOURCES) \
+	$(tests_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -429,6 +436,7 @@ libfncs_la_LIBADD = $(CZMQ_LIBS) $(ZMQ_LIBS)
 @ON_MINGW_FALSE@libfncs_la_LDFLAGS = $(AM_LDFLAGS)
 @ON_MINGW_TRUE@libfncs_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined -avoid-version
 tests_test_SOURCES = tests/test.cpp
+tests_fncs_netdelay_SOURCES = tests/netdelay.cpp
 fncs_broker_SOURCES = src/broker.cpp
 fncs_tracer_SOURCES = src/tracer.cpp
 fncs_player_SOURCES = src/player.cpp
@@ -625,6 +633,12 @@ tests/$(am__dirstamp):
 tests/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) tests/$(DEPDIR)
 	@: > tests/$(DEPDIR)/$(am__dirstamp)
+tests/netdelay.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+tests/fncs_netdelay$(EXEEXT): $(tests_fncs_netdelay_OBJECTS) $(tests_fncs_netdelay_DEPENDENCIES) $(EXTRA_tests_fncs_netdelay_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/fncs_netdelay$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(tests_fncs_netdelay_OBJECTS) $(tests_fncs_netdelay_LDADD) $(LIBS)
 tests/test.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
@@ -648,6 +662,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_player_anon-player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tracer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/netdelay.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test.Po@am__quote@
 
 .cpp.o:

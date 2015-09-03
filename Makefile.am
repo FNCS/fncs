@@ -46,6 +46,9 @@ endif
 check_PROGRAMS += tests/test
 tests_test_SOURCES = tests/test.cpp
 
+check_PROGRAMS += tests/fncs_netdelay
+tests_fncs_netdelay_SOURCES = tests/netdelay.cpp
+
 bin_PROGRAMS += fncs_broker
 fncs_broker_SOURCES = src/broker.cpp
 
