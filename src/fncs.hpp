@@ -72,6 +72,9 @@ namespace fncs {
     /** Return the name of the simulator. */
     FNCS_EXPORT string get_name();
 
+    /** Return the minimum time delta of the simulator. */
+    FNCS_EXPORT time get_time_delta();
+
     /** Return a unique numeric ID for the simulator. */
     FNCS_EXPORT int get_id();
 
