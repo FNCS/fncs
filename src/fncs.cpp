@@ -645,7 +645,7 @@ void fncs::route(
         return;
     }
 
-    string new_key = simulation_name + '/' + from + ':' + to + '/' + key;
+    string new_key = simulation_name + '/' + from + '@' + to + '/' + key;
     zstr_sendm(client, fncs::PUBLISH);
     zstr_sendm(client, new_key.c_str());
     zstr_send(client, value.c_str());
