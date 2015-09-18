@@ -423,17 +423,22 @@ fncs::time fncs::time_request(fncs::time next)
         return next;
     }
 
-    if (next % time_delta != 0) {
-        FATAL << "time request is not a multiple of time delta!" << endl;
-        die();
-        return next;
-    }
-
     fncs::time granted;
 
     /* send TIME_REQUEST */
     TRACE << "sending TIME_REQUEST of " << next << " in sim units" << endl;
     next *= time_delta_multiplier;
+
+    if (next % time_delta != 0) {
+        FATAL << "time request "
+            << next
+            << " is not a multiple of time delta ("
+            << time_delta
+            << ")!" << endl;
+        die();
+        return next;
+    }
+
     TRACE << "sending TIME_REQUEST of " << next << " nanoseconds" << endl;
     zstr_sendm(client, fncs::TIME_REQUEST);
     zstr_sendf(client, "%llu", next);
