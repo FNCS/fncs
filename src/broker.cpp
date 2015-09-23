@@ -46,12 +46,12 @@ class SimulatorState {
         bool processing;
         bool messages_pending;
         set<string> subscription_values;
-        vector<zrex_t*> subscription_matches;
 };
 
 typedef map<string,size_t> SimIndex;
 typedef vector<SimulatorState> SimVec;
 
+ofstream trace; /* the trace stream, if requested */
 
 static inline void broker_die(const SimVec &simulators, zsock_t *server) {
     /* repeat the fatal die to all connected sims */
@@ -60,6 +60,9 @@ static inline void broker_die(const SimVec &simulators, zsock_t *server) {
         zstr_send(server, fncs::DIE);
     }
     zsock_destroy(&server);
+    if (trace.is_open()) {
+        trace.close();
+    }
     exit(EXIT_FAILURE);
 }
 
@@ -75,6 +78,7 @@ int main(int argc, char **argv)
     SimIndex name_to_index;     /* quickly lookup sim state index */
     fncs::time time_granted = 0;/* global clock */
     zsock_t *server = NULL;     /* the broker socket */
+    bool do_trace = false;      /* whether to dump all received messages */
     Echo echo;
 
     fncs::start_logging(echo);
@@ -98,6 +102,28 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
         n_sims = static_cast<unsigned int>(n_sims_signed);
+    }
+
+    {
+        const char *env_do_trace = getenv("FNCS_TRACE");
+        if (env_do_trace) {
+            if (env_do_trace[0] == 'Y'
+                    || env_do_trace[0] == 'y'
+                    || env_do_trace[0] == 'T'
+                    || env_do_trace[0] == 't') {
+                do_trace = true;
+            }
+        }
+    }
+
+    if (do_trace) {
+        TRACE << "tracing of all published messages enabled" << endl;
+        trace.open("broker_trace.txt");
+        if (!trace) {
+            FATAL << "Could not open trace file 'broker_trace.txt'" << endl;
+            exit(EXIT_FAILURE);
+        }
+        trace << "#nanoseconds\ttopic\tvalue" << endl;
     }
 
     /* broker endpoint may come from env var */
@@ -222,22 +248,6 @@ int main(int argc, char **argv)
                     TRACE << "no subscription values" << endl;
                 }
 
-                /* parse subscription matches */
-                vector<zrex_t*> subscription_matches;
-                config_values = zconfig_locate(config, "/matches");
-                if (config_values) {
-                    vector<fncs::Subscription> subs =
-                        fncs::parse_matches(config_values);
-                    for (size_t i=0; i<subs.size(); ++i) {
-                        TRACE << "compiling re'" << subs[i].topic << "'" << endl;
-                        subscription_matches.push_back(
-                                zrex_new(subs[i].topic.c_str()));
-                    }
-                }
-                else {
-                    TRACE << "no matches" << endl;
-                }
-
                 /* populate sim state object */
                 state.name = sender;
                 state.time_delta = fncs::parse_time(time_delta);
@@ -246,7 +256,6 @@ int main(int argc, char **argv)
                 state.processing = false;
                 state.messages_pending = false;
                 state.subscription_values = subscription_values;
-                state.subscription_matches = subscription_matches;
                 name_to_index[sender] = simulators.size();
                 simulators.push_back(state);
 
@@ -391,23 +400,25 @@ int main(int argc, char **argv)
                 }
                 topic = fncs::to_string(frame);
 
+                if (do_trace) {
+                    /* next frame is value payload */
+                    frame = zmsg_next(msg);
+                    if (!frame) {
+                        FATAL << "PUBLISH message missing value" << endl;
+                        broker_die(simulators, server);
+                    }
+                    string value = fncs::to_string(frame);
+                    trace << time_granted
+                        << "\t" << topic
+                        << "\t" << value
+                        << endl;
+                }
+
                 /* send the message to subscribed sims */
                 for (size_t i=0; i<n_sims; ++i) {
                     bool found = false;
                     if (simulators[i].subscription_values.count(topic)) {
                         found = true;
-                    }
-                    else {
-                        for (size_t j=0;
-                                j<simulators[i].subscription_matches.size();
-                                ++j) {
-                            if (zrex_matches(
-                                        simulators[i].subscription_matches[j],
-                                        topic.c_str())) {
-                                found = true;
-                                break;
-                            }
-                        }
                     }
                     if (found) {
                         zmsg_t *msg_copy = zmsg_dup(msg);
@@ -423,9 +434,6 @@ int main(int argc, char **argv)
                         zmsg_send(&msg_copy, server);
                         found_one = true;
                         simulators[i].messages_pending = true;
-                        /* even if multiple subscriptions for the
-                         * current simulator match this message, we
-                         * only want to send it once */
                         TRACE << "pub to " << simulators[i].name << endl;
                     }
                 }
@@ -485,6 +493,10 @@ int main(int argc, char **argv)
     }
 
     zsock_destroy(&server);
+
+    if (trace.is_open()) {
+        trace.close();
+    }
 
     return 0;
 }

@@ -103,32 +103,6 @@ char** fncs_get_values(const char *key)
     return convert(fncs::get_values(key));
 }
 
-#if 0
-void fncs_get_matches(
-            const char *key,
-            char *** topics,
-            char *** values,
-            size_t *size)
-{
-    vector<pair<string,string> > matches_vector = fncs::get_matches(key);
-
-    if (matches_vector.empty()) {
-        *topics = NULL;
-        *values = NULL;
-        *size = 0;
-    }
-    else {
-        *topics = (char**)malloc(sizeof(char*)*matches_vector.size());
-        *values = (char**)malloc(sizeof(char*)*matches_vector.size());
-        for (size_t i=0; i<matches_vector.size(); ++i) {
-            (*topics)[i] = convert(matches_vector[i].first);
-            (*values)[i] = convert(matches_vector[i].second);
-        }
-        *size = matches_vector.size();
-    }
-}
-#endif
-
 const char* fncs_get_name()
 {
     return fncs::get_name().c_str();

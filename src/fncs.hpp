@@ -65,10 +65,6 @@ namespace fncs {
      * Will return a vector of size 1 if only a single value exists. */
     FNCS_EXPORT vector<string> get_values(const string &key);
 
-    /** Get a vector of topic-value pairs from the cache with the given key.
-     * Will return a vector of size 1 if only a single value exists. */
-    FNCS_EXPORT vector<pair<string,string> > get_matches(const string &key);
-
     /** Return the name of the simulator. */
     FNCS_EXPORT string get_name();
 
