@@ -49,6 +49,9 @@ tests_test_SOURCES = tests/test.cpp
 bin_PROGRAMS += fncs_broker
 fncs_broker_SOURCES = src/broker.cpp
 
+bin_PROGRAMS += fncs_tracer
+fncs_tracer_SOURCES = src/tracer.cpp
+
 bin_PROGRAMS += fncs_player
 fncs_player_SOURCES = src/player.cpp
 

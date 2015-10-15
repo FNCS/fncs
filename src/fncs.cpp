@@ -129,11 +129,13 @@ void fncs::initialize()
     config = zconfig_load(fncs_config_file);
     if (!config) {
         cerr << "could not open " << fncs_config_file << endl;
+        /* create an empty ZPL file in case all info was provided on
+         * command line */
+        config = zconfig_new("root", NULL);
     }
-    else {
-        initialize(config);
-        zconfig_destroy(&config);
-    }
+
+    initialize(config);
+    zconfig_destroy(&config);
 }
 
 
