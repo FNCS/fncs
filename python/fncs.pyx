@@ -12,6 +12,9 @@ def initialize(const string &configuration=""):
     else:
         fncs.initialize(configuration)
 
+def is_initialized():
+    return fncs.is_initialized()
+
 def time_request(fncs.time next):
     return fncs.time_request(next)
 
@@ -30,17 +33,20 @@ def finalize():
 def update_time_delta(fncs.time delta):
     fncs.update_time_delta(delta)
 
+def get_events():
+    return fncs.get_events()
+
 def get_value(const string &key):
     return fncs.get_value(key)
 
 def get_values(const string &key):
     return fncs.get_values(key)
 
-def get_matches(const string &key):
-    return fncs.get_matches(key)
-
 def get_name():
     return fncs.get_name()
+
+def get_time_delta():
+    return fncs.get_time_delta()
 
 def get_id():
     return fncs.get_id()

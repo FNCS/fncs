@@ -3,19 +3,8 @@
 /* BEGIN: Cython Metadata
 {
     "distutils": {
-        "depends": [
-            "/home/d3n000/fpgi/fncs2/bld/include/fncs.hpp"
-        ], 
-        "include_dirs": [
-            "/home/d3n000/fpgi/fncs2/bld/include"
-        ], 
-        "language": "c++", 
-        "libraries": [
-            "fncs"
-        ], 
-        "library_dirs": [
-            "/home/d3n000/fpgi/fncs2/bld/lib"
-        ]
+        "depends": [], 
+        "language": "c++"
     }
 }
 END: Cython Metadata */
@@ -634,26 +623,26 @@ static CYTHON_INLINE PyObject *__pyx_convert_PyStr_string_to_py_std__in_string(s
 static CYTHON_INLINE PyObject *__pyx_convert_PyBytes_string_to_py_std__in_string(std::string const &); /*proto*/
 static CYTHON_INLINE PyObject *__pyx_convert_PyByteArray_string_to_py_std__in_string(std::string const &); /*proto*/
 static PyObject *__pyx_convert_vector_to_py_std_3a__3a_string(const std::vector<std::string>  &); /*proto*/
-static PyObject *__pyx_convert_pair_to_py_std_3a__3a_string____std_3a__3a_string(std::pair<std::string,std::string>  const &); /*proto*/
-static PyObject *__pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___(const std::vector<std::pair<std::string,std::string> >  &); /*proto*/
 #define __Pyx_MODULE_NAME "fncs"
 int __pyx_module_is_main_fncs = 0;
 
 /* Implementation of 'fncs' */
 static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_pf_4fncs_initialize(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_configuration); /* proto */
-static PyObject *__pyx_pf_4fncs_2time_request(CYTHON_UNUSED PyObject *__pyx_self, fncs::time __pyx_v_next); /* proto */
-static PyObject *__pyx_pf_4fncs_4publish(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key, std::string __pyx_v_value); /* proto */
-static PyObject *__pyx_pf_4fncs_6route(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_from_, std::string __pyx_v_to, std::string __pyx_v_key, std::string __pyx_v_value); /* proto */
-static PyObject *__pyx_pf_4fncs_8die(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
-static PyObject *__pyx_pf_4fncs_10finalize(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
-static PyObject *__pyx_pf_4fncs_12update_time_delta(CYTHON_UNUSED PyObject *__pyx_self, fncs::time __pyx_v_delta); /* proto */
-static PyObject *__pyx_pf_4fncs_14get_value(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key); /* proto */
-static PyObject *__pyx_pf_4fncs_16get_values(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key); /* proto */
-static PyObject *__pyx_pf_4fncs_18get_matches(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key); /* proto */
-static PyObject *__pyx_pf_4fncs_20get_name(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
-static PyObject *__pyx_pf_4fncs_22get_id(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
-static PyObject *__pyx_pf_4fncs_24get_simulator_count(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_4fncs_2is_initialized(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_4fncs_4time_request(CYTHON_UNUSED PyObject *__pyx_self, fncs::time __pyx_v_next); /* proto */
+static PyObject *__pyx_pf_4fncs_6publish(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key, std::string __pyx_v_value); /* proto */
+static PyObject *__pyx_pf_4fncs_8route(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_from_, std::string __pyx_v_to, std::string __pyx_v_key, std::string __pyx_v_value); /* proto */
+static PyObject *__pyx_pf_4fncs_10die(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_4fncs_12finalize(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_4fncs_14update_time_delta(CYTHON_UNUSED PyObject *__pyx_self, fncs::time __pyx_v_delta); /* proto */
+static PyObject *__pyx_pf_4fncs_16get_events(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_4fncs_18get_value(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key); /* proto */
+static PyObject *__pyx_pf_4fncs_20get_values(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key); /* proto */
+static PyObject *__pyx_pf_4fncs_22get_name(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_4fncs_24get_time_delta(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_4fncs_26get_id(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_4fncs_28get_simulator_count(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
 static char __pyx_k__2[] = "";
 static char __pyx_k_to[] = "to";
 static char __pyx_k_die[] = "die";
@@ -672,14 +661,16 @@ static char __pyx_k_publish[] = "publish";
 static char __pyx_k_finalize[] = "finalize";
 static char __pyx_k_get_name[] = "get_name";
 static char __pyx_k_get_value[] = "get_value";
+static char __pyx_k_get_events[] = "get_events";
 static char __pyx_k_get_values[] = "get_values";
 static char __pyx_k_initialize[] = "initialize";
-static char __pyx_k_get_matches[] = "get_matches";
 static char __pyx_k_time_request[] = "time_request";
 static char __pyx_k_configuration[] = "configuration";
+static char __pyx_k_get_time_delta[] = "get_time_delta";
+static char __pyx_k_is_initialized[] = "is_initialized";
 static char __pyx_k_update_time_delta[] = "update_time_delta";
 static char __pyx_k_get_simulator_count[] = "get_simulator_count";
-static char __pyx_k_home_d3n000_fpgi_fncs2_python_f[] = "/home/d3n000/fpgi/fncs2/python/fncs.pyx";
+static char __pyx_k_home_fncsdemo_fncs2_python_fncs[] = "/home/fncsdemo/fncs2/python/fncs.pyx";
 static PyObject *__pyx_kp_b__2;
 static PyObject *__pyx_n_s_configuration;
 static PyObject *__pyx_n_s_delta;
@@ -687,14 +678,16 @@ static PyObject *__pyx_n_s_die;
 static PyObject *__pyx_n_s_finalize;
 static PyObject *__pyx_n_s_fncs;
 static PyObject *__pyx_n_s_from;
+static PyObject *__pyx_n_s_get_events;
 static PyObject *__pyx_n_s_get_id;
-static PyObject *__pyx_n_s_get_matches;
 static PyObject *__pyx_n_s_get_name;
 static PyObject *__pyx_n_s_get_simulator_count;
+static PyObject *__pyx_n_s_get_time_delta;
 static PyObject *__pyx_n_s_get_value;
 static PyObject *__pyx_n_s_get_values;
-static PyObject *__pyx_kp_s_home_d3n000_fpgi_fncs2_python_f;
+static PyObject *__pyx_kp_s_home_fncsdemo_fncs2_python_fncs;
 static PyObject *__pyx_n_s_initialize;
+static PyObject *__pyx_n_s_is_initialized;
 static PyObject *__pyx_n_s_key;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_next;
@@ -708,26 +701,27 @@ static PyObject *__pyx_n_s_update_time_delta;
 static PyObject *__pyx_n_s_value;
 static std::string __pyx_k_;
 static PyObject *__pyx_tuple__3;
-static PyObject *__pyx_tuple__5;
-static PyObject *__pyx_tuple__7;
-static PyObject *__pyx_tuple__9;
-static PyObject *__pyx_tuple__13;
-static PyObject *__pyx_tuple__15;
+static PyObject *__pyx_tuple__6;
+static PyObject *__pyx_tuple__8;
+static PyObject *__pyx_tuple__10;
+static PyObject *__pyx_tuple__14;
 static PyObject *__pyx_tuple__17;
 static PyObject *__pyx_tuple__19;
 static PyObject *__pyx_codeobj__4;
-static PyObject *__pyx_codeobj__6;
-static PyObject *__pyx_codeobj__8;
-static PyObject *__pyx_codeobj__10;
+static PyObject *__pyx_codeobj__5;
+static PyObject *__pyx_codeobj__7;
+static PyObject *__pyx_codeobj__9;
 static PyObject *__pyx_codeobj__11;
 static PyObject *__pyx_codeobj__12;
-static PyObject *__pyx_codeobj__14;
+static PyObject *__pyx_codeobj__13;
+static PyObject *__pyx_codeobj__15;
 static PyObject *__pyx_codeobj__16;
 static PyObject *__pyx_codeobj__18;
 static PyObject *__pyx_codeobj__20;
 static PyObject *__pyx_codeobj__21;
 static PyObject *__pyx_codeobj__22;
 static PyObject *__pyx_codeobj__23;
+static PyObject *__pyx_codeobj__24;
 
 /* "fncs.pyx":9
  * cimport fncshpp as fncs
@@ -831,7 +825,7 @@ static PyObject *__pyx_pf_4fncs_initialize(CYTHON_UNUSED PyObject *__pyx_self, s
  *     else:
  *         fncs.initialize(configuration)             # <<<<<<<<<<<<<<
  * 
- * def time_request(fncs.time next):
+ * def is_initialized():
  */
     fncs::initialize(__pyx_v_configuration);
   }
@@ -855,15 +849,79 @@ static PyObject *__pyx_pf_4fncs_initialize(CYTHON_UNUSED PyObject *__pyx_self, s
 /* "fncs.pyx":15
  *         fncs.initialize(configuration)
  * 
+ * def is_initialized():             # <<<<<<<<<<<<<<
+ *     return fncs.is_initialized()
+ * 
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4fncs_3is_initialized(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_3is_initialized = {"is_initialized", (PyCFunction)__pyx_pw_4fncs_3is_initialized, METH_NOARGS, 0};
+static PyObject *__pyx_pw_4fncs_3is_initialized(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("is_initialized (wrapper)", 0);
+  __pyx_r = __pyx_pf_4fncs_2is_initialized(__pyx_self);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4fncs_2is_initialized(CYTHON_UNUSED PyObject *__pyx_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("is_initialized", 0);
+
+  /* "fncs.pyx":16
+ * 
+ * def is_initialized():
+ *     return fncs.is_initialized()             # <<<<<<<<<<<<<<
+ * 
+ * def time_request(fncs.time next):
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __Pyx_PyBool_FromLong(fncs::is_initialized()); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* "fncs.pyx":15
+ *         fncs.initialize(configuration)
+ * 
+ * def is_initialized():             # <<<<<<<<<<<<<<
+ *     return fncs.is_initialized()
+ * 
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("fncs.is_initialized", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "fncs.pyx":18
+ *     return fncs.is_initialized()
+ * 
  * def time_request(fncs.time next):             # <<<<<<<<<<<<<<
  *     return fncs.time_request(next)
  * 
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4fncs_3time_request(PyObject *__pyx_self, PyObject *__pyx_arg_next); /*proto*/
-static PyMethodDef __pyx_mdef_4fncs_3time_request = {"time_request", (PyCFunction)__pyx_pw_4fncs_3time_request, METH_O, 0};
-static PyObject *__pyx_pw_4fncs_3time_request(PyObject *__pyx_self, PyObject *__pyx_arg_next) {
+static PyObject *__pyx_pw_4fncs_5time_request(PyObject *__pyx_self, PyObject *__pyx_arg_next); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_5time_request = {"time_request", (PyCFunction)__pyx_pw_4fncs_5time_request, METH_O, 0};
+static PyObject *__pyx_pw_4fncs_5time_request(PyObject *__pyx_self, PyObject *__pyx_arg_next) {
   fncs::time __pyx_v_next;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
@@ -872,7 +930,7 @@ static PyObject *__pyx_pw_4fncs_3time_request(PyObject *__pyx_self, PyObject *__
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("time_request (wrapper)", 0);
   assert(__pyx_arg_next); {
-    __pyx_v_next = __Pyx_PyInt_As_fncs_3a__3a_time(__pyx_arg_next); if (unlikely((__pyx_v_next == (fncs::time)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_next = __Pyx_PyInt_As_fncs_3a__3a_time(__pyx_arg_next); if (unlikely((__pyx_v_next == (fncs::time)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -880,14 +938,14 @@ static PyObject *__pyx_pw_4fncs_3time_request(PyObject *__pyx_self, PyObject *__
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_4fncs_2time_request(__pyx_self, ((fncs::time)__pyx_v_next));
+  __pyx_r = __pyx_pf_4fncs_4time_request(__pyx_self, ((fncs::time)__pyx_v_next));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4fncs_2time_request(CYTHON_UNUSED PyObject *__pyx_self, fncs::time __pyx_v_next) {
+static PyObject *__pyx_pf_4fncs_4time_request(CYTHON_UNUSED PyObject *__pyx_self, fncs::time __pyx_v_next) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -896,7 +954,7 @@ static PyObject *__pyx_pf_4fncs_2time_request(CYTHON_UNUSED PyObject *__pyx_self
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("time_request", 0);
 
-  /* "fncs.pyx":16
+  /* "fncs.pyx":19
  * 
  * def time_request(fncs.time next):
  *     return fncs.time_request(next)             # <<<<<<<<<<<<<<
@@ -904,14 +962,14 @@ static PyObject *__pyx_pf_4fncs_2time_request(CYTHON_UNUSED PyObject *__pyx_self
  * def publish(const string &key, const string &value):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_fncs_3a__3a_time(fncs::time_request(__pyx_v_next)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_From_fncs_3a__3a_time(fncs::time_request(__pyx_v_next)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "fncs.pyx":15
- *         fncs.initialize(configuration)
+  /* "fncs.pyx":18
+ *     return fncs.is_initialized()
  * 
  * def time_request(fncs.time next):             # <<<<<<<<<<<<<<
  *     return fncs.time_request(next)
@@ -929,7 +987,7 @@ static PyObject *__pyx_pf_4fncs_2time_request(CYTHON_UNUSED PyObject *__pyx_self
   return __pyx_r;
 }
 
-/* "fncs.pyx":18
+/* "fncs.pyx":21
  *     return fncs.time_request(next)
  * 
  * def publish(const string &key, const string &value):             # <<<<<<<<<<<<<<
@@ -938,9 +996,9 @@ static PyObject *__pyx_pf_4fncs_2time_request(CYTHON_UNUSED PyObject *__pyx_self
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4fncs_5publish(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_4fncs_5publish = {"publish", (PyCFunction)__pyx_pw_4fncs_5publish, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_4fncs_5publish(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_4fncs_7publish(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_7publish = {"publish", (PyCFunction)__pyx_pw_4fncs_7publish, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_4fncs_7publish(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   std::string __pyx_v_key;
   std::string __pyx_v_value;
   int __pyx_lineno = 0;
@@ -969,11 +1027,11 @@ static PyObject *__pyx_pw_4fncs_5publish(PyObject *__pyx_self, PyObject *__pyx_a
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_value)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("publish", 1, 2, 2, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("publish", 1, 2, 2, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "publish") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "publish") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -981,30 +1039,30 @@ static PyObject *__pyx_pw_4fncs_5publish(PyObject *__pyx_self, PyObject *__pyx_a
       values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
     }
-    __pyx_v_key = __pyx_convert_string_from_py_std__in_string(values[0]); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_value = __pyx_convert_string_from_py_std__in_string(values[1]); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_key = __pyx_convert_string_from_py_std__in_string(values[0]); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_value = __pyx_convert_string_from_py_std__in_string(values[1]); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("publish", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("publish", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("fncs.publish", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_4fncs_4publish(__pyx_self, __pyx_v_key, __pyx_v_value);
+  __pyx_r = __pyx_pf_4fncs_6publish(__pyx_self, __pyx_v_key, __pyx_v_value);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4fncs_4publish(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key, std::string __pyx_v_value) {
+static PyObject *__pyx_pf_4fncs_6publish(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key, std::string __pyx_v_value) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("publish", 0);
 
-  /* "fncs.pyx":19
+  /* "fncs.pyx":22
  * 
  * def publish(const string &key, const string &value):
  *     fncs.publish(key, value)             # <<<<<<<<<<<<<<
@@ -1013,7 +1071,7 @@ static PyObject *__pyx_pf_4fncs_4publish(CYTHON_UNUSED PyObject *__pyx_self, std
  */
   fncs::publish(__pyx_v_key, __pyx_v_value);
 
-  /* "fncs.pyx":18
+  /* "fncs.pyx":21
  *     return fncs.time_request(next)
  * 
  * def publish(const string &key, const string &value):             # <<<<<<<<<<<<<<
@@ -1028,7 +1086,7 @@ static PyObject *__pyx_pf_4fncs_4publish(CYTHON_UNUSED PyObject *__pyx_self, std
   return __pyx_r;
 }
 
-/* "fncs.pyx":21
+/* "fncs.pyx":24
  *     fncs.publish(key, value)
  * 
  * def route(const string &from_, const string &to, const string &key, const string &value):             # <<<<<<<<<<<<<<
@@ -1037,9 +1095,9 @@ static PyObject *__pyx_pf_4fncs_4publish(CYTHON_UNUSED PyObject *__pyx_self, std
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4fncs_7route(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_4fncs_7route = {"route", (PyCFunction)__pyx_pw_4fncs_7route, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_4fncs_7route(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_4fncs_9route(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_9route = {"route", (PyCFunction)__pyx_pw_4fncs_9route, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_4fncs_9route(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   std::string __pyx_v_from_;
   std::string __pyx_v_to;
   std::string __pyx_v_key;
@@ -1072,21 +1130,21 @@ static PyObject *__pyx_pw_4fncs_7route(PyObject *__pyx_self, PyObject *__pyx_arg
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_to)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("route", 1, 4, 4, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("route", 1, 4, 4, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_key)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("route", 1, 4, 4, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("route", 1, 4, 4, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_value)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("route", 1, 4, 4, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("route", 1, 4, 4, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "route") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "route") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -1096,32 +1154,32 @@ static PyObject *__pyx_pw_4fncs_7route(PyObject *__pyx_self, PyObject *__pyx_arg
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
       values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
     }
-    __pyx_v_from_ = __pyx_convert_string_from_py_std__in_string(values[0]); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_to = __pyx_convert_string_from_py_std__in_string(values[1]); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_key = __pyx_convert_string_from_py_std__in_string(values[2]); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_value = __pyx_convert_string_from_py_std__in_string(values[3]); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_from_ = __pyx_convert_string_from_py_std__in_string(values[0]); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_to = __pyx_convert_string_from_py_std__in_string(values[1]); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_key = __pyx_convert_string_from_py_std__in_string(values[2]); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_value = __pyx_convert_string_from_py_std__in_string(values[3]); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("route", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("route", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("fncs.route", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_4fncs_6route(__pyx_self, __pyx_v_from_, __pyx_v_to, __pyx_v_key, __pyx_v_value);
+  __pyx_r = __pyx_pf_4fncs_8route(__pyx_self, __pyx_v_from_, __pyx_v_to, __pyx_v_key, __pyx_v_value);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4fncs_6route(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_from_, std::string __pyx_v_to, std::string __pyx_v_key, std::string __pyx_v_value) {
+static PyObject *__pyx_pf_4fncs_8route(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_from_, std::string __pyx_v_to, std::string __pyx_v_key, std::string __pyx_v_value) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("route", 0);
 
-  /* "fncs.pyx":22
+  /* "fncs.pyx":25
  * 
  * def route(const string &from_, const string &to, const string &key, const string &value):
  *     fncs.route(from_, to, key, value)             # <<<<<<<<<<<<<<
@@ -1130,7 +1188,7 @@ static PyObject *__pyx_pf_4fncs_6route(CYTHON_UNUSED PyObject *__pyx_self, std::
  */
   fncs::route(__pyx_v_from_, __pyx_v_to, __pyx_v_key, __pyx_v_value);
 
-  /* "fncs.pyx":21
+  /* "fncs.pyx":24
  *     fncs.publish(key, value)
  * 
  * def route(const string &from_, const string &to, const string &key, const string &value):             # <<<<<<<<<<<<<<
@@ -1145,7 +1203,7 @@ static PyObject *__pyx_pf_4fncs_6route(CYTHON_UNUSED PyObject *__pyx_self, std::
   return __pyx_r;
 }
 
-/* "fncs.pyx":24
+/* "fncs.pyx":27
  *     fncs.route(from_, to, key, value)
  * 
  * def die():             # <<<<<<<<<<<<<<
@@ -1154,25 +1212,25 @@ static PyObject *__pyx_pf_4fncs_6route(CYTHON_UNUSED PyObject *__pyx_self, std::
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4fncs_9die(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyMethodDef __pyx_mdef_4fncs_9die = {"die", (PyCFunction)__pyx_pw_4fncs_9die, METH_NOARGS, 0};
-static PyObject *__pyx_pw_4fncs_9die(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_4fncs_11die(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_11die = {"die", (PyCFunction)__pyx_pw_4fncs_11die, METH_NOARGS, 0};
+static PyObject *__pyx_pw_4fncs_11die(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("die (wrapper)", 0);
-  __pyx_r = __pyx_pf_4fncs_8die(__pyx_self);
+  __pyx_r = __pyx_pf_4fncs_10die(__pyx_self);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4fncs_8die(CYTHON_UNUSED PyObject *__pyx_self) {
+static PyObject *__pyx_pf_4fncs_10die(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("die", 0);
 
-  /* "fncs.pyx":25
+  /* "fncs.pyx":28
  * 
  * def die():
  *     fncs.die()             # <<<<<<<<<<<<<<
@@ -1181,62 +1239,11 @@ static PyObject *__pyx_pf_4fncs_8die(CYTHON_UNUSED PyObject *__pyx_self) {
  */
   fncs::die();
 
-  /* "fncs.pyx":24
+  /* "fncs.pyx":27
  *     fncs.route(from_, to, key, value)
  * 
  * def die():             # <<<<<<<<<<<<<<
  *     fncs.die()
- * 
- */
-
-  /* function exit code */
-  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-/* "fncs.pyx":27
- *     fncs.die()
- * 
- * def finalize():             # <<<<<<<<<<<<<<
- *     fncs.finalize()
- * 
- */
-
-/* Python wrapper */
-static PyObject *__pyx_pw_4fncs_11finalize(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyMethodDef __pyx_mdef_4fncs_11finalize = {"finalize", (PyCFunction)__pyx_pw_4fncs_11finalize, METH_NOARGS, 0};
-static PyObject *__pyx_pw_4fncs_11finalize(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
-  PyObject *__pyx_r = 0;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("finalize (wrapper)", 0);
-  __pyx_r = __pyx_pf_4fncs_10finalize(__pyx_self);
-
-  /* function exit code */
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-static PyObject *__pyx_pf_4fncs_10finalize(CYTHON_UNUSED PyObject *__pyx_self) {
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("finalize", 0);
-
-  /* "fncs.pyx":28
- * 
- * def finalize():
- *     fncs.finalize()             # <<<<<<<<<<<<<<
- * 
- * def update_time_delta(fncs.time delta):
- */
-  fncs::finalize();
-
-  /* "fncs.pyx":27
- *     fncs.die()
- * 
- * def finalize():             # <<<<<<<<<<<<<<
- *     fncs.finalize()
  * 
  */
 
@@ -1248,6 +1255,57 @@ static PyObject *__pyx_pf_4fncs_10finalize(CYTHON_UNUSED PyObject *__pyx_self) {
 }
 
 /* "fncs.pyx":30
+ *     fncs.die()
+ * 
+ * def finalize():             # <<<<<<<<<<<<<<
+ *     fncs.finalize()
+ * 
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4fncs_13finalize(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_13finalize = {"finalize", (PyCFunction)__pyx_pw_4fncs_13finalize, METH_NOARGS, 0};
+static PyObject *__pyx_pw_4fncs_13finalize(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("finalize (wrapper)", 0);
+  __pyx_r = __pyx_pf_4fncs_12finalize(__pyx_self);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4fncs_12finalize(CYTHON_UNUSED PyObject *__pyx_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("finalize", 0);
+
+  /* "fncs.pyx":31
+ * 
+ * def finalize():
+ *     fncs.finalize()             # <<<<<<<<<<<<<<
+ * 
+ * def update_time_delta(fncs.time delta):
+ */
+  fncs::finalize();
+
+  /* "fncs.pyx":30
+ *     fncs.die()
+ * 
+ * def finalize():             # <<<<<<<<<<<<<<
+ *     fncs.finalize()
+ * 
+ */
+
+  /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "fncs.pyx":33
  *     fncs.finalize()
  * 
  * def update_time_delta(fncs.time delta):             # <<<<<<<<<<<<<<
@@ -1256,9 +1314,9 @@ static PyObject *__pyx_pf_4fncs_10finalize(CYTHON_UNUSED PyObject *__pyx_self) {
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4fncs_13update_time_delta(PyObject *__pyx_self, PyObject *__pyx_arg_delta); /*proto*/
-static PyMethodDef __pyx_mdef_4fncs_13update_time_delta = {"update_time_delta", (PyCFunction)__pyx_pw_4fncs_13update_time_delta, METH_O, 0};
-static PyObject *__pyx_pw_4fncs_13update_time_delta(PyObject *__pyx_self, PyObject *__pyx_arg_delta) {
+static PyObject *__pyx_pw_4fncs_15update_time_delta(PyObject *__pyx_self, PyObject *__pyx_arg_delta); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_15update_time_delta = {"update_time_delta", (PyCFunction)__pyx_pw_4fncs_15update_time_delta, METH_O, 0};
+static PyObject *__pyx_pw_4fncs_15update_time_delta(PyObject *__pyx_self, PyObject *__pyx_arg_delta) {
   fncs::time __pyx_v_delta;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
@@ -1267,7 +1325,7 @@ static PyObject *__pyx_pw_4fncs_13update_time_delta(PyObject *__pyx_self, PyObje
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("update_time_delta (wrapper)", 0);
   assert(__pyx_arg_delta); {
-    __pyx_v_delta = __Pyx_PyInt_As_fncs_3a__3a_time(__pyx_arg_delta); if (unlikely((__pyx_v_delta == (fncs::time)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_delta = __Pyx_PyInt_As_fncs_3a__3a_time(__pyx_arg_delta); if (unlikely((__pyx_v_delta == (fncs::time)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -1275,28 +1333,28 @@ static PyObject *__pyx_pw_4fncs_13update_time_delta(PyObject *__pyx_self, PyObje
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_4fncs_12update_time_delta(__pyx_self, ((fncs::time)__pyx_v_delta));
+  __pyx_r = __pyx_pf_4fncs_14update_time_delta(__pyx_self, ((fncs::time)__pyx_v_delta));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4fncs_12update_time_delta(CYTHON_UNUSED PyObject *__pyx_self, fncs::time __pyx_v_delta) {
+static PyObject *__pyx_pf_4fncs_14update_time_delta(CYTHON_UNUSED PyObject *__pyx_self, fncs::time __pyx_v_delta) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("update_time_delta", 0);
 
-  /* "fncs.pyx":31
+  /* "fncs.pyx":34
  * 
  * def update_time_delta(fncs.time delta):
  *     fncs.update_time_delta(delta)             # <<<<<<<<<<<<<<
  * 
- * def get_value(const string &key):
+ * def get_events():
  */
   fncs::update_time_delta(__pyx_v_delta);
 
-  /* "fncs.pyx":30
+  /* "fncs.pyx":33
  *     fncs.finalize()
  * 
  * def update_time_delta(fncs.time delta):             # <<<<<<<<<<<<<<
@@ -1311,153 +1369,63 @@ static PyObject *__pyx_pf_4fncs_12update_time_delta(CYTHON_UNUSED PyObject *__py
   return __pyx_r;
 }
 
-/* "fncs.pyx":33
- *     fncs.update_time_delta(delta)
- * 
- * def get_value(const string &key):             # <<<<<<<<<<<<<<
- *     return fncs.get_value(key)
- * 
- */
-
-/* Python wrapper */
-static PyObject *__pyx_pw_4fncs_15get_value(PyObject *__pyx_self, PyObject *__pyx_arg_key); /*proto*/
-static PyMethodDef __pyx_mdef_4fncs_15get_value = {"get_value", (PyCFunction)__pyx_pw_4fncs_15get_value, METH_O, 0};
-static PyObject *__pyx_pw_4fncs_15get_value(PyObject *__pyx_self, PyObject *__pyx_arg_key) {
-  std::string __pyx_v_key;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  PyObject *__pyx_r = 0;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("get_value (wrapper)", 0);
-  assert(__pyx_arg_key); {
-    __pyx_v_key = __pyx_convert_string_from_py_std__in_string(__pyx_arg_key); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-  }
-  goto __pyx_L4_argument_unpacking_done;
-  __pyx_L3_error:;
-  __Pyx_AddTraceback("fncs.get_value", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __Pyx_RefNannyFinishContext();
-  return NULL;
-  __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_4fncs_14get_value(__pyx_self, ((std::string)__pyx_v_key));
-
-  /* function exit code */
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-static PyObject *__pyx_pf_4fncs_14get_value(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key) {
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("get_value", 0);
-
-  /* "fncs.pyx":34
- * 
- * def get_value(const string &key):
- *     return fncs.get_value(key)             # <<<<<<<<<<<<<<
- * 
- * def get_values(const string &key):
- */
-  __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_convert_PyBytes_string_to_py_std__in_string(fncs::get_value(__pyx_v_key)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 34; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_r = __pyx_t_1;
-  __pyx_t_1 = 0;
-  goto __pyx_L0;
-
-  /* "fncs.pyx":33
- *     fncs.update_time_delta(delta)
- * 
- * def get_value(const string &key):             # <<<<<<<<<<<<<<
- *     return fncs.get_value(key)
- * 
- */
-
-  /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("fncs.get_value", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
 /* "fncs.pyx":36
- *     return fncs.get_value(key)
+ *     fncs.update_time_delta(delta)
  * 
- * def get_values(const string &key):             # <<<<<<<<<<<<<<
- *     return fncs.get_values(key)
+ * def get_events():             # <<<<<<<<<<<<<<
+ *     return fncs.get_events()
  * 
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4fncs_17get_values(PyObject *__pyx_self, PyObject *__pyx_arg_key); /*proto*/
-static PyMethodDef __pyx_mdef_4fncs_17get_values = {"get_values", (PyCFunction)__pyx_pw_4fncs_17get_values, METH_O, 0};
-static PyObject *__pyx_pw_4fncs_17get_values(PyObject *__pyx_self, PyObject *__pyx_arg_key) {
-  std::string __pyx_v_key;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
+static PyObject *__pyx_pw_4fncs_17get_events(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_17get_events = {"get_events", (PyCFunction)__pyx_pw_4fncs_17get_events, METH_NOARGS, 0};
+static PyObject *__pyx_pw_4fncs_17get_events(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("get_values (wrapper)", 0);
-  assert(__pyx_arg_key); {
-    __pyx_v_key = __pyx_convert_string_from_py_std__in_string(__pyx_arg_key); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-  }
-  goto __pyx_L4_argument_unpacking_done;
-  __pyx_L3_error:;
-  __Pyx_AddTraceback("fncs.get_values", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __Pyx_RefNannyFinishContext();
-  return NULL;
-  __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_4fncs_16get_values(__pyx_self, ((std::string)__pyx_v_key));
+  __Pyx_RefNannySetupContext("get_events (wrapper)", 0);
+  __pyx_r = __pyx_pf_4fncs_16get_events(__pyx_self);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4fncs_16get_values(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key) {
+static PyObject *__pyx_pf_4fncs_16get_events(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("get_values", 0);
+  __Pyx_RefNannySetupContext("get_events", 0);
 
   /* "fncs.pyx":37
  * 
- * def get_values(const string &key):
- *     return fncs.get_values(key)             # <<<<<<<<<<<<<<
+ * def get_events():
+ *     return fncs.get_events()             # <<<<<<<<<<<<<<
  * 
- * def get_matches(const string &key):
+ * def get_value(const string &key):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_convert_vector_to_py_std_3a__3a_string(fncs::get_values(__pyx_v_key)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __pyx_convert_vector_to_py_std_3a__3a_string(fncs::get_events()); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
   /* "fncs.pyx":36
- *     return fncs.get_value(key)
+ *     fncs.update_time_delta(delta)
  * 
- * def get_values(const string &key):             # <<<<<<<<<<<<<<
- *     return fncs.get_values(key)
+ * def get_events():             # <<<<<<<<<<<<<<
+ *     return fncs.get_events()
  * 
  */
 
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("fncs.get_values", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("fncs.get_events", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -1466,75 +1434,75 @@ static PyObject *__pyx_pf_4fncs_16get_values(CYTHON_UNUSED PyObject *__pyx_self,
 }
 
 /* "fncs.pyx":39
- *     return fncs.get_values(key)
+ *     return fncs.get_events()
  * 
- * def get_matches(const string &key):             # <<<<<<<<<<<<<<
- *     return fncs.get_matches(key)
+ * def get_value(const string &key):             # <<<<<<<<<<<<<<
+ *     return fncs.get_value(key)
  * 
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4fncs_19get_matches(PyObject *__pyx_self, PyObject *__pyx_arg_key); /*proto*/
-static PyMethodDef __pyx_mdef_4fncs_19get_matches = {"get_matches", (PyCFunction)__pyx_pw_4fncs_19get_matches, METH_O, 0};
-static PyObject *__pyx_pw_4fncs_19get_matches(PyObject *__pyx_self, PyObject *__pyx_arg_key) {
+static PyObject *__pyx_pw_4fncs_19get_value(PyObject *__pyx_self, PyObject *__pyx_arg_key); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_19get_value = {"get_value", (PyCFunction)__pyx_pw_4fncs_19get_value, METH_O, 0};
+static PyObject *__pyx_pw_4fncs_19get_value(PyObject *__pyx_self, PyObject *__pyx_arg_key) {
   std::string __pyx_v_key;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("get_matches (wrapper)", 0);
+  __Pyx_RefNannySetupContext("get_value (wrapper)", 0);
   assert(__pyx_arg_key); {
     __pyx_v_key = __pyx_convert_string_from_py_std__in_string(__pyx_arg_key); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
-  __Pyx_AddTraceback("fncs.get_matches", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("fncs.get_value", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_4fncs_18get_matches(__pyx_self, ((std::string)__pyx_v_key));
+  __pyx_r = __pyx_pf_4fncs_18get_value(__pyx_self, ((std::string)__pyx_v_key));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4fncs_18get_matches(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key) {
+static PyObject *__pyx_pf_4fncs_18get_value(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("get_matches", 0);
+  __Pyx_RefNannySetupContext("get_value", 0);
 
   /* "fncs.pyx":40
  * 
- * def get_matches(const string &key):
- *     return fncs.get_matches(key)             # <<<<<<<<<<<<<<
+ * def get_value(const string &key):
+ *     return fncs.get_value(key)             # <<<<<<<<<<<<<<
  * 
- * def get_name():
+ * def get_values(const string &key):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___(fncs::get_matches(__pyx_v_key)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __pyx_convert_PyBytes_string_to_py_std__in_string(fncs::get_value(__pyx_v_key)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
   /* "fncs.pyx":39
- *     return fncs.get_values(key)
+ *     return fncs.get_events()
  * 
- * def get_matches(const string &key):             # <<<<<<<<<<<<<<
- *     return fncs.get_matches(key)
+ * def get_value(const string &key):             # <<<<<<<<<<<<<<
+ *     return fncs.get_value(key)
  * 
  */
 
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("fncs.get_matches", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("fncs.get_value", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -1543,7 +1511,84 @@ static PyObject *__pyx_pf_4fncs_18get_matches(CYTHON_UNUSED PyObject *__pyx_self
 }
 
 /* "fncs.pyx":42
- *     return fncs.get_matches(key)
+ *     return fncs.get_value(key)
+ * 
+ * def get_values(const string &key):             # <<<<<<<<<<<<<<
+ *     return fncs.get_values(key)
+ * 
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4fncs_21get_values(PyObject *__pyx_self, PyObject *__pyx_arg_key); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_21get_values = {"get_values", (PyCFunction)__pyx_pw_4fncs_21get_values, METH_O, 0};
+static PyObject *__pyx_pw_4fncs_21get_values(PyObject *__pyx_self, PyObject *__pyx_arg_key) {
+  std::string __pyx_v_key;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("get_values (wrapper)", 0);
+  assert(__pyx_arg_key); {
+    __pyx_v_key = __pyx_convert_string_from_py_std__in_string(__pyx_arg_key); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("fncs.get_values", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_4fncs_20get_values(__pyx_self, ((std::string)__pyx_v_key));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4fncs_20get_values(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_key) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("get_values", 0);
+
+  /* "fncs.pyx":43
+ * 
+ * def get_values(const string &key):
+ *     return fncs.get_values(key)             # <<<<<<<<<<<<<<
+ * 
+ * def get_name():
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __pyx_convert_vector_to_py_std_3a__3a_string(fncs::get_values(__pyx_v_key)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 43; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* "fncs.pyx":42
+ *     return fncs.get_value(key)
+ * 
+ * def get_values(const string &key):             # <<<<<<<<<<<<<<
+ *     return fncs.get_values(key)
+ * 
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("fncs.get_values", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "fncs.pyx":45
+ *     return fncs.get_values(key)
  * 
  * def get_name():             # <<<<<<<<<<<<<<
  *     return fncs.get_name()
@@ -1551,20 +1596,20 @@ static PyObject *__pyx_pf_4fncs_18get_matches(CYTHON_UNUSED PyObject *__pyx_self
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4fncs_21get_name(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyMethodDef __pyx_mdef_4fncs_21get_name = {"get_name", (PyCFunction)__pyx_pw_4fncs_21get_name, METH_NOARGS, 0};
-static PyObject *__pyx_pw_4fncs_21get_name(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_4fncs_23get_name(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_23get_name = {"get_name", (PyCFunction)__pyx_pw_4fncs_23get_name, METH_NOARGS, 0};
+static PyObject *__pyx_pw_4fncs_23get_name(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("get_name (wrapper)", 0);
-  __pyx_r = __pyx_pf_4fncs_20get_name(__pyx_self);
+  __pyx_r = __pyx_pf_4fncs_22get_name(__pyx_self);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4fncs_20get_name(CYTHON_UNUSED PyObject *__pyx_self) {
+static PyObject *__pyx_pf_4fncs_22get_name(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -1573,22 +1618,22 @@ static PyObject *__pyx_pf_4fncs_20get_name(CYTHON_UNUSED PyObject *__pyx_self) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_name", 0);
 
-  /* "fncs.pyx":43
+  /* "fncs.pyx":46
  * 
  * def get_name():
  *     return fncs.get_name()             # <<<<<<<<<<<<<<
  * 
- * def get_id():
+ * def get_time_delta():
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_convert_PyBytes_string_to_py_std__in_string(fncs::get_name()); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 43; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __pyx_convert_PyBytes_string_to_py_std__in_string(fncs::get_name()); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "fncs.pyx":42
- *     return fncs.get_matches(key)
+  /* "fncs.pyx":45
+ *     return fncs.get_values(key)
  * 
  * def get_name():             # <<<<<<<<<<<<<<
  *     return fncs.get_name()
@@ -1606,8 +1651,72 @@ static PyObject *__pyx_pf_4fncs_20get_name(CYTHON_UNUSED PyObject *__pyx_self) {
   return __pyx_r;
 }
 
-/* "fncs.pyx":45
+/* "fncs.pyx":48
  *     return fncs.get_name()
+ * 
+ * def get_time_delta():             # <<<<<<<<<<<<<<
+ *     return fncs.get_time_delta()
+ * 
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4fncs_25get_time_delta(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_25get_time_delta = {"get_time_delta", (PyCFunction)__pyx_pw_4fncs_25get_time_delta, METH_NOARGS, 0};
+static PyObject *__pyx_pw_4fncs_25get_time_delta(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("get_time_delta (wrapper)", 0);
+  __pyx_r = __pyx_pf_4fncs_24get_time_delta(__pyx_self);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4fncs_24get_time_delta(CYTHON_UNUSED PyObject *__pyx_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("get_time_delta", 0);
+
+  /* "fncs.pyx":49
+ * 
+ * def get_time_delta():
+ *     return fncs.get_time_delta()             # <<<<<<<<<<<<<<
+ * 
+ * def get_id():
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __Pyx_PyInt_From_fncs_3a__3a_time(fncs::get_time_delta()); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* "fncs.pyx":48
+ *     return fncs.get_name()
+ * 
+ * def get_time_delta():             # <<<<<<<<<<<<<<
+ *     return fncs.get_time_delta()
+ * 
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("fncs.get_time_delta", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "fncs.pyx":51
+ *     return fncs.get_time_delta()
  * 
  * def get_id():             # <<<<<<<<<<<<<<
  *     return fncs.get_id()
@@ -1615,20 +1724,20 @@ static PyObject *__pyx_pf_4fncs_20get_name(CYTHON_UNUSED PyObject *__pyx_self) {
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4fncs_23get_id(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyMethodDef __pyx_mdef_4fncs_23get_id = {"get_id", (PyCFunction)__pyx_pw_4fncs_23get_id, METH_NOARGS, 0};
-static PyObject *__pyx_pw_4fncs_23get_id(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_4fncs_27get_id(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_27get_id = {"get_id", (PyCFunction)__pyx_pw_4fncs_27get_id, METH_NOARGS, 0};
+static PyObject *__pyx_pw_4fncs_27get_id(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("get_id (wrapper)", 0);
-  __pyx_r = __pyx_pf_4fncs_22get_id(__pyx_self);
+  __pyx_r = __pyx_pf_4fncs_26get_id(__pyx_self);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4fncs_22get_id(CYTHON_UNUSED PyObject *__pyx_self) {
+static PyObject *__pyx_pf_4fncs_26get_id(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -1637,7 +1746,7 @@ static PyObject *__pyx_pf_4fncs_22get_id(CYTHON_UNUSED PyObject *__pyx_self) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_id", 0);
 
-  /* "fncs.pyx":46
+  /* "fncs.pyx":52
  * 
  * def get_id():
  *     return fncs.get_id()             # <<<<<<<<<<<<<<
@@ -1645,14 +1754,14 @@ static PyObject *__pyx_pf_4fncs_22get_id(CYTHON_UNUSED PyObject *__pyx_self) {
  * def get_simulator_count():
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_int(fncs::get_id()); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_From_int(fncs::get_id()); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 52; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "fncs.pyx":45
- *     return fncs.get_name()
+  /* "fncs.pyx":51
+ *     return fncs.get_time_delta()
  * 
  * def get_id():             # <<<<<<<<<<<<<<
  *     return fncs.get_id()
@@ -1670,7 +1779,7 @@ static PyObject *__pyx_pf_4fncs_22get_id(CYTHON_UNUSED PyObject *__pyx_self) {
   return __pyx_r;
 }
 
-/* "fncs.pyx":48
+/* "fncs.pyx":54
  *     return fncs.get_id()
  * 
  * def get_simulator_count():             # <<<<<<<<<<<<<<
@@ -1679,20 +1788,20 @@ static PyObject *__pyx_pf_4fncs_22get_id(CYTHON_UNUSED PyObject *__pyx_self) {
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4fncs_25get_simulator_count(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyMethodDef __pyx_mdef_4fncs_25get_simulator_count = {"get_simulator_count", (PyCFunction)__pyx_pw_4fncs_25get_simulator_count, METH_NOARGS, 0};
-static PyObject *__pyx_pw_4fncs_25get_simulator_count(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_4fncs_29get_simulator_count(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyMethodDef __pyx_mdef_4fncs_29get_simulator_count = {"get_simulator_count", (PyCFunction)__pyx_pw_4fncs_29get_simulator_count, METH_NOARGS, 0};
+static PyObject *__pyx_pw_4fncs_29get_simulator_count(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("get_simulator_count (wrapper)", 0);
-  __pyx_r = __pyx_pf_4fncs_24get_simulator_count(__pyx_self);
+  __pyx_r = __pyx_pf_4fncs_28get_simulator_count(__pyx_self);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4fncs_24get_simulator_count(CYTHON_UNUSED PyObject *__pyx_self) {
+static PyObject *__pyx_pf_4fncs_28get_simulator_count(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -1701,7 +1810,7 @@ static PyObject *__pyx_pf_4fncs_24get_simulator_count(CYTHON_UNUSED PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_simulator_count", 0);
 
-  /* "fncs.pyx":49
+  /* "fncs.pyx":55
  * 
  * def get_simulator_count():
  *     return fncs.get_simulator_count()             # <<<<<<<<<<<<<<
@@ -1709,13 +1818,13 @@ static PyObject *__pyx_pf_4fncs_24get_simulator_count(CYTHON_UNUSED PyObject *__
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_int(fncs::get_simulator_count()); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_From_int(fncs::get_simulator_count()); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "fncs.pyx":48
+  /* "fncs.pyx":54
  *     return fncs.get_id()
  * 
  * def get_simulator_count():             # <<<<<<<<<<<<<<
@@ -2101,133 +2210,6 @@ static PyObject *__pyx_convert_vector_to_py_std_3a__3a_string(const std::vector<
   return __pyx_r;
 }
 
-/* "pair.to_py":180
- * 
- * @cname("__pyx_convert_pair_to_py_std_3a__3a_string____std_3a__3a_string")
- * cdef object __pyx_convert_pair_to_py_std_3a__3a_string____std_3a__3a_string(const pair[X,Y]& p):             # <<<<<<<<<<<<<<
- *     return X_to_py(p.first), Y_to_py(p.second)
- * 
- */
-
-static PyObject *__pyx_convert_pair_to_py_std_3a__3a_string____std_3a__3a_string(std::pair<std::string,std::string>  const &__pyx_v_p) {
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  PyObject *__pyx_t_2 = NULL;
-  PyObject *__pyx_t_3 = NULL;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("__pyx_convert_pair_to_py_std_3a__3a_string____std_3a__3a_string", 0);
-
-  /* "pair.to_py":181
- * @cname("__pyx_convert_pair_to_py_std_3a__3a_string____std_3a__3a_string")
- * cdef object __pyx_convert_pair_to_py_std_3a__3a_string____std_3a__3a_string(const pair[X,Y]& p):
- *     return X_to_py(p.first), Y_to_py(p.second)             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_convert_PyObject_string_to_py_std__in_string(__pyx_v_p.first); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 181; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_convert_PyObject_string_to_py_std__in_string(__pyx_v_p.second); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 181; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 181; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_GIVEREF(__pyx_t_1);
-  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
-  __Pyx_GIVEREF(__pyx_t_2);
-  PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_2);
-  __pyx_t_1 = 0;
-  __pyx_t_2 = 0;
-  __pyx_r = __pyx_t_3;
-  __pyx_t_3 = 0;
-  goto __pyx_L0;
-
-  /* "pair.to_py":180
- * 
- * @cname("__pyx_convert_pair_to_py_std_3a__3a_string____std_3a__3a_string")
- * cdef object __pyx_convert_pair_to_py_std_3a__3a_string____std_3a__3a_string(const pair[X,Y]& p):             # <<<<<<<<<<<<<<
- *     return X_to_py(p.first), Y_to_py(p.second)
- * 
- */
-
-  /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("pair.to_py.__pyx_convert_pair_to_py_std_3a__3a_string____std_3a__3a_string", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = 0;
-  __pyx_L0:;
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-/* "vector.to_py":67
- * 
- * @cname("__pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___")
- * cdef object __pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___(vector[X]& v):             # <<<<<<<<<<<<<<
- *     return [X_to_py(v[i]) for i in range(v.size())]
- * 
- */
-
-static PyObject *__pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___(const std::vector<std::pair<std::string,std::string> >  &__pyx_v_v) {
-  size_t __pyx_v_i;
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  size_t __pyx_t_2;
-  size_t __pyx_t_3;
-  PyObject *__pyx_t_4 = NULL;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("__pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___", 0);
-
-  /* "vector.to_py":68
- * @cname("__pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___")
- * cdef object __pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___(vector[X]& v):
- *     return [X_to_py(v[i]) for i in range(v.size())]             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 68; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_v_v.size();
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_i = __pyx_t_3;
-    __pyx_t_4 = __pyx_convert_pair_to_py_std_3a__3a_string____std_3a__3a_string((__pyx_v_v[__pyx_v_i])); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 68; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_4);
-    if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_4))) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 68; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  }
-  __pyx_r = __pyx_t_1;
-  __pyx_t_1 = 0;
-  goto __pyx_L0;
-
-  /* "vector.to_py":67
- * 
- * @cname("__pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___")
- * cdef object __pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___(vector[X]& v):             # <<<<<<<<<<<<<<
- *     return [X_to_py(v[i]) for i in range(v.size())]
- * 
- */
-
-  /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_AddTraceback("vector.to_py.__pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = 0;
-  __pyx_L0:;
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
 static PyMethodDef __pyx_methods[] = {
   {0, 0, 0, 0}
 };
@@ -2258,14 +2240,16 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_finalize, __pyx_k_finalize, sizeof(__pyx_k_finalize), 0, 0, 1, 1},
   {&__pyx_n_s_fncs, __pyx_k_fncs, sizeof(__pyx_k_fncs), 0, 0, 1, 1},
   {&__pyx_n_s_from, __pyx_k_from, sizeof(__pyx_k_from), 0, 0, 1, 1},
+  {&__pyx_n_s_get_events, __pyx_k_get_events, sizeof(__pyx_k_get_events), 0, 0, 1, 1},
   {&__pyx_n_s_get_id, __pyx_k_get_id, sizeof(__pyx_k_get_id), 0, 0, 1, 1},
-  {&__pyx_n_s_get_matches, __pyx_k_get_matches, sizeof(__pyx_k_get_matches), 0, 0, 1, 1},
   {&__pyx_n_s_get_name, __pyx_k_get_name, sizeof(__pyx_k_get_name), 0, 0, 1, 1},
   {&__pyx_n_s_get_simulator_count, __pyx_k_get_simulator_count, sizeof(__pyx_k_get_simulator_count), 0, 0, 1, 1},
+  {&__pyx_n_s_get_time_delta, __pyx_k_get_time_delta, sizeof(__pyx_k_get_time_delta), 0, 0, 1, 1},
   {&__pyx_n_s_get_value, __pyx_k_get_value, sizeof(__pyx_k_get_value), 0, 0, 1, 1},
   {&__pyx_n_s_get_values, __pyx_k_get_values, sizeof(__pyx_k_get_values), 0, 0, 1, 1},
-  {&__pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_k_home_d3n000_fpgi_fncs2_python_f, sizeof(__pyx_k_home_d3n000_fpgi_fncs2_python_f), 0, 0, 1, 0},
+  {&__pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_k_home_fncsdemo_fncs2_python_fncs, sizeof(__pyx_k_home_fncsdemo_fncs2_python_fncs), 0, 0, 1, 0},
   {&__pyx_n_s_initialize, __pyx_k_initialize, sizeof(__pyx_k_initialize), 0, 0, 1, 1},
+  {&__pyx_n_s_is_initialized, __pyx_k_is_initialized, sizeof(__pyx_k_is_initialized), 0, 0, 1, 1},
   {&__pyx_n_s_key, __pyx_k_key, sizeof(__pyx_k_key), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_next, __pyx_k_next, sizeof(__pyx_k_next), 0, 0, 1, 1},
@@ -2300,136 +2284,151 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__3 = PyTuple_Pack(1, __pyx_n_s_configuration); if (unlikely(!__pyx_tuple__3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 9; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
-  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_initialize, 9, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 9; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_initialize, 9, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 9; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "fncs.pyx":15
  *         fncs.initialize(configuration)
+ * 
+ * def is_initialized():             # <<<<<<<<<<<<<<
+ *     return fncs.is_initialized()
+ * 
+ */
+  __pyx_codeobj__5 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_is_initialized, 15, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+
+  /* "fncs.pyx":18
+ *     return fncs.is_initialized()
  * 
  * def time_request(fncs.time next):             # <<<<<<<<<<<<<<
  *     return fncs.time_request(next)
  * 
  */
-  __pyx_tuple__5 = PyTuple_Pack(2, __pyx_n_s_next, __pyx_n_s_next); if (unlikely(!__pyx_tuple__5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_tuple__5);
-  __Pyx_GIVEREF(__pyx_tuple__5);
-  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_time_request, 15, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__6 = PyTuple_Pack(2, __pyx_n_s_next, __pyx_n_s_next); if (unlikely(!__pyx_tuple__6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__6);
+  __Pyx_GIVEREF(__pyx_tuple__6);
+  __pyx_codeobj__7 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__6, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_time_request, 18, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "fncs.pyx":18
+  /* "fncs.pyx":21
  *     return fncs.time_request(next)
  * 
  * def publish(const string &key, const string &value):             # <<<<<<<<<<<<<<
  *     fncs.publish(key, value)
  * 
  */
-  __pyx_tuple__7 = PyTuple_Pack(2, __pyx_n_s_key, __pyx_n_s_value); if (unlikely(!__pyx_tuple__7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_tuple__7);
-  __Pyx_GIVEREF(__pyx_tuple__7);
-  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_publish, 18, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__8 = PyTuple_Pack(2, __pyx_n_s_key, __pyx_n_s_value); if (unlikely(!__pyx_tuple__8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__8);
+  __Pyx_GIVEREF(__pyx_tuple__8);
+  __pyx_codeobj__9 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__8, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_publish, 21, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "fncs.pyx":21
+  /* "fncs.pyx":24
  *     fncs.publish(key, value)
  * 
  * def route(const string &from_, const string &to, const string &key, const string &value):             # <<<<<<<<<<<<<<
  *     fncs.route(from_, to, key, value)
  * 
  */
-  __pyx_tuple__9 = PyTuple_Pack(4, __pyx_n_s_from, __pyx_n_s_to, __pyx_n_s_key, __pyx_n_s_value); if (unlikely(!__pyx_tuple__9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_tuple__9);
-  __Pyx_GIVEREF(__pyx_tuple__9);
-  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(4, 0, 4, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_route, 21, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__10 = PyTuple_Pack(4, __pyx_n_s_from, __pyx_n_s_to, __pyx_n_s_key, __pyx_n_s_value); if (unlikely(!__pyx_tuple__10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__10);
+  __Pyx_GIVEREF(__pyx_tuple__10);
+  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(4, 0, 4, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_route, 24, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "fncs.pyx":24
+  /* "fncs.pyx":27
  *     fncs.route(from_, to, key, value)
  * 
  * def die():             # <<<<<<<<<<<<<<
  *     fncs.die()
  * 
  */
-  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_die, 24, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_die, 27, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "fncs.pyx":27
+  /* "fncs.pyx":30
  *     fncs.die()
  * 
  * def finalize():             # <<<<<<<<<<<<<<
  *     fncs.finalize()
  * 
  */
-  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_finalize, 27, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_finalize, 30, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "fncs.pyx":30
+  /* "fncs.pyx":33
  *     fncs.finalize()
  * 
  * def update_time_delta(fncs.time delta):             # <<<<<<<<<<<<<<
  *     fncs.update_time_delta(delta)
  * 
  */
-  __pyx_tuple__13 = PyTuple_Pack(2, __pyx_n_s_delta, __pyx_n_s_delta); if (unlikely(!__pyx_tuple__13)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_tuple__13);
-  __Pyx_GIVEREF(__pyx_tuple__13);
-  __pyx_codeobj__14 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__13, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_update_time_delta, 30, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__14)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__14 = PyTuple_Pack(2, __pyx_n_s_delta, __pyx_n_s_delta); if (unlikely(!__pyx_tuple__14)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__14);
+  __Pyx_GIVEREF(__pyx_tuple__14);
+  __pyx_codeobj__15 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__14, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_update_time_delta, 33, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__15)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "fncs.pyx":33
+  /* "fncs.pyx":36
  *     fncs.update_time_delta(delta)
+ * 
+ * def get_events():             # <<<<<<<<<<<<<<
+ *     return fncs.get_events()
+ * 
+ */
+  __pyx_codeobj__16 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_get_events, 36, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__16)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+
+  /* "fncs.pyx":39
+ *     return fncs.get_events()
  * 
  * def get_value(const string &key):             # <<<<<<<<<<<<<<
  *     return fncs.get_value(key)
  * 
  */
-  __pyx_tuple__15 = PyTuple_Pack(2, __pyx_n_s_key, __pyx_n_s_key); if (unlikely(!__pyx_tuple__15)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_tuple__15);
-  __Pyx_GIVEREF(__pyx_tuple__15);
-  __pyx_codeobj__16 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__15, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_get_value, 33, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__16)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__17 = PyTuple_Pack(2, __pyx_n_s_key, __pyx_n_s_key); if (unlikely(!__pyx_tuple__17)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__17);
+  __Pyx_GIVEREF(__pyx_tuple__17);
+  __pyx_codeobj__18 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__17, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_get_value, 39, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__18)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "fncs.pyx":36
+  /* "fncs.pyx":42
  *     return fncs.get_value(key)
  * 
  * def get_values(const string &key):             # <<<<<<<<<<<<<<
  *     return fncs.get_values(key)
  * 
  */
-  __pyx_tuple__17 = PyTuple_Pack(2, __pyx_n_s_key, __pyx_n_s_key); if (unlikely(!__pyx_tuple__17)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_tuple__17);
-  __Pyx_GIVEREF(__pyx_tuple__17);
-  __pyx_codeobj__18 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__17, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_get_values, 36, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__18)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-
-  /* "fncs.pyx":39
- *     return fncs.get_values(key)
- * 
- * def get_matches(const string &key):             # <<<<<<<<<<<<<<
- *     return fncs.get_matches(key)
- * 
- */
-  __pyx_tuple__19 = PyTuple_Pack(2, __pyx_n_s_key, __pyx_n_s_key); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__19 = PyTuple_Pack(2, __pyx_n_s_key, __pyx_n_s_key); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__19);
   __Pyx_GIVEREF(__pyx_tuple__19);
-  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_get_matches, 39, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_get_values, 42, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "fncs.pyx":42
- *     return fncs.get_matches(key)
+  /* "fncs.pyx":45
+ *     return fncs.get_values(key)
  * 
  * def get_name():             # <<<<<<<<<<<<<<
  *     return fncs.get_name()
  * 
  */
-  __pyx_codeobj__21 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_get_name, 42, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__21)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__21 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_get_name, 45, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__21)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "fncs.pyx":45
+  /* "fncs.pyx":48
  *     return fncs.get_name()
+ * 
+ * def get_time_delta():             # <<<<<<<<<<<<<<
+ *     return fncs.get_time_delta()
+ * 
+ */
+  __pyx_codeobj__22 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_get_time_delta, 48, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__22)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 48; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+
+  /* "fncs.pyx":51
+ *     return fncs.get_time_delta()
  * 
  * def get_id():             # <<<<<<<<<<<<<<
  *     return fncs.get_id()
  * 
  */
-  __pyx_codeobj__22 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_get_id, 45, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__22)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__23 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_get_id, 51, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__23)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "fncs.pyx":48
+  /* "fncs.pyx":54
  *     return fncs.get_id()
  * 
  * def get_simulator_count():             # <<<<<<<<<<<<<<
  *     return fncs.get_simulator_count()
  * 
  */
-  __pyx_codeobj__23 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_d3n000_fpgi_fncs2_python_f, __pyx_n_s_get_simulator_count, 48, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__23)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 48; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__24 = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_fncsdemo_fncs2_python_fncs, __pyx_n_s_get_simulator_count, 54, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__24)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -2547,145 +2546,169 @@ PyMODINIT_FUNC PyInit_fncs(void)
   /* "fncs.pyx":15
  *         fncs.initialize(configuration)
  * 
+ * def is_initialized():             # <<<<<<<<<<<<<<
+ *     return fncs.is_initialized()
+ * 
+ */
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_3is_initialized, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_is_initialized, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "fncs.pyx":18
+ *     return fncs.is_initialized()
+ * 
  * def time_request(fncs.time next):             # <<<<<<<<<<<<<<
  *     return fncs.time_request(next)
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_3time_request, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_5time_request, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_time_request, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_time_request, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "fncs.pyx":18
+  /* "fncs.pyx":21
  *     return fncs.time_request(next)
  * 
  * def publish(const string &key, const string &value):             # <<<<<<<<<<<<<<
  *     fncs.publish(key, value)
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_5publish, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_7publish, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_publish, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_publish, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "fncs.pyx":21
+  /* "fncs.pyx":24
  *     fncs.publish(key, value)
  * 
  * def route(const string &from_, const string &to, const string &key, const string &value):             # <<<<<<<<<<<<<<
  *     fncs.route(from_, to, key, value)
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_7route, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_9route, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_route, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_route, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "fncs.pyx":24
+  /* "fncs.pyx":27
  *     fncs.route(from_, to, key, value)
  * 
  * def die():             # <<<<<<<<<<<<<<
  *     fncs.die()
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_9die, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_11die, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_die, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_die, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "fncs.pyx":27
+  /* "fncs.pyx":30
  *     fncs.die()
  * 
  * def finalize():             # <<<<<<<<<<<<<<
  *     fncs.finalize()
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_11finalize, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_13finalize, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_finalize, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_finalize, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "fncs.pyx":30
+  /* "fncs.pyx":33
  *     fncs.finalize()
  * 
  * def update_time_delta(fncs.time delta):             # <<<<<<<<<<<<<<
  *     fncs.update_time_delta(delta)
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_13update_time_delta, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_15update_time_delta, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_update_time_delta, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_update_time_delta, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "fncs.pyx":33
+  /* "fncs.pyx":36
  *     fncs.update_time_delta(delta)
+ * 
+ * def get_events():             # <<<<<<<<<<<<<<
+ *     return fncs.get_events()
+ * 
+ */
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_17get_events, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_events, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "fncs.pyx":39
+ *     return fncs.get_events()
  * 
  * def get_value(const string &key):             # <<<<<<<<<<<<<<
  *     return fncs.get_value(key)
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_15get_value, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_19get_value, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_value, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_value, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "fncs.pyx":36
+  /* "fncs.pyx":42
  *     return fncs.get_value(key)
  * 
  * def get_values(const string &key):             # <<<<<<<<<<<<<<
  *     return fncs.get_values(key)
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_17get_values, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_21get_values, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_values, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_values, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "fncs.pyx":39
+  /* "fncs.pyx":45
  *     return fncs.get_values(key)
- * 
- * def get_matches(const string &key):             # <<<<<<<<<<<<<<
- *     return fncs.get_matches(key)
- * 
- */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_19get_matches, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_matches, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-
-  /* "fncs.pyx":42
- *     return fncs.get_matches(key)
  * 
  * def get_name():             # <<<<<<<<<<<<<<
  *     return fncs.get_name()
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_21get_name, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_23get_name, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_name, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_name, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "fncs.pyx":45
+  /* "fncs.pyx":48
  *     return fncs.get_name()
+ * 
+ * def get_time_delta():             # <<<<<<<<<<<<<<
+ *     return fncs.get_time_delta()
+ * 
+ */
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_25get_time_delta, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 48; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_time_delta, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 48; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "fncs.pyx":51
+ *     return fncs.get_time_delta()
  * 
  * def get_id():             # <<<<<<<<<<<<<<
  *     return fncs.get_id()
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_23get_id, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_27get_id, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_id, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_id, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "fncs.pyx":48
+  /* "fncs.pyx":54
  *     return fncs.get_id()
  * 
  * def get_simulator_count():             # <<<<<<<<<<<<<<
  *     return fncs.get_simulator_count()
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_25get_simulator_count, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 48; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4fncs_29get_simulator_count, NULL, __pyx_n_s_fncs); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_simulator_count, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 48; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_simulator_count, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "fncs.pyx":1
@@ -2700,8 +2723,8 @@ PyMODINIT_FUNC PyInit_fncs(void)
 
   /* "vector.to_py":67
  * 
- * @cname("__pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___")
- * cdef object __pyx_convert_vector_to_py_std_3a__3a_pair_3c_std_3a__3a_string_2c_std_3a__3a_string_3e___(vector[X]& v):             # <<<<<<<<<<<<<<
+ * @cname("__pyx_convert_vector_to_py_std_3a__3a_string")
+ * cdef object __pyx_convert_vector_to_py_std_3a__3a_string(vector[X]& v):             # <<<<<<<<<<<<<<
  *     return [X_to_py(v[i]) for i in range(v.size())]
  * 
  */
