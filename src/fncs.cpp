@@ -172,7 +172,6 @@ void fncs::initialize(zconfig_t *config)
     zmsg_t *msg = NULL;
     zchunk_t *zchunk = NULL;
     zconfig_t *config_values = NULL;
-
     /* name from env var is tried first */
     name = getenv("FNCS_NAME");
     if (!name) {
@@ -342,6 +341,7 @@ void fncs::initialize(zconfig_t *config)
 
     /* receive ack */
     msg = zmsg_recv(client);
+    TRACE << "called zmsg_recv" << endl;
     if (!msg) {
         FATAL << "null message received" << endl;
         die();
@@ -634,6 +634,7 @@ void fncs::die()
 
 void fncs::finalize()
 {
+	bool recBye = false;
     TRACE << "fncs::finalize()" << endl;
 
     if (!is_initialized_) {
@@ -646,26 +647,71 @@ void fncs::finalize()
 
     zstr_send(client, fncs::BYE);
 
-    /* receive BYE back */
-    msg = zmsg_recv(client);
-    if (!msg) {
-        FATAL << "null message received" << endl;
-        die();
-        return;
-    }
+    /* receive BYE and perhaps other message types */
+    zmq_pollitem_t items[] = { { zsock_resolve(client), 0, ZMQ_POLLIN, 0 } };
+    while(!recBye){
+		/* receive BYE back */
+    	int rc = 0;
 
-    /* first frame is type identifier */
-    frame = zmsg_first(msg);
-    if (!zframe_streq(frame, BYE)) {
-        FATAL << "BYE expected, got " << frame << endl;
-        die();
-        return;
-    }
-    TRACE << "received BYE" << endl;
+		TRACE << "entering blocking poll" << endl;
+		rc = zmq_poll(items, 1, -1);
+		if (rc == -1) {
+			FATAL << "client polling error: " << strerror(errno) << endl;
+			die(); /* interrupted */
+			return;
+		}
+        if (items[0].revents & ZMQ_POLLIN) {
+            zmsg_t *msg = NULL;
+            zframe_t *frame = NULL;
+            string message_type;
 
-    zmsg_destroy(&msg);
+            TRACE << "incoming message" << endl;
+            msg = zmsg_recv(client);
+            if (!msg) {
+                FATAL << "null message received" << endl;
+                die();
+                return;
+            }
+
+            /* first frame is message type identifier */
+            frame = zmsg_first(msg);
+            if (!frame) {
+                FATAL << "message missing type identifier" << endl;
+                die();
+                return;
+            }
+            message_type = fncs::to_string(frame);
+
+            if (fncs::TIME_REQUEST == message_type) {
+                FATAL << "TIME_REQUEST received. Calling die." << endl;
+                die();
+                return;
+            }
+            else if (fncs::PUBLISH == message_type) {
+                TRACE << "PUBLISH received and ignored." << endl;
+            }
+            else if(fncs::DIE == message_type){
+                FATAL << "DIE received." << endl;
+                die();
+                return;
+            }
+            else if(fncs::BYE == message_type){
+            	TRACE << "BYE received." << endl;
+            	recBye = true;
+            }
+            else{
+            	FATAL << "Unknown message type received! Sending DIE." << endl;
+            	die();
+            	return;
+            }
+
+            zmsg_destroy(&msg);
+        }
+    }
 
     zsock_destroy(&client);
+
+    return;
 }
 
 
