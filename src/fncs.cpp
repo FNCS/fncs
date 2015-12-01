@@ -224,7 +224,7 @@ void fncs::initialize(zconfig_t *config)
     /* whether die() should exit() */
     fatal = getenv("FNCS_FATAL");
     if (!fatal) {
-        fatal =  "no";
+        fatal =  "yes";
     }
     if (fatal[0] == 'N'
             || fatal[0] == 'n'
