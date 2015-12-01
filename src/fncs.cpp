@@ -60,6 +60,35 @@ typedef map<string,fncs::Subscription> sub_string_t;
 static sub_string_t subs_string;
 
 
+#if defined(_WIN32)
+static void signal_handler_reset() { } /* no-op */
+#else
+#include <signal.h>
+static struct sigaction sigint_default;
+static struct sigaction sigterm_default;
+static void signal_handler (int signal_value)
+{
+    zctx_interrupted = 1;
+    zsys_interrupted = 1;
+    if (SIGINT == signal_value && NULL != sigint_default.sa_handler) {
+        sigint_default.sa_handler(signal_value);
+    }
+    if (SIGTERM == signal_value && NULL != sigterm_default.sa_handler) {
+        sigterm_default.sa_handler(signal_value);
+    }
+}
+static void signal_handler_reset()
+{
+    zsys_handler_set(NULL);
+    sigaction(SIGINT, NULL, &sigint_default);
+    sigaction(SIGTERM, NULL, &sigterm_default);
+    zsys_handler_set(signal_handler);
+}
+#endif
+
+
+
+
 void fncs::start_logging(Echo &echo)
 {
     const char *fncs_log_filename = NULL;
@@ -290,6 +319,10 @@ void fncs::initialize(zconfig_t *config)
         die();
         return;
     }
+
+    /* reset the signal handler so it chains */
+    signal_handler_reset();
+
     /* set client identity */
     rc = zmq_setsockopt(zsock_resolve(client), ZMQ_IDENTITY, name, strlen(name));
     if (rc) {
