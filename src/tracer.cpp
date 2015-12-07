@@ -21,9 +21,6 @@
 
 using namespace ::std;
 
-typedef pair<string,string> kv_t;
-typedef vector<kv_t> matches_t;
-
 
 int main(int argc, char **argv)
 {
@@ -31,7 +28,7 @@ int main(int argc, char **argv)
     string param_file_name = "";
     fncs::time time_granted = 0;
     fncs::time time_stop = 0;
-    vector<pair<string,string> > matches;
+    vector<string> events;
     ofstream fout;
     ostream out(cout.rdbuf()); /* share cout's stream buffer */
 
@@ -58,16 +55,15 @@ int main(int argc, char **argv)
         out.rdbuf(fout.rdbuf()); /* redirect out to use file buffer */
     }
 
-    out << "#nanoseconds\ttopic\tvalue" << endl;
+    out << "#time\ttopic\tvalue" << endl;
 
-    fncs::initialize(
-            "name = tracer\n"
-            "time_delta = 1ns\n"
-            "broker = tcp://localhost:5570\n"
-            "matches\n"
-            "    all\n"
-            "        topic = .*\n"
-            );
+    fncs::initialize();
+
+    if (!fncs::is_initialized()) {
+        cout << "did not connect to broker, exiting" << endl;
+        fout.close();
+        return EXIT_FAILURE;
+    }
 
     time_stop = fncs::parse_time(param_time_stop);
     cout << "stops at " << time_stop << " nanoseconds" << endl;
@@ -77,12 +73,12 @@ int main(int argc, char **argv)
     do {
         time_granted = fncs::time_request(time_stop);
         cout << "time_granted is " << time_granted << endl;
-        matches = fncs::get_matches("all");
-        for (matches_t::iterator it=matches.begin(); it!=matches.end(); ++it) {
+        events = fncs::get_events();
+        for (vector<string>::iterator it=events.begin(); it!=events.end(); ++it) {
             out << time_granted
-                << "\t" << it->first
-                << "\t" << it->second
-                << endl;;
+                << "\t" << *it
+                << "\t" << fncs::get_value(*it)
+                << endl;
         }
     } while (time_granted < time_stop);
     cout << "time_granted was " << time_granted << endl;
@@ -94,6 +90,6 @@ int main(int argc, char **argv)
 
     fncs::finalize();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 

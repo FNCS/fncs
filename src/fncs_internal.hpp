@@ -30,7 +30,6 @@ namespace fncs {
                 , def("")
                 , type("")
                 , list("")
-                , match(false)
             {}
 
             string key;
@@ -38,13 +37,10 @@ namespace fncs {
             string def;
             string type;
             string list;
-            bool match;
 
             bool is_list() const {
                 return toupper(list[0]) == 'T' || toupper(list[0]) == 'Y';
             }
-
-            bool is_match() const { return match; }
     };
 
     const char * const HELLO = "hello";
@@ -76,12 +72,6 @@ namespace fncs {
 
     /** Converts all 'values' zconfig items into fncs Subscription values. */
     FNCS_EXPORT vector<fncs::Subscription> parse_values(zconfig_t *config);
-
-    /** Converts given 'match' zconfig into a fncs Subscription value. */
-    FNCS_EXPORT fncs::Subscription parse_match(zconfig_t *config);
-
-    /** Converts all 'matches' zconfig items into fncs Subscription matches. */
-    FNCS_EXPORT vector<fncs::Subscription> parse_matches(zconfig_t *config);
 
     /** Converts given czmq frame into a string. */
     FNCS_EXPORT string to_string(zframe_t *frame);

@@ -21,16 +21,12 @@
 
 using namespace ::std;
 
-typedef pair<string,string> kv_t;
-typedef vector<kv_t> matches_t;
-
 int main(int argc, char **argv)
 {
     string param_time_stop = "";
     string param_file_name = "";
     fncs::time time_granted = 0;
     fncs::time time_stop = 0;
-    vector<pair<string,string> > matches;
     ifstream fin;
     string line = "";
     size_t counter = 0;

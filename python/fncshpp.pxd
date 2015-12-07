@@ -12,6 +12,8 @@ cdef extern from "fncs.hpp" namespace "fncs":
 
     void initialize(const string &configuration)
 
+    bint is_initialized()
+
     time time_request(time next)
 
     void publish(const string &key, const string &value)
@@ -24,13 +26,15 @@ cdef extern from "fncs.hpp" namespace "fncs":
 
     void update_time_delta(time delta)
 
+    vector[string] get_events()
+
     string get_value(const string &key)
 
     vector[string] get_values(const string &key)
 
-    vector[pair[string,string]] get_matches(const string &key)
-
     string get_name()
+
+    time get_time_delta()
 
     int get_id()
 

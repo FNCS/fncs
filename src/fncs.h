@@ -67,16 +67,6 @@ extern "C" {
      * Will return an array of size 1 if only a single value exists. */
     FNCS_EXPORT char** fncs_get_values(const char *key);
 
-#if 0
-    /** Get an array of topic-value pairs from the cache with the given key.
-     * Will return an array of size 1 if only a single value exists. */
-    FNCS_EXPORT void fncs_get_matches(
-            const char *key,
-            char *** topics,
-            char *** values,
-            size_t *size);
-#endif
-
     /** Return the name of the simulator. */
     FNCS_EXPORT const char * fncs_get_name();
 
