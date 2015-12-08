@@ -81,6 +81,9 @@ namespace fncs {
 
     /** Current time in seconds with nanosecond precision. */
     FNCS_EXPORT double timer();
+
+    /** Current time as a fncs::time in nanoseconds. */
+    FNCS_EXPORT fncs::time timer_ft();
 }
 
 #endif /* _FNCS_INTERNAL_H_ */

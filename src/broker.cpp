@@ -51,7 +51,9 @@ class SimulatorState {
 typedef map<string,size_t> SimIndex;
 typedef vector<SimulatorState> SimVec;
 
-ofstream trace; /* the trace stream, if requested */
+static fncs::time time_real_start;
+static fncs::time time_real;
+static ofstream trace; /* the trace stream, if requested */
 
 static inline void broker_die(const SimVec &simulators, zsock_t *server) {
     /* repeat the fatal die to all connected sims */
@@ -65,6 +67,13 @@ static inline void broker_die(const SimVec &simulators, zsock_t *server) {
     }
     exit(EXIT_FAILURE);
 }
+
+static void time_real_update(void)
+{
+    time_real = fncs::timer_ft() - time_real_start;
+}
+
+
 
 
 int main(int argc, char **argv)
@@ -80,19 +89,20 @@ int main(int argc, char **argv)
     zsock_t *server = NULL;     /* the broker socket */
     bool do_trace = false;      /* whether to dump all received messages */
     Echo echo;
+    fncs::time realtime_interval = 0;
 
     fncs::start_logging(echo);
 
     /* how many simulators are connecting? */
-    if (argc > 2) {
+    if (argc > 3) {
         FATAL << "too many command line args" << endl;
         exit(EXIT_FAILURE);
     }
-    else if (argc < 2) {
+    if (argc < 2) {
         FATAL << "missing command line arg for number of simulators" << endl;
         exit(EXIT_FAILURE);
     }
-    else {
+    if (argc >= 2) {
         int n_sims_signed = 0;
         istringstream iss(argv[1]);
         iss >> n_sims_signed;
@@ -102,6 +112,10 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
         n_sims = static_cast<unsigned int>(n_sims_signed);
+    }
+    if (argc == 3) {
+        realtime_interval = fncs::parse_time(argv[2]);
+        TRACE << "realtime_interval = " << realtime_interval << " ns" << endl;
     }
 
     {
@@ -263,6 +277,25 @@ int main(int argc, char **argv)
 
                 /* if all sims have connected, send the go-ahead */
                 if (simulators.size() == n_sims) {
+                    time_real_start = fncs::timer_ft();
+                    time_real = 0;
+                    if (realtime_interval) {
+                        struct itimerval it_val;  /* for setting itimer */
+
+                        /* setitimer call needs seconds and useconds */
+                        if (signal(SIGALRM, (void (*)(int)) time_real_update) == SIG_ERR) {
+                            perror("Unable to catch SIGALRM");
+                            exit(EXIT_FAILURE);
+                        }
+                        it_val.it_value.tv_sec = realtime_interval/1000000000UL;
+                        TRACE << "realtime_sec = " << it_val.it_value.tv_sec << endl;
+                        it_val.it_value.tv_usec = realtime_interval/1000 % 1000000;
+                        TRACE << "realtime_usec = " << it_val.it_value.tv_usec << endl;
+                        it_val.it_interval = it_val.it_value;
+                        if (setitimer(ITIMER_REAL, &it_val, NULL) == -1) {
+                            broker_die(simulators, server);
+                        }
+                    }
                     /* easier to keep a counter than iterating over states */
                     n_processing = n_sims;
                     /* send ACK to all registered sims */
@@ -361,6 +394,15 @@ int main(int argc, char **argv)
                     time_granted = *min_element(time_actionable.begin(),
                                                 time_actionable.end());
                     TRACE << "time_granted = " << time_granted << endl;
+                    if (realtime_interval) {
+                        TRACE << "time_real = " << time_real << endl;
+                        while (time_granted > time_real) {
+                            useconds_t u = (time_granted-time_real)/1000;
+                            TRACE << "usleep(" << u << ")" << endl;
+                            usleep(u);
+                        }
+                        TRACE << "time_real = " << time_real << endl;
+                    }
                     for (size_t i=0; i<n_sims; ++i) {
                         if (time_granted == time_actionable[i]) {
                             TRACE << "granting " << time_granted

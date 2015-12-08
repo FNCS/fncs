@@ -36,7 +36,6 @@
 using namespace ::std;
 using fncs::Echo;
 
-
 static bool is_initialized_ = false;
 static bool die_is_fatal = false;
 static string simulation_name = "";
@@ -1065,7 +1064,7 @@ fncs::time fncs::convert_broker_to_sim_time(fncs::time value)
     return value / time_delta_multiplier;
 }
 
-double fncs::timer()
+fncs::time fncs::timer_ft()
 {
 #ifdef __MACH__
     /* OS X does not have clock_gettime, use clock_get_time */
@@ -1074,13 +1073,13 @@ double fncs::timer()
     host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
     clock_get_time(cclock, &mts);
     mach_port_deallocate(mach_task_self(), cclock);
-    return (double)(mts.tv_sec) + (double)(mts.tv_nsec)/1000000000.0;
+    return mts.tv_sec*1000000000UL + mts.tv_nsec;
 #elif defined(__FreeBSD__)
     struct timespec ts;
     /* Works on FreeBSD */
     long retval = clock_gettime(CLOCK_MONOTONIC, &ts);
     assert(0 == retval);
-    return (double)(ts.tv_sec) + (double)(ts.tv_nsec)/1000000000.0;
+    return ts.tv_sec*1000000000UL + ts.tv_nsec;
 #elif defined(_WIN32)
     static LARGE_INTEGER freq, start;
     LARGE_INTEGER count;
@@ -1092,13 +1091,18 @@ double fncs::timer()
         assert(retval);
         start = count;
     }
-    return (double)(count.QuadPart - start.QuadPart) / freq.QuadPart;
+    return 1000000000UL*fncs::time(double(count.QuadPart - start.QuadPart)/freq.QuadPart);
 #else
     struct timespec ts;
     /* Works on Linux */
     long retval = clock_gettime(CLOCK_REALTIME, &ts);
     assert(0 == retval);
-    return (double)(ts.tv_sec) + (double)(ts.tv_nsec)/1000000000.0;
+    return ts.tv_sec*1000000000UL + ts.tv_nsec;
 #endif
+}
+
+double fncs::timer()
+{
+    return double(timer_ft())/1000000000.0;
 }
 
