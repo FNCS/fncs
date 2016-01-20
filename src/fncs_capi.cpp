@@ -78,6 +78,22 @@ static char** convert(const vector<string> & the_values)
     return values;
 }
 
+void _fncs_free_char_p(char * ptr)
+{
+    if (NULL != ptr) free(ptr);
+}
+
+void _fncs_free_char_pp(char ** ptr, size_t size)
+{
+    if (NULL != ptr) {
+        size_t i;
+        for (i=0; i<size; ++i) {
+            if (NULL != ptr) free(ptr[i]);
+        }
+        free(ptr);
+    }
+}
+
 size_t fncs_get_events_size()
 {
     return fncs::get_events().size();

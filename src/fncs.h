@@ -76,6 +76,12 @@ extern "C" {
     /** Return the number of simulators connected to the broker. */
     FNCS_EXPORT int fncs_get_simulator_count();
 
+    /** Helper, free allocated character buffer. */
+    FNCS_EXPORT void _fncs_free_char_p(char * ptr);
+
+    /** Helper, free allocated array of character buffers. */
+    FNCS_EXPORT void _fncs_free_char_pp(char ** ptr, size_t size);
+
 #ifdef __cplusplus
 }
 #endif
