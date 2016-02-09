@@ -426,7 +426,8 @@ include_HEADERS = src/fncs.hpp src/fncs.h
 lib_LTLIBRARIES = libfncs.la
 EXTRA_DIST = README
 AM_CXXFLAGS = 
-AM_CPPFLAGS = -I$(top_srcdir)/src $(CZMQ_CPPFLAGS) $(ZMQ_CPPFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/contrib \
+	$(CZMQ_CPPFLAGS) $(ZMQ_CPPFLAGS)
 AM_LDFLAGS = $(CZMQ_LDFLAGS) $(ZMQ_LDFLAGS)
 LDADD = libfncs.la $(CZMQ_LIBS) $(ZMQ_LIBS)
 pkgconfig_DATA = src/libfncs.pc

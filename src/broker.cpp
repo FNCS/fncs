@@ -6,6 +6,8 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
+#include <iostream>
 #include <map>
 #include <set>
 #include <string>
@@ -16,17 +18,11 @@
 #include "czmq.h"
 
 /* fncs headers */
-#include "echo.hpp"
+#include "log.hpp"
 #include "fncs.hpp"
 #include "fncs_internal.hpp"
 
 using namespace ::std;
-using fncs::Echo;
-
-#define TRACE echo << "TRACE: "
-#define WARN  echo << "INFO:  "
-#define FATAL echo << "FATAL: "
-
 
 class SimulatorState {
     public:
@@ -88,34 +84,33 @@ int main(int argc, char **argv)
     fncs::time time_granted = 0;/* global clock */
     zsock_t *server = NULL;     /* the broker socket */
     bool do_trace = false;      /* whether to dump all received messages */
-    Echo echo;
     fncs::time realtime_interval = 0;
 
-    fncs::start_logging(echo);
+    fncs::start_logging();
 
     /* how many simulators are connecting? */
     if (argc > 3) {
-        FATAL << "too many command line args" << endl;
+        LERROR << "too many command line args";
         exit(EXIT_FAILURE);
     }
     if (argc < 2) {
-        FATAL << "missing command line arg for number of simulators" << endl;
+        LERROR << "missing command line arg for number of simulators";
         exit(EXIT_FAILURE);
     }
     if (argc >= 2) {
         int n_sims_signed = 0;
         istringstream iss(argv[1]);
         iss >> n_sims_signed;
-        TRACE << "n_sims_signed = " << n_sims_signed << endl;
+        LDEBUG4 << "n_sims_signed = " << n_sims_signed;
         if (n_sims_signed <= 0) {
-            FATAL << "number of simulators arg must be >= 1" << endl;
+            LERROR << "number of simulators arg must be >= 1";
             exit(EXIT_FAILURE);
         }
         n_sims = static_cast<unsigned int>(n_sims_signed);
     }
     if (argc == 3) {
         realtime_interval = fncs::parse_time(argv[2]);
-        TRACE << "realtime_interval = " << realtime_interval << " ns" << endl;
+        LDEBUG4 << "realtime_interval = " << realtime_interval << " ns";
     }
 
     {
@@ -131,10 +126,10 @@ int main(int argc, char **argv)
     }
 
     if (do_trace) {
-        TRACE << "tracing of all published messages enabled" << endl;
+        LDEBUG4 << "tracing of all published messages enabled";
         trace.open("broker_trace.txt");
         if (!trace) {
-            FATAL << "Could not open trace file 'broker_trace.txt'" << endl;
+            LERROR << "Could not open trace file 'broker_trace.txt'";
             exit(EXIT_FAILURE);
         }
         trace << "#nanoseconds\ttopic\tvalue" << endl;
@@ -148,24 +143,24 @@ int main(int argc, char **argv)
 
     server = zsock_new_router(endpoint);
     if (!server) {
-        FATAL << "socket creation failed" << endl;
+        LERROR << "socket creation failed";
         exit(EXIT_FAILURE);
     }
     if (!(zsock_resolve(server) != server)) {
-        FATAL << "socket failed to resolve" << endl;
+        LERROR << "socket failed to resolve";
         exit(EXIT_FAILURE);
     }
-    TRACE << "broker socket bound to " << endpoint << endl;
+    LDEBUG4 << "broker socket bound to " << endpoint;
 
     /* begin event loop */
     zmq_pollitem_t items[] = { { zsock_resolve(server), 0, ZMQ_POLLIN, 0 } };
     while (true) {
         int rc = 0;
         
-        TRACE << "entering blocking poll" << endl;
+        LDEBUG4 << "entering blocking poll";
         rc = zmq_poll(items, 1, -1);
         if (rc == -1) {
-            FATAL << "broker polling error: " << strerror(errno) << endl;
+            LERROR << "broker polling error: " << strerror(errno);
             broker_die(simulators, server); /* interrupted */
         }
 
@@ -175,17 +170,17 @@ int main(int argc, char **argv)
             string sender;
             string message_type;
 
-            TRACE << "incoming message" << endl;
+            LDEBUG4 << "incoming message";
             msg = zmsg_recv(server);
             if (!msg) {
-                FATAL << "null message received" << endl;
+                LERROR << "null message received";
                 broker_die(simulators, server);
             }
 
             /* first frame is sender */
             frame = zmsg_first(msg);
             if (!frame) {
-                FATAL << "message missing sender" << endl;
+                LERROR << "message missing sender";
                 broker_die(simulators, server);
             }
             sender = fncs::to_string(frame);
@@ -193,7 +188,7 @@ int main(int argc, char **argv)
             /* next frame is message type identifier */
             frame = zmsg_next(msg);
             if (!frame) {
-                FATAL << "message missing type identifier" << endl;
+                LERROR << "message missing type identifier";
                 broker_die(simulators, server);
             }
             message_type = fncs::to_string(frame);
@@ -206,33 +201,33 @@ int main(int argc, char **argv)
                 zconfig_t *config_values = NULL;
                 const char * time_delta = NULL;
 
-                TRACE << "HELLO received" << endl;
+                LDEBUG4 << "HELLO received";
 
                 /* check for duplicate sims */
                 if (name_to_index.count(sender) != 0) {
-                    FATAL << "simulator '" << sender << "' already connected" << endl;
+                    LERROR << "simulator '" << sender << "' already connected";
                     broker_die(simulators, server);
                 }
-                TRACE << "registering client '" << sender << "'" << endl;
+                LDEBUG4 << "registering client '" << sender << "'";
 
                 /* next frame is config chunk */
                 frame = zmsg_next(msg);
                 if (!frame) {
-                    FATAL << "HELLO message missing config frame" << endl;
+                    LERROR << "HELLO message missing config frame";
                     broker_die(simulators, server);
                 }
 
                 /* copy config frame into chunk */
                 chunk = zchunk_new(zframe_data(frame), zframe_size(frame));
                 if (!chunk) {
-                    FATAL << "HELLO message zconfig bad config chunk" << endl;
+                    LERROR << "HELLO message zconfig bad config chunk";
                     broker_die(simulators, server);
                 }
 
                 /* parse config chunk */
                 config = zconfig_chunk_load(chunk);
                 if (!config) {
-                    FATAL << "HELLO message bad config" << endl;
+                    LERROR << "HELLO message bad config";
                     broker_die(simulators, server);
                 }
 
@@ -242,8 +237,8 @@ int main(int argc, char **argv)
                 /* get time delta from config */
                 time_delta = zconfig_resolve(config, "/time_delta", NULL);
                 if (!time_delta) {
-                    WARN << sender << " config does not contain 'time_delta'" << endl;
-                    WARN << sender << " time_delta defaulting to 1s" << endl;
+                    LWARNING << sender << " config does not contain 'time_delta'";
+                    LWARNING << sender << " time_delta defaulting to 1s";
                     time_delta = "1s";
                 }
 
@@ -254,12 +249,12 @@ int main(int argc, char **argv)
                     vector<fncs::Subscription> subs =
                         fncs::parse_values(config_values);
                     for (size_t i=0; i<subs.size(); ++i) {
-                        TRACE << "adding value '" << subs[i].topic << "'" << endl;
+                        LDEBUG4 << "adding value '" << subs[i].topic << "'";
                         subscription_values.insert(subs[i].topic);
                     }
                 }
                 else {
-                    TRACE << "no subscription values" << endl;
+                    LDEBUG4 << "no subscription values";
                 }
 
                 /* populate sim state object */
@@ -273,7 +268,7 @@ int main(int argc, char **argv)
                 name_to_index[sender] = simulators.size();
                 simulators.push_back(state);
 
-                TRACE << "simulators.size() = " << simulators.size() << endl;
+                LDEBUG4 << "simulators.size() = " << simulators.size();
 
                 /* if all sims have connected, send the go-ahead */
                 if (simulators.size() == n_sims) {
@@ -288,9 +283,9 @@ int main(int argc, char **argv)
                             exit(EXIT_FAILURE);
                         }
                         it_val.it_value.tv_sec = realtime_interval/1000000000UL;
-                        TRACE << "realtime_sec = " << it_val.it_value.tv_sec << endl;
+                        LDEBUG4 << "realtime_sec = " << it_val.it_value.tv_sec;
                         it_val.it_value.tv_usec = realtime_interval/1000 % 1000000;
-                        TRACE << "realtime_usec = " << it_val.it_value.tv_usec << endl;
+                        LDEBUG4 << "realtime_usec = " << it_val.it_value.tv_usec;
                         it_val.it_interval = it_val.it_value;
                         if (setitimer(ITIMER_REAL, &it_val, NULL) == -1) {
                             broker_die(simulators, server);
@@ -305,7 +300,7 @@ int main(int argc, char **argv)
                         zstr_sendm(server, fncs::ACK);
                         zstr_sendfm(server, "%llu", (unsigned long long)i);
                         zstr_sendf(server, "%llu", (unsigned long long)n_sims);
-                        TRACE << "ACK sent to '" << simulators[i].name << endl;
+                        LDEBUG4 << "ACK sent to '" << simulators[i].name;
                     }
                 }
             }
@@ -315,15 +310,15 @@ int main(int argc, char **argv)
                 fncs::time time_requested;
 
                 if (fncs::TIME_REQUEST == message_type) {
-                    TRACE << "TIME_REQUEST received" << endl;
+                    LDEBUG4 << "TIME_REQUEST received";
                 }
                 else if (fncs::BYE == message_type) {
-                    TRACE << "BYE received" << endl;
+                    LDEBUG4 << "BYE received";
                 }
 
                 /* did we receive message from a connected sim? */
                 if (name_to_index.count(sender) == 0) {
-                    FATAL << "simulator '" << sender << "' not connected" << endl;
+                    LERROR << "simulator '" << sender << "' not connected";
                     broker_die(simulators, server);
                 }
 
@@ -333,7 +328,7 @@ int main(int argc, char **argv)
                 if (fncs::BYE == message_type) {
                     /* soft error if muliple byes received */
                     if (byes.count(sender)) {
-                        WARN << "duplicate BYE from '" << sender << "'" << endl;
+                        LWARNING << "duplicate BYE from '" << sender << "'";
                     }
 
                     /* add sender to list of leaving sims */
@@ -345,7 +340,7 @@ int main(int argc, char **argv)
                         for (size_t i=0; i<n_sims; ++i) {
                             zstr_sendm(server, simulators[i].name.c_str());
                             zstr_send(server, fncs::BYE);
-                            TRACE << "BYE sent to '" << simulators[i].name << endl;
+                            LDEBUG4 << "BYE sent to '" << simulators[i].name;
                         }
                         /* need to delete msg since we are breaking from loop */
                         zmsg_destroy(&msg);
@@ -359,7 +354,7 @@ int main(int argc, char **argv)
                     /* next frame is time */
                     frame = zmsg_next(msg);
                     if (!frame) {
-                        FATAL << "TIME_REQUEST message missing time frame" << endl;
+                        LERROR << "TIME_REQUEST message missing time frame";
                         broker_die(simulators, server);
                     }
                     /* convert time string */
@@ -393,20 +388,20 @@ int main(int argc, char **argv)
                     }
                     time_granted = *min_element(time_actionable.begin(),
                                                 time_actionable.end());
-                    TRACE << "time_granted = " << time_granted << endl;
+                    LDEBUG4 << "time_granted = " << time_granted;
                     if (realtime_interval) {
-                        TRACE << "time_real = " << time_real << endl;
+                        LDEBUG4 << "time_real = " << time_real;
                         while (time_granted > time_real) {
                             useconds_t u = (time_granted-time_real)/1000;
-                            TRACE << "usleep(" << u << ")" << endl;
+                            LDEBUG4 << "usleep(" << u << ")";
                             usleep(u);
                         }
-                        TRACE << "time_real = " << time_real << endl;
+                        LDEBUG4 << "time_real = " << time_real;
                     }
                     for (size_t i=0; i<n_sims; ++i) {
                         if (time_granted == time_actionable[i]) {
-                            TRACE << "granting " << time_granted
-                                << " to " << simulators[i].name << endl;
+                            LDEBUG4 << "granting " << time_granted
+                                << " to " << simulators[i].name;
                             ++n_processing;
                             simulators[i].processing = true;
                             simulators[i].messages_pending = false;
@@ -426,18 +421,18 @@ int main(int argc, char **argv)
                 string topic = "";
                 bool found_one = false;
 
-                TRACE << "PUBLISH received" << endl;
+                LDEBUG4 << "PUBLISH received";
 
                 /* did we receive message from a connected sim? */
                 if (name_to_index.count(sender) == 0) {
-                    FATAL << "simulator '" << sender << "' not connected" << endl;
+                    LERROR << "simulator '" << sender << "' not connected";
                     broker_die(simulators, server);
                 }
 
                 /* next frame is topic */
                 frame = zmsg_next(msg);
                 if (!frame) {
-                    FATAL << "PUBLISH message missing topic" << endl;
+                    LERROR << "PUBLISH message missing topic";
                     broker_die(simulators, server);
                 }
                 topic = fncs::to_string(frame);
@@ -446,7 +441,7 @@ int main(int argc, char **argv)
                     /* next frame is value payload */
                     frame = zmsg_next(msg);
                     if (!frame) {
-                        FATAL << "PUBLISH message missing value" << endl;
+                        LERROR << "PUBLISH message missing value";
                         broker_die(simulators, server);
                     }
                     string value = fncs::to_string(frame);
@@ -465,7 +460,7 @@ int main(int argc, char **argv)
                     if (found) {
                         zmsg_t *msg_copy = zmsg_dup(msg);
                         if (!msg_copy) {
-                            FATAL << "failed to copy pub message" << endl;
+                            LERROR << "failed to copy pub message";
                             broker_die(simulators, server);
                         }
                         /* swap out original sender with new destiation */
@@ -476,19 +471,19 @@ int main(int argc, char **argv)
                         zmsg_send(&msg_copy, server);
                         found_one = true;
                         simulators[i].messages_pending = true;
-                        TRACE << "pub to " << simulators[i].name << endl;
+                        LDEBUG4 << "pub to " << simulators[i].name;
                     }
                 }
                 if (!found_one) {
-                    TRACE << "dropping PUBLISH message '" << topic << "'" << endl;
+                    LDEBUG4 << "dropping PUBLISH message '" << topic << "'";
                 }
             }
             else if (fncs::DIE == message_type) {
-                TRACE << "DIE received" << endl;
+                LDEBUG4 << "DIE received";
 
                 /* did we receive message from a connected sim? */
                 if (name_to_index.count(sender) == 0) {
-                    FATAL << "simulator '" << sender << "' not connected" << endl;
+                    LERROR << "simulator '" << sender << "' not connected";
                     broker_die(simulators, server);
                 }
 
@@ -498,11 +493,11 @@ int main(int argc, char **argv)
                 size_t index = 0; /* index of sim state */
                 fncs::time time_delta;
 
-                TRACE << "TIME_DELTA received" << endl;
+                LDEBUG4 << "TIME_DELTA received";
 
                 /* did we receive message from a connected sim? */
                 if (name_to_index.count(sender) == 0) {
-                    FATAL << "simulator '" << sender << "' not connected" << endl;
+                    LERROR << "simulator '" << sender << "' not connected";
                     broker_die(simulators, server);
                 }
 
@@ -512,7 +507,7 @@ int main(int argc, char **argv)
                 /* next frame is time */
                 frame = zmsg_next(msg);
                 if (!frame) {
-                    FATAL << "TIME_DELTA message missing time frame" << endl;
+                    LERROR << "TIME_DELTA message missing time frame";
                     broker_die(simulators, server);
                 }
                 /* convert time string */
@@ -525,8 +520,8 @@ int main(int argc, char **argv)
                 simulators[index].time_delta = time_delta;
             }
             else {
-                FATAL << "received unknown message type '"
-                    << message_type << "'" << endl;
+                LERROR << "received unknown message type '"
+                    << message_type << "'";
                 broker_die(simulators, server);
             }
 
