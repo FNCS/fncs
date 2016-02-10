@@ -46,6 +46,8 @@ class SimulatorState {
 
 typedef map<string,size_t> SimIndex;
 typedef vector<SimulatorState> SimVec;
+typedef vector<size_t> IndexVec;
+typedef map<string,IndexVec> TopicMap;
 
 static fncs::time time_real_start;
 static fncs::time time_real;
@@ -81,6 +83,7 @@ int main(int argc, char **argv)
     const char *endpoint = NULL;/* broker location */
     SimVec simulators;          /* vector of connected simulator state */
     SimIndex name_to_index;     /* quickly lookup sim state index */
+    TopicMap topic_to_indexes;  /* quickly lookup subscribed sims */
     fncs::time time_granted = 0;/* global clock */
     zsock_t *server = NULL;     /* the broker socket */
     bool do_trace = false;      /* whether to dump all received messages */
@@ -200,6 +203,7 @@ int main(int argc, char **argv)
                 zconfig_t *config = NULL;
                 zconfig_t *config_values = NULL;
                 const char * time_delta = NULL;
+                size_t index = 0;
 
                 LDEBUG4 << "HELLO received";
 
@@ -208,6 +212,7 @@ int main(int argc, char **argv)
                     LERROR << "simulator '" << sender << "' already connected";
                     broker_die(simulators, server);
                 }
+                index = simulators.size();
                 LDEBUG4 << "registering client '" << sender << "'";
 
                 /* next frame is config chunk */
@@ -249,8 +254,16 @@ int main(int argc, char **argv)
                     vector<fncs::Subscription> subs =
                         fncs::parse_values(config_values);
                     for (size_t i=0; i<subs.size(); ++i) {
-                        LDEBUG4 << "adding value '" << subs[i].topic << "'";
-                        subscription_values.insert(subs[i].topic);
+                        string topic = subs[i].topic;
+                        LDEBUG4 << "adding value '" << topic << "'";
+                        subscription_values.insert(topic);
+                        TopicMap::iterator it = topic_to_indexes.find(topic);
+                        if (it != topic_to_indexes.end()) {
+                            it->second.push_back(index);
+                        }
+                        else {
+                            topic_to_indexes[topic] = IndexVec(1,index);
+                        }
                     }
                 }
                 else {
@@ -265,7 +278,7 @@ int main(int argc, char **argv)
                 state.processing = false;
                 state.messages_pending = false;
                 state.subscription_values = subscription_values;
-                name_to_index[sender] = simulators.size();
+                name_to_index[sender] = index;
                 simulators.push_back(state);
 
                 LDEBUG4 << "simulators.size() = " << simulators.size();
@@ -452,6 +465,7 @@ int main(int argc, char **argv)
                 }
 
                 /* send the message to subscribed sims */
+#if 1
                 for (size_t i=0; i<n_sims; ++i) {
                     bool found = false;
                     if (simulators[i].subscription_values.count(topic)) {
@@ -474,6 +488,32 @@ int main(int argc, char **argv)
                         LDEBUG4 << "pub to " << simulators[i].name;
                     }
                 }
+#else
+                {
+                    TopicMap::iterator iter = topic_to_indexes.find(topic);
+                    if (iter != topic_to_indexes.end()) {
+                        IndexVec &iv = iter->second;
+                        IndexVec::iterator index;
+                        for (index=iv.begin(); index!=iv.end(); index++) {
+                            size_t i = *index;
+                            zmsg_t *msg_copy = zmsg_dup(msg);
+                            if (!msg_copy) {
+                                LERROR << "failed to copy pub message";
+                                broker_die(simulators, server);
+                            }
+                            /* swap out original sender with new destiation */
+                            zframe_reset(zmsg_first(msg_copy),
+                                    simulators[i].name.c_str(),
+                                    simulators[i].name.size());
+                            /* send it on */
+                            zmsg_send(&msg_copy, server);
+                            found_one = true;
+                            simulators[i].messages_pending = true;
+                            LDEBUG4 << "pub to " << simulators[i].name;
+                        }
+                    }
+                }
+#endif
                 if (!found_one) {
                     LDEBUG4 << "dropping PUBLISH message '" << topic << "'";
                 }

@@ -50,11 +50,13 @@ Log<T>::Log()
 template <typename T>
 std::ostringstream& Log<T>::Get(TLogLevel level)
 {
+    /* for FNCS we did not prefer tabbed log levels or timestamps */
+#if 0
     os << "- " << NowTime();
     os << " " << ToString(level) << ": ";
-    /* for FNCS we did not prefer tabbed log levels */
-#if 0
     os << std::string(level > logDEBUG ? level - logDEBUG : 0, '\t');
+#else
+    os << ToString(level) << ": ";
 #endif
     return os;
 }

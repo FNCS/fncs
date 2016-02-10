@@ -164,14 +164,6 @@ void fncs::start_logging()
     }
 
     FNCSLog::ReportingLevel() = FNCSLog::FromString(fncs_log_level);
-    LERROR << "LERROR";
-    LWARNING << "LWARNING";
-    LINFO << "LINFO";
-    LDEBUG << "LDEBUG";
-    LDEBUG1 << "LDEBUG1";
-    LDEBUG2 << "LDEBUG2";
-    LDEBUG3 << "LDEBUG3";
-    LDEBUG4 << "LDEBUG4";
 }
 
 
