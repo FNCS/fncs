@@ -465,7 +465,7 @@ int main(int argc, char **argv)
                 }
 
                 /* send the message to subscribed sims */
-#if 1
+#if 0
                 for (size_t i=0; i<n_sims; ++i) {
                     bool found = false;
                     if (simulators[i].subscription_values.count(topic)) {
