@@ -9,6 +9,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -46,6 +47,7 @@ static fncs::time time_delta = 0;
 static zsock_t *client = NULL;
 static map<string,string> cache;
 static vector<string> events;
+static set<string> keys;
 
 typedef map<string,vector<string> > clist_t;
 static clist_t cache_list;
@@ -436,6 +438,37 @@ void fncs::initialize(zconfig_t *config)
     n_sims = atoi(fncs::to_string(frame).c_str());
     LDEBUG2 << "n_sims is " << n_sims;
 
+    /* next frame is number of subscription keys */
+    frame = zmsg_next(msg);
+    if (!frame) {
+        LERROR << "ACK message missing n_keys";
+        die();
+        return;
+    }
+    int n_keys = atoi(fncs::to_string(frame).c_str());
+    LDEBUG2 << "n_keys is " << n_keys;
+
+    /* next frames are the keys */
+    for (int i=0; i<n_keys; ++i) {
+        frame = zmsg_next(msg);
+        if (!frame) {
+            LERROR << "ACK message missing key " << i;
+            die();
+            return;
+        }
+        string key = fncs::to_string(frame);
+        keys.insert(key);
+        LDEBUG2 << "key is " << key;
+    }
+
+    /* last frame is second ACK */
+    frame = zmsg_next(msg);
+    if (!zframe_streq(frame, ACK)) {
+        LERROR << "ACK expected, got " << frame;
+        die();
+        return;
+    }
+    LDEBUG2 << "received second ACK";
     zmsg_destroy(&msg);
 
     is_initialized_ = true;
@@ -627,11 +660,16 @@ void fncs::publish(const string &key, const string &value)
         return;
     }
 
-    string new_key = simulation_name + '/' + key;
-    zstr_sendm(client, fncs::PUBLISH);
-    zstr_sendm(client, new_key.c_str());
-    zstr_send(client, value.c_str());
-    LDEBUG4 << "sent PUBLISH '" << new_key << "'='" << value << "'";
+    if (keys.count(key)) {
+        string new_key = simulation_name + '/' + key;
+        zstr_sendm(client, fncs::PUBLISH);
+        zstr_sendm(client, new_key.c_str());
+        zstr_send(client, value.c_str());
+        LDEBUG4 << "sent PUBLISH '" << new_key << "'='" << value << "'";
+    }
+    else {
+        LDEBUG4 << "dropped " << key;
+    }
 }
 
 

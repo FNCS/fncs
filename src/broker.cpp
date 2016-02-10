@@ -48,6 +48,7 @@ typedef map<string,size_t> SimIndex;
 typedef vector<SimulatorState> SimVec;
 typedef vector<size_t> IndexVec;
 typedef map<string,IndexVec> TopicMap;
+typedef map<string,set<string> > SimKeyMap;
 
 static fncs::time time_real_start;
 static fncs::time time_real;
@@ -84,6 +85,7 @@ int main(int argc, char **argv)
     SimVec simulators;          /* vector of connected simulator state */
     SimIndex name_to_index;     /* quickly lookup sim state index */
     TopicMap topic_to_indexes;  /* quickly lookup subscribed sims */
+    SimKeyMap name_to_keys;     /* summary of topics per sim name */
     fncs::time time_granted = 0;/* global clock */
     zsock_t *server = NULL;     /* the broker socket */
     bool do_trace = false;      /* whether to dump all received messages */
@@ -264,6 +266,16 @@ int main(int argc, char **argv)
                         else {
                             topic_to_indexes[topic] = IndexVec(1,index);
                         }
+                        size_t loc = topic.find('/');
+                        if (loc == string::npos) {
+                            LWARNING << "invalid topic: " << topic;
+                        }
+                        else {
+                            string name = topic.substr(0,loc);
+                            string key = topic.substr(loc+1);
+                            name_to_keys[name].insert(key);
+                            LDEBUG4 << "name_to_keys[" << name << "]=" << key;
+                        }
                     }
                 }
                 else {
@@ -308,11 +320,17 @@ int main(int argc, char **argv)
                     n_processing = n_sims;
                     /* send ACK to all registered sims */
                     for (size_t i=0; i<n_sims; ++i) {
+                        set<string> &keys = name_to_keys[simulators[i].name];
                         simulators[i].processing = true;
                         zstr_sendm(server, simulators[i].name.c_str());
                         zstr_sendm(server, fncs::ACK);
                         zstr_sendfm(server, "%llu", (unsigned long long)i);
-                        zstr_sendf(server, "%llu", (unsigned long long)n_sims);
+                        zstr_sendfm(server, "%llu", (unsigned long long)n_sims);
+                        zstr_sendfm(server, "%llu", (unsigned long long)keys.size());
+                        for (set<string>::iterator it=keys.begin(); it!=keys.end(); ++it) {
+                            zstr_sendm(server, it->c_str());
+                        }
+                        zstr_send(server, fncs::ACK);
                         LDEBUG4 << "ACK sent to '" << simulators[i].name;
                     }
                 }
@@ -449,6 +467,8 @@ int main(int argc, char **argv)
                     broker_die(simulators, server);
                 }
                 topic = fncs::to_string(frame);
+
+                LDEBUG4 << "PUBLISH received topic " << topic;
 
                 if (do_trace) {
                     /* next frame is value payload */
