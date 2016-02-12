@@ -3,14 +3,18 @@
  
 #include <cctype>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include "czmq.h"
 
+#include "yaml-cpp/yaml.h"
 #include "fncs.hpp"
 
+using ::std::endl;
 using ::std::ostream;
+using ::std::ostringstream;
 using ::std::string;
 using ::std::toupper;
 using ::std::vector;
@@ -40,6 +44,49 @@ namespace fncs {
             bool is_list() const {
                 return toupper(list[0]) == 'T' || toupper(list[0]) == 'Y';
             }
+
+            string to_string() {
+                const string indent("  ");
+                ostringstream os;
+                os << indent << key << ":" << endl;
+                os << indent << indent << "topic: " << topic << endl;
+                os << indent << indent << "default: " << def << endl;
+                os << indent << indent << "type: " << type << endl;
+                os << indent << indent << "list: " << list << endl;
+                return os.str();
+            }
+    };
+
+    class FNCS_EXPORT Config {
+        public:
+            Config()
+                : broker("")
+                , name("")
+                , time_delta("")
+                , fatal("")
+                , values()
+            {}
+
+            string broker;
+            string name;
+            string time_delta;
+            string fatal;
+            vector<Subscription> values;
+
+            string to_string() {
+                ostringstream os;
+                os << "name: " << name << endl;
+                os << "broker: " << broker << endl;
+                os << "time_delta: " << time_delta << endl;
+                os << "fatal: " << fatal << endl;
+                if (values.size()) {
+                    os << "values:" << endl;
+                    for (size_t i=0; i<values.size(); ++i) {
+                        os << values[i].to_string();
+                    }
+                }
+                return os.str();
+            }
     };
 
     const char * const HELLO = "hello";
@@ -51,7 +98,7 @@ namespace fncs {
     const char * const TIME_DELTA = "time_delta";
 
     /** Connects to broker and parses the given config object. */
-    FNCS_EXPORT void initialize(zconfig_t *zconfig);
+    FNCS_EXPORT void initialize(Config config);
 
     /** Starts the FNCS logger. */
     FNCS_EXPORT void start_logging();
@@ -65,6 +112,21 @@ namespace fncs {
 
     /** Converts given time value, assumed in ns, to sim's unit. */
     FNCS_EXPORT fncs::time convert_broker_to_sim_time(fncs::time value);
+
+    /** Parses the given configuration string. */
+    FNCS_EXPORT Config parse_config(const string &configuration);
+
+    /** Parses the given YAML::Node object representing the document. */
+    FNCS_EXPORT Config parse_config(const YAML::Node &doc);
+
+    /** Converts given 'value' YAML::Node into a fncs Subscription value. */
+    FNCS_EXPORT fncs::Subscription parse_value(const YAML::Node &node);
+
+    /** Converts all 'values' YAML::Node items into fncs Subscription values. */
+    FNCS_EXPORT vector<fncs::Subscription> parse_values(const YAML::Node &node);
+
+    /** Parses the given zconfig object. */
+    FNCS_EXPORT Config parse_config(zconfig_t *zconfig);
 
     /** Converts given 'value' zconfig into a fncs Subscription value. */
     FNCS_EXPORT fncs::Subscription parse_value(zconfig_t *config);

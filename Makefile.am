@@ -2,6 +2,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 include_HEADERS =
 lib_LTLIBRARIES =
+noinst_LTLIBRARIES =
 bin_PROGRAMS =
 check_PROGRAMS =
 EXTRA_DIST = README
@@ -14,6 +15,7 @@ pkgconfig_DATA = src/libfncs.pc
 
 AM_CPPFLAGS += -I$(top_srcdir)/src
 AM_CPPFLAGS += -I$(top_srcdir)/contrib
+AM_CPPFLAGS += -I$(top_srcdir)/contrib/yaml-cpp/include
 AM_CPPFLAGS += $(CZMQ_CPPFLAGS)
 AM_CPPFLAGS += $(ZMQ_CPPFLAGS)
 
@@ -37,12 +39,89 @@ libfncs_la_SOURCES += src/fncs_internal.hpp
 libfncs_la_LIBADD =
 libfncs_la_LIBADD += $(CZMQ_LIBS)
 libfncs_la_LIBADD += $(ZMQ_LIBS)
+libfncs_la_LIBADD += libyamlcpp.la
+
+noinst_LTLIBRARIES += libyamlcpp.la
+libyamlcpp_la_SOURCES =
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/aliasmanager.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/binary.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/collectionstack.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/contrib/graphbuilderadapter.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/contrib/graphbuilderadapter.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/contrib/graphbuilder.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/conversion.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/directives.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/directives.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/emitfromevents.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/emitter.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/emitterstate.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/emitterstate.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/emitterutils.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/emitterutils.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/exp.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/exp.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/indentation.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/iterator.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/iterpriv.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/nodebuilder.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/nodebuilder.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/node.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/nodeownership.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/nodeownership.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/null.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/ostream.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/parser.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/ptr_stack.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/ptr_vector.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/regex.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/regex.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/regeximpl.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/scanner.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/scanner.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/scanscalar.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/scanscalar.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/scantag.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/scantag.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/scantoken.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/setting.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/simplekey.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/singledocparser.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/singledocparser.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/streamcharsource.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/stream.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/stream.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/stringsource.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/tag.cpp
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/tag.h
+libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/token.h
 
 if ON_MINGW
 libfncs_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined -avoid-version
 else
 libfncs_la_LDFLAGS = $(AM_LDFLAGS)
 endif
+
+check_PROGRAMS += contrib/yaml-cpp/test/test
+contrib_yaml_cpp_test_test_SOURCES =
+contrib_yaml_cpp_test_test_SOURCES += contrib/yaml-cpp/test/emittertests.cpp
+contrib_yaml_cpp_test_test_SOURCES += contrib/yaml-cpp/test/emittertests.h
+contrib_yaml_cpp_test_test_SOURCES += contrib/yaml-cpp/test/main.cpp
+contrib_yaml_cpp_test_test_SOURCES += contrib/yaml-cpp/test/nodetests.h
+contrib_yaml_cpp_test_test_SOURCES += contrib/yaml-cpp/test/old-api/parsertests.cpp
+contrib_yaml_cpp_test_test_SOURCES += contrib/yaml-cpp/test/old-api/spectests.cpp
+contrib_yaml_cpp_test_test_SOURCES += contrib/yaml-cpp/test/parsertests.h
+contrib_yaml_cpp_test_test_SOURCES += contrib/yaml-cpp/test/specexamples.h
+contrib_yaml_cpp_test_test_SOURCES += contrib/yaml-cpp/test/spectests.cpp
+contrib_yaml_cpp_test_test_SOURCES += contrib/yaml-cpp/test/spectests.h
+contrib_yaml_cpp_test_test_SOURCES += contrib/yaml-cpp/test/tests.cpp
+contrib_yaml_cpp_test_test_SOURCES += contrib/yaml-cpp/test/tests.h
+
+contrib_yaml_cpp_test_test_CPPFLAGS =
+contrib_yaml_cpp_test_test_CPPFLAGS += $(AM_CPPFLAGS)
+contrib_yaml_cpp_test_test_CPPFLAGS += -I$(top_srcdir)/contrib/yaml-cpp/test
+
+check_PROGRAMS += tests/config
+tests_config_SOURCES = tests/config.cpp
 
 check_PROGRAMS += tests/test
 tests_test_SOURCES = tests/test.cpp

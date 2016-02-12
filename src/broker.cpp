@@ -201,10 +201,9 @@ int main(int argc, char **argv)
             /* dispatcher */
             if (fncs::HELLO == message_type) {
                 SimulatorState state;
-                zchunk_t *chunk = NULL;
-                zconfig_t *config = NULL;
-                zconfig_t *config_values = NULL;
-                const char * time_delta = NULL;
+                string config_string;
+                fncs::Config config;
+                string time_delta;
                 size_t index = 0;
 
                 LDEBUG4 << "HELLO received";
@@ -225,25 +224,15 @@ int main(int argc, char **argv)
                 }
 
                 /* copy config frame into chunk */
-                chunk = zchunk_new(zframe_data(frame), zframe_size(frame));
-                if (!chunk) {
-                    LERROR << "HELLO message zconfig bad config chunk";
-                    broker_die(simulators, server);
-                }
+                config_string = fncs::to_string(frame);
+                LDEBUG2 << "-- recv configuration as follows --" << endl << config_string;
 
                 /* parse config chunk */
-                config = zconfig_chunk_load(chunk);
-                if (!config) {
-                    LERROR << "HELLO message bad config";
-                    broker_die(simulators, server);
-                }
-
-                /* done with chunk */
-                zchunk_destroy(&chunk);
+                config = fncs::parse_config(config_string);
 
                 /* get time delta from config */
-                time_delta = zconfig_resolve(config, "/time_delta", NULL);
-                if (!time_delta) {
+                time_delta = config.time_delta;
+                if (time_delta.empty()) {
                     LWARNING << sender << " config does not contain 'time_delta'";
                     LWARNING << sender << " time_delta defaulting to 1s";
                     time_delta = "1s";
@@ -251,10 +240,8 @@ int main(int argc, char **argv)
 
                 /* parse subscription values */
                 set<string> subscription_values;
-                config_values = zconfig_locate(config, "/values");
-                if (config_values) {
-                    vector<fncs::Subscription> subs =
-                        fncs::parse_values(config_values);
+                if (!config.values.empty()) {
+                    vector<fncs::Subscription> &subs = config.values;
                     for (size_t i=0; i<subs.size(); ++i) {
                         string topic = subs[i].topic;
                         LDEBUG4 << "adding value '" << topic << "'";

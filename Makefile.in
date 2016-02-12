@@ -83,7 +83,9 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = fncs_broker$(EXEEXT) fncs_tracer$(EXEEXT) \
 	fncs_player$(EXEEXT) fncs_player_anon$(EXEEXT)
-check_PROGRAMS = tests/test$(EXEEXT) tests/fncs_netdelay$(EXEEXT)
+check_PROGRAMS = contrib/yaml-cpp/test/test$(EXEEXT) \
+	tests/config$(EXEEXT) tests/test$(EXEEXT) \
+	tests/fncs_netdelay$(EXEEXT)
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
@@ -143,9 +145,10 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(includedir)"
-LTLIBRARIES = $(lib_LTLIBRARIES)
+LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libfncs_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+libfncs_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	libyamlcpp.la
 am__dirstamp = $(am__leading_dot)dirstamp
 am_libfncs_la_OBJECTS = src/echo.lo src/fncs.lo src/fncs_capi.lo
 libfncs_la_OBJECTS = $(am_libfncs_la_OBJECTS)
@@ -156,7 +159,43 @@ am__v_lt_1 =
 libfncs_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(libfncs_la_LDFLAGS) $(LDFLAGS) -o $@
+libyamlcpp_la_LIBADD =
+am_libyamlcpp_la_OBJECTS = contrib/yaml-cpp/src/aliasmanager.lo \
+	contrib/yaml-cpp/src/binary.lo \
+	contrib/yaml-cpp/src/contrib/graphbuilderadapter.lo \
+	contrib/yaml-cpp/src/contrib/graphbuilder.lo \
+	contrib/yaml-cpp/src/conversion.lo \
+	contrib/yaml-cpp/src/directives.lo \
+	contrib/yaml-cpp/src/emitfromevents.lo \
+	contrib/yaml-cpp/src/emitter.lo \
+	contrib/yaml-cpp/src/emitterstate.lo \
+	contrib/yaml-cpp/src/emitterutils.lo \
+	contrib/yaml-cpp/src/exp.lo contrib/yaml-cpp/src/iterator.lo \
+	contrib/yaml-cpp/src/nodebuilder.lo \
+	contrib/yaml-cpp/src/node.lo \
+	contrib/yaml-cpp/src/nodeownership.lo \
+	contrib/yaml-cpp/src/null.lo contrib/yaml-cpp/src/ostream.lo \
+	contrib/yaml-cpp/src/parser.lo contrib/yaml-cpp/src/regex.lo \
+	contrib/yaml-cpp/src/scanner.lo \
+	contrib/yaml-cpp/src/scanscalar.lo \
+	contrib/yaml-cpp/src/scantag.lo \
+	contrib/yaml-cpp/src/scantoken.lo \
+	contrib/yaml-cpp/src/simplekey.lo \
+	contrib/yaml-cpp/src/singledocparser.lo \
+	contrib/yaml-cpp/src/stream.lo contrib/yaml-cpp/src/tag.lo
+libyamlcpp_la_OBJECTS = $(am_libyamlcpp_la_OBJECTS)
 PROGRAMS = $(bin_PROGRAMS)
+am_contrib_yaml_cpp_test_test_OBJECTS = contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.$(OBJEXT) \
+	contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.$(OBJEXT) \
+	contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.$(OBJEXT) \
+	contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-spectests.$(OBJEXT) \
+	contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-spectests.$(OBJEXT) \
+	contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.$(OBJEXT)
+contrib_yaml_cpp_test_test_OBJECTS =  \
+	$(am_contrib_yaml_cpp_test_test_OBJECTS)
+contrib_yaml_cpp_test_test_LDADD = $(LDADD)
+contrib_yaml_cpp_test_test_DEPENDENCIES = libfncs.la \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am_fncs_broker_OBJECTS = src/broker.$(OBJEXT)
 fncs_broker_OBJECTS = $(am_fncs_broker_OBJECTS)
 fncs_broker_LDADD = $(LDADD)
@@ -176,6 +215,11 @@ am_fncs_tracer_OBJECTS = src/tracer.$(OBJEXT)
 fncs_tracer_OBJECTS = $(am_fncs_tracer_OBJECTS)
 fncs_tracer_LDADD = $(LDADD)
 fncs_tracer_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+am_tests_config_OBJECTS = tests/config.$(OBJEXT)
+tests_config_OBJECTS = $(am_tests_config_OBJECTS)
+tests_config_LDADD = $(LDADD)
+tests_config_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 am_tests_fncs_netdelay_OBJECTS = tests/netdelay.$(OBJEXT)
 tests_fncs_netdelay_OBJECTS = $(am_tests_fncs_netdelay_OBJECTS)
@@ -239,14 +283,16 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libfncs_la_SOURCES) $(fncs_broker_SOURCES) \
+SOURCES = $(libfncs_la_SOURCES) $(libyamlcpp_la_SOURCES) \
+	$(contrib_yaml_cpp_test_test_SOURCES) $(fncs_broker_SOURCES) \
 	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
-	$(fncs_tracer_SOURCES) $(tests_fncs_netdelay_SOURCES) \
-	$(tests_test_SOURCES)
-DIST_SOURCES = $(libfncs_la_SOURCES) $(fncs_broker_SOURCES) \
+	$(fncs_tracer_SOURCES) $(tests_config_SOURCES) \
+	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES)
+DIST_SOURCES = $(libfncs_la_SOURCES) $(libyamlcpp_la_SOURCES) \
+	$(contrib_yaml_cpp_test_test_SOURCES) $(fncs_broker_SOURCES) \
 	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
-	$(fncs_tracer_SOURCES) $(tests_fncs_netdelay_SOURCES) \
-	$(tests_test_SOURCES)
+	$(fncs_tracer_SOURCES) $(tests_config_SOURCES) \
+	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -424,18 +470,81 @@ top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
 include_HEADERS = src/fncs.hpp src/fncs.h
 lib_LTLIBRARIES = libfncs.la
+noinst_LTLIBRARIES = libyamlcpp.la
 EXTRA_DIST = README
 AM_CXXFLAGS = 
 AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/contrib \
-	$(CZMQ_CPPFLAGS) $(ZMQ_CPPFLAGS)
+	-I$(top_srcdir)/contrib/yaml-cpp/include $(CZMQ_CPPFLAGS) \
+	$(ZMQ_CPPFLAGS)
 AM_LDFLAGS = $(CZMQ_LDFLAGS) $(ZMQ_LDFLAGS)
 LDADD = libfncs.la $(CZMQ_LIBS) $(ZMQ_LIBS)
 pkgconfig_DATA = src/libfncs.pc
 libfncs_la_SOURCES = src/echo.cpp src/echo.hpp src/fncs.cpp \
 	src/fncs_capi.cpp src/fncs_internal.hpp
-libfncs_la_LIBADD = $(CZMQ_LIBS) $(ZMQ_LIBS)
+libfncs_la_LIBADD = $(CZMQ_LIBS) $(ZMQ_LIBS) libyamlcpp.la
+libyamlcpp_la_SOURCES = contrib/yaml-cpp/src/aliasmanager.cpp \
+	contrib/yaml-cpp/src/binary.cpp \
+	contrib/yaml-cpp/src/collectionstack.h \
+	contrib/yaml-cpp/src/contrib/graphbuilderadapter.cpp \
+	contrib/yaml-cpp/src/contrib/graphbuilderadapter.h \
+	contrib/yaml-cpp/src/contrib/graphbuilder.cpp \
+	contrib/yaml-cpp/src/conversion.cpp \
+	contrib/yaml-cpp/src/directives.cpp \
+	contrib/yaml-cpp/src/directives.h \
+	contrib/yaml-cpp/src/emitfromevents.cpp \
+	contrib/yaml-cpp/src/emitter.cpp \
+	contrib/yaml-cpp/src/emitterstate.cpp \
+	contrib/yaml-cpp/src/emitterstate.h \
+	contrib/yaml-cpp/src/emitterutils.cpp \
+	contrib/yaml-cpp/src/emitterutils.h \
+	contrib/yaml-cpp/src/exp.cpp contrib/yaml-cpp/src/exp.h \
+	contrib/yaml-cpp/src/indentation.h \
+	contrib/yaml-cpp/src/iterator.cpp \
+	contrib/yaml-cpp/src/iterpriv.h \
+	contrib/yaml-cpp/src/nodebuilder.cpp \
+	contrib/yaml-cpp/src/nodebuilder.h \
+	contrib/yaml-cpp/src/node.cpp \
+	contrib/yaml-cpp/src/nodeownership.cpp \
+	contrib/yaml-cpp/src/nodeownership.h \
+	contrib/yaml-cpp/src/null.cpp contrib/yaml-cpp/src/ostream.cpp \
+	contrib/yaml-cpp/src/parser.cpp \
+	contrib/yaml-cpp/src/ptr_stack.h \
+	contrib/yaml-cpp/src/ptr_vector.h \
+	contrib/yaml-cpp/src/regex.cpp contrib/yaml-cpp/src/regex.h \
+	contrib/yaml-cpp/src/regeximpl.h \
+	contrib/yaml-cpp/src/scanner.cpp \
+	contrib/yaml-cpp/src/scanner.h \
+	contrib/yaml-cpp/src/scanscalar.cpp \
+	contrib/yaml-cpp/src/scanscalar.h \
+	contrib/yaml-cpp/src/scantag.cpp \
+	contrib/yaml-cpp/src/scantag.h \
+	contrib/yaml-cpp/src/scantoken.cpp \
+	contrib/yaml-cpp/src/setting.h \
+	contrib/yaml-cpp/src/simplekey.cpp \
+	contrib/yaml-cpp/src/singledocparser.cpp \
+	contrib/yaml-cpp/src/singledocparser.h \
+	contrib/yaml-cpp/src/streamcharsource.h \
+	contrib/yaml-cpp/src/stream.cpp contrib/yaml-cpp/src/stream.h \
+	contrib/yaml-cpp/src/stringsource.h \
+	contrib/yaml-cpp/src/tag.cpp contrib/yaml-cpp/src/tag.h \
+	contrib/yaml-cpp/src/token.h
 @ON_MINGW_FALSE@libfncs_la_LDFLAGS = $(AM_LDFLAGS)
 @ON_MINGW_TRUE@libfncs_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined -avoid-version
+contrib_yaml_cpp_test_test_SOURCES =  \
+	contrib/yaml-cpp/test/emittertests.cpp \
+	contrib/yaml-cpp/test/emittertests.h \
+	contrib/yaml-cpp/test/main.cpp \
+	contrib/yaml-cpp/test/nodetests.h \
+	contrib/yaml-cpp/test/old-api/parsertests.cpp \
+	contrib/yaml-cpp/test/old-api/spectests.cpp \
+	contrib/yaml-cpp/test/parsertests.h \
+	contrib/yaml-cpp/test/specexamples.h \
+	contrib/yaml-cpp/test/spectests.cpp \
+	contrib/yaml-cpp/test/spectests.h \
+	contrib/yaml-cpp/test/tests.cpp contrib/yaml-cpp/test/tests.h
+contrib_yaml_cpp_test_test_CPPFLAGS = $(AM_CPPFLAGS) \
+	-I$(top_srcdir)/contrib/yaml-cpp/test
+tests_config_SOURCES = tests/config.cpp
 tests_test_SOURCES = tests/test.cpp
 tests_fncs_netdelay_SOURCES = tests/netdelay.cpp
 fncs_broker_SOURCES = src/broker.cpp
@@ -534,6 +643,17 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
+
+clean-noinstLTLIBRARIES:
+	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
+	@list='$(noinst_LTLIBRARIES)'; \
+	locs=`for p in $$list; do echo $$p; done | \
+	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
+	      sort -u`; \
+	test -z "$$locs" || { \
+	  echo rm -f $${locs}; \
+	  rm -f $${locs}; \
+	}
 src/$(am__dirstamp):
 	@$(MKDIR_P) src
 	@: > src/$(am__dirstamp)
@@ -546,6 +666,90 @@ src/fncs_capi.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
 
 libfncs.la: $(libfncs_la_OBJECTS) $(libfncs_la_DEPENDENCIES) $(EXTRA_libfncs_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(libfncs_la_LINK) -rpath $(libdir) $(libfncs_la_OBJECTS) $(libfncs_la_LIBADD) $(LIBS)
+contrib/yaml-cpp/src/$(am__dirstamp):
+	@$(MKDIR_P) contrib/yaml-cpp/src
+	@: > contrib/yaml-cpp/src/$(am__dirstamp)
+contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) contrib/yaml-cpp/src/$(DEPDIR)
+	@: > contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/aliasmanager.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/binary.lo: contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/contrib/$(am__dirstamp):
+	@$(MKDIR_P) contrib/yaml-cpp/src/contrib
+	@: > contrib/yaml-cpp/src/contrib/$(am__dirstamp)
+contrib/yaml-cpp/src/contrib/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) contrib/yaml-cpp/src/contrib/$(DEPDIR)
+	@: > contrib/yaml-cpp/src/contrib/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/contrib/graphbuilderadapter.lo:  \
+	contrib/yaml-cpp/src/contrib/$(am__dirstamp) \
+	contrib/yaml-cpp/src/contrib/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/contrib/graphbuilder.lo:  \
+	contrib/yaml-cpp/src/contrib/$(am__dirstamp) \
+	contrib/yaml-cpp/src/contrib/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/conversion.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/directives.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/emitfromevents.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/emitter.lo: contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/emitterstate.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/emitterutils.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/exp.lo: contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/iterator.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/nodebuilder.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/node.lo: contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/nodeownership.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/null.lo: contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/ostream.lo: contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/parser.lo: contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/regex.lo: contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/scanner.lo: contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/scanscalar.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/scantag.lo: contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/scantoken.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/simplekey.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/singledocparser.lo:  \
+	contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/stream.lo: contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/src/tag.lo: contrib/yaml-cpp/src/$(am__dirstamp) \
+	contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+
+libyamlcpp.la: $(libyamlcpp_la_OBJECTS) $(libyamlcpp_la_DEPENDENCIES) $(EXTRA_libyamlcpp_la_DEPENDENCIES) 
+	$(AM_V_CXXLD)$(CXXLINK)  $(libyamlcpp_la_OBJECTS) $(libyamlcpp_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
@@ -604,6 +808,40 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+contrib/yaml-cpp/test/$(am__dirstamp):
+	@$(MKDIR_P) contrib/yaml-cpp/test
+	@: > contrib/yaml-cpp/test/$(am__dirstamp)
+contrib/yaml-cpp/test/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) contrib/yaml-cpp/test/$(DEPDIR)
+	@: > contrib/yaml-cpp/test/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.$(OBJEXT):  \
+	contrib/yaml-cpp/test/$(am__dirstamp) \
+	contrib/yaml-cpp/test/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.$(OBJEXT):  \
+	contrib/yaml-cpp/test/$(am__dirstamp) \
+	contrib/yaml-cpp/test/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/test/old-api/$(am__dirstamp):
+	@$(MKDIR_P) contrib/yaml-cpp/test/old-api
+	@: > contrib/yaml-cpp/test/old-api/$(am__dirstamp)
+contrib/yaml-cpp/test/old-api/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) contrib/yaml-cpp/test/old-api/$(DEPDIR)
+	@: > contrib/yaml-cpp/test/old-api/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.$(OBJEXT):  \
+	contrib/yaml-cpp/test/old-api/$(am__dirstamp) \
+	contrib/yaml-cpp/test/old-api/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-spectests.$(OBJEXT):  \
+	contrib/yaml-cpp/test/old-api/$(am__dirstamp) \
+	contrib/yaml-cpp/test/old-api/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-spectests.$(OBJEXT):  \
+	contrib/yaml-cpp/test/$(am__dirstamp) \
+	contrib/yaml-cpp/test/$(DEPDIR)/$(am__dirstamp)
+contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.$(OBJEXT):  \
+	contrib/yaml-cpp/test/$(am__dirstamp) \
+	contrib/yaml-cpp/test/$(DEPDIR)/$(am__dirstamp)
+
+contrib/yaml-cpp/test/test$(EXEEXT): $(contrib_yaml_cpp_test_test_OBJECTS) $(contrib_yaml_cpp_test_test_DEPENDENCIES) $(EXTRA_contrib_yaml_cpp_test_test_DEPENDENCIES) contrib/yaml-cpp/test/$(am__dirstamp)
+	@rm -f contrib/yaml-cpp/test/test$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(contrib_yaml_cpp_test_test_OBJECTS) $(contrib_yaml_cpp_test_test_LDADD) $(LIBS)
 src/broker.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 
@@ -634,6 +872,12 @@ tests/$(am__dirstamp):
 tests/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) tests/$(DEPDIR)
 	@: > tests/$(DEPDIR)/$(am__dirstamp)
+tests/config.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+tests/config$(EXEEXT): $(tests_config_OBJECTS) $(tests_config_DEPENDENCIES) $(EXTRA_tests_config_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/config$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(tests_config_OBJECTS) $(tests_config_LDADD) $(LIBS)
 tests/netdelay.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
@@ -649,6 +893,12 @@ tests/test$(EXEEXT): $(tests_test_OBJECTS) $(tests_test_DEPENDENCIES) $(EXTRA_te
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f contrib/yaml-cpp/src/*.$(OBJEXT)
+	-rm -f contrib/yaml-cpp/src/*.lo
+	-rm -f contrib/yaml-cpp/src/contrib/*.$(OBJEXT)
+	-rm -f contrib/yaml-cpp/src/contrib/*.lo
+	-rm -f contrib/yaml-cpp/test/*.$(OBJEXT)
+	-rm -f contrib/yaml-cpp/test/old-api/*.$(OBJEXT)
 	-rm -f src/*.$(OBJEXT)
 	-rm -f src/*.lo
 	-rm -f tests/*.$(OBJEXT)
@@ -656,6 +906,39 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/aliasmanager.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/binary.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/conversion.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/directives.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/emitfromevents.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/emitter.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/emitterstate.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/emitterutils.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/exp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/iterator.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/node.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/nodebuilder.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/nodeownership.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/null.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/ostream.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/parser.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/regex.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/scanner.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/scanscalar.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/scantag.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/scantoken.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/simplekey.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/singledocparser.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/stream.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/tag.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/contrib/$(DEPDIR)/graphbuilder.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/contrib/$(DEPDIR)/graphbuilderadapter.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-emittertests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-tests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-parsertests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/broker.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/echo.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs.Plo@am__quote@
@@ -663,6 +946,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_player_anon-player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tracer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/config.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/netdelay.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test.Po@am__quote@
 
@@ -690,6 +974,90 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
 
+contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.o: contrib/yaml-cpp/test/emittertests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.o -MD -MP -MF contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-emittertests.Tpo -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.o `test -f 'contrib/yaml-cpp/test/emittertests.cpp' || echo '$(srcdir)/'`contrib/yaml-cpp/test/emittertests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-emittertests.Tpo contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-emittertests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='contrib/yaml-cpp/test/emittertests.cpp' object='contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.o `test -f 'contrib/yaml-cpp/test/emittertests.cpp' || echo '$(srcdir)/'`contrib/yaml-cpp/test/emittertests.cpp
+
+contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.obj: contrib/yaml-cpp/test/emittertests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.obj -MD -MP -MF contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-emittertests.Tpo -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.obj `if test -f 'contrib/yaml-cpp/test/emittertests.cpp'; then $(CYGPATH_W) 'contrib/yaml-cpp/test/emittertests.cpp'; else $(CYGPATH_W) '$(srcdir)/contrib/yaml-cpp/test/emittertests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-emittertests.Tpo contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-emittertests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='contrib/yaml-cpp/test/emittertests.cpp' object='contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.obj `if test -f 'contrib/yaml-cpp/test/emittertests.cpp'; then $(CYGPATH_W) 'contrib/yaml-cpp/test/emittertests.cpp'; else $(CYGPATH_W) '$(srcdir)/contrib/yaml-cpp/test/emittertests.cpp'; fi`
+
+contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.o: contrib/yaml-cpp/test/main.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.o -MD -MP -MF contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-main.Tpo -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.o `test -f 'contrib/yaml-cpp/test/main.cpp' || echo '$(srcdir)/'`contrib/yaml-cpp/test/main.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-main.Tpo contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-main.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='contrib/yaml-cpp/test/main.cpp' object='contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.o `test -f 'contrib/yaml-cpp/test/main.cpp' || echo '$(srcdir)/'`contrib/yaml-cpp/test/main.cpp
+
+contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.obj: contrib/yaml-cpp/test/main.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.obj -MD -MP -MF contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-main.Tpo -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.obj `if test -f 'contrib/yaml-cpp/test/main.cpp'; then $(CYGPATH_W) 'contrib/yaml-cpp/test/main.cpp'; else $(CYGPATH_W) '$(srcdir)/contrib/yaml-cpp/test/main.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-main.Tpo contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-main.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='contrib/yaml-cpp/test/main.cpp' object='contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.obj `if test -f 'contrib/yaml-cpp/test/main.cpp'; then $(CYGPATH_W) 'contrib/yaml-cpp/test/main.cpp'; else $(CYGPATH_W) '$(srcdir)/contrib/yaml-cpp/test/main.cpp'; fi`
+
+contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.o: contrib/yaml-cpp/test/old-api/parsertests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.o -MD -MP -MF contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-parsertests.Tpo -c -o contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.o `test -f 'contrib/yaml-cpp/test/old-api/parsertests.cpp' || echo '$(srcdir)/'`contrib/yaml-cpp/test/old-api/parsertests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-parsertests.Tpo contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-parsertests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='contrib/yaml-cpp/test/old-api/parsertests.cpp' object='contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.o `test -f 'contrib/yaml-cpp/test/old-api/parsertests.cpp' || echo '$(srcdir)/'`contrib/yaml-cpp/test/old-api/parsertests.cpp
+
+contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.obj: contrib/yaml-cpp/test/old-api/parsertests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.obj -MD -MP -MF contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-parsertests.Tpo -c -o contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.obj `if test -f 'contrib/yaml-cpp/test/old-api/parsertests.cpp'; then $(CYGPATH_W) 'contrib/yaml-cpp/test/old-api/parsertests.cpp'; else $(CYGPATH_W) '$(srcdir)/contrib/yaml-cpp/test/old-api/parsertests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-parsertests.Tpo contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-parsertests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='contrib/yaml-cpp/test/old-api/parsertests.cpp' object='contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.obj `if test -f 'contrib/yaml-cpp/test/old-api/parsertests.cpp'; then $(CYGPATH_W) 'contrib/yaml-cpp/test/old-api/parsertests.cpp'; else $(CYGPATH_W) '$(srcdir)/contrib/yaml-cpp/test/old-api/parsertests.cpp'; fi`
+
+contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-spectests.o: contrib/yaml-cpp/test/old-api/spectests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-spectests.o -MD -MP -MF contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Tpo -c -o contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-spectests.o `test -f 'contrib/yaml-cpp/test/old-api/spectests.cpp' || echo '$(srcdir)/'`contrib/yaml-cpp/test/old-api/spectests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Tpo contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='contrib/yaml-cpp/test/old-api/spectests.cpp' object='contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-spectests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-spectests.o `test -f 'contrib/yaml-cpp/test/old-api/spectests.cpp' || echo '$(srcdir)/'`contrib/yaml-cpp/test/old-api/spectests.cpp
+
+contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-spectests.obj: contrib/yaml-cpp/test/old-api/spectests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-spectests.obj -MD -MP -MF contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Tpo -c -o contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-spectests.obj `if test -f 'contrib/yaml-cpp/test/old-api/spectests.cpp'; then $(CYGPATH_W) 'contrib/yaml-cpp/test/old-api/spectests.cpp'; else $(CYGPATH_W) '$(srcdir)/contrib/yaml-cpp/test/old-api/spectests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Tpo contrib/yaml-cpp/test/old-api/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='contrib/yaml-cpp/test/old-api/spectests.cpp' object='contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-spectests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-spectests.obj `if test -f 'contrib/yaml-cpp/test/old-api/spectests.cpp'; then $(CYGPATH_W) 'contrib/yaml-cpp/test/old-api/spectests.cpp'; else $(CYGPATH_W) '$(srcdir)/contrib/yaml-cpp/test/old-api/spectests.cpp'; fi`
+
+contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-spectests.o: contrib/yaml-cpp/test/spectests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-spectests.o -MD -MP -MF contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Tpo -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-spectests.o `test -f 'contrib/yaml-cpp/test/spectests.cpp' || echo '$(srcdir)/'`contrib/yaml-cpp/test/spectests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Tpo contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='contrib/yaml-cpp/test/spectests.cpp' object='contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-spectests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-spectests.o `test -f 'contrib/yaml-cpp/test/spectests.cpp' || echo '$(srcdir)/'`contrib/yaml-cpp/test/spectests.cpp
+
+contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-spectests.obj: contrib/yaml-cpp/test/spectests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-spectests.obj -MD -MP -MF contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Tpo -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-spectests.obj `if test -f 'contrib/yaml-cpp/test/spectests.cpp'; then $(CYGPATH_W) 'contrib/yaml-cpp/test/spectests.cpp'; else $(CYGPATH_W) '$(srcdir)/contrib/yaml-cpp/test/spectests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Tpo contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-spectests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='contrib/yaml-cpp/test/spectests.cpp' object='contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-spectests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-spectests.obj `if test -f 'contrib/yaml-cpp/test/spectests.cpp'; then $(CYGPATH_W) 'contrib/yaml-cpp/test/spectests.cpp'; else $(CYGPATH_W) '$(srcdir)/contrib/yaml-cpp/test/spectests.cpp'; fi`
+
+contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.o: contrib/yaml-cpp/test/tests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.o -MD -MP -MF contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-tests.Tpo -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.o `test -f 'contrib/yaml-cpp/test/tests.cpp' || echo '$(srcdir)/'`contrib/yaml-cpp/test/tests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-tests.Tpo contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-tests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='contrib/yaml-cpp/test/tests.cpp' object='contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.o `test -f 'contrib/yaml-cpp/test/tests.cpp' || echo '$(srcdir)/'`contrib/yaml-cpp/test/tests.cpp
+
+contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.obj: contrib/yaml-cpp/test/tests.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.obj -MD -MP -MF contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-tests.Tpo -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.obj `if test -f 'contrib/yaml-cpp/test/tests.cpp'; then $(CYGPATH_W) 'contrib/yaml-cpp/test/tests.cpp'; else $(CYGPATH_W) '$(srcdir)/contrib/yaml-cpp/test/tests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-tests.Tpo contrib/yaml-cpp/test/$(DEPDIR)/contrib_yaml_cpp_test_test-tests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='contrib/yaml-cpp/test/tests.cpp' object='contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(contrib_yaml_cpp_test_test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.obj `if test -f 'contrib/yaml-cpp/test/tests.cpp'; then $(CYGPATH_W) 'contrib/yaml-cpp/test/tests.cpp'; else $(CYGPATH_W) '$(srcdir)/contrib/yaml-cpp/test/tests.cpp'; fi`
+
 src/fncs_player_anon-player.o: src/player.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fncs_player_anon_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/fncs_player_anon-player.o -MD -MP -MF src/$(DEPDIR)/fncs_player_anon-player.Tpo -c -o src/fncs_player_anon-player.o `test -f 'src/player.cpp' || echo '$(srcdir)/'`src/player.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/fncs_player_anon-player.Tpo src/$(DEPDIR)/fncs_player_anon-player.Po
@@ -709,6 +1077,9 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+	-rm -rf contrib/yaml-cpp/src/.libs contrib/yaml-cpp/src/_libs
+	-rm -rf contrib/yaml-cpp/src/contrib/.libs contrib/yaml-cpp/src/contrib/_libs
+	-rm -rf contrib/yaml-cpp/test/.libs contrib/yaml-cpp/test/_libs
 	-rm -rf src/.libs src/_libs
 	-rm -rf tests/.libs tests/_libs
 
@@ -1009,6 +1380,14 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
+	-rm -f contrib/yaml-cpp/src/$(am__dirstamp)
+	-rm -f contrib/yaml-cpp/src/contrib/$(DEPDIR)/$(am__dirstamp)
+	-rm -f contrib/yaml-cpp/src/contrib/$(am__dirstamp)
+	-rm -f contrib/yaml-cpp/test/$(DEPDIR)/$(am__dirstamp)
+	-rm -f contrib/yaml-cpp/test/$(am__dirstamp)
+	-rm -f contrib/yaml-cpp/test/old-api/$(DEPDIR)/$(am__dirstamp)
+	-rm -f contrib/yaml-cpp/test/old-api/$(am__dirstamp)
 	-rm -f src/$(DEPDIR)/$(am__dirstamp)
 	-rm -f src/$(am__dirstamp)
 	-rm -f tests/$(DEPDIR)/$(am__dirstamp)
@@ -1020,11 +1399,12 @@ maintainer-clean-generic:
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
-	clean-libLTLIBRARIES clean-libtool mostlyclean-am
+	clean-libLTLIBRARIES clean-libtool clean-noinstLTLIBRARIES \
+	mostlyclean-am
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf src/$(DEPDIR) tests/$(DEPDIR)
+	-rm -rf contrib/yaml-cpp/src/$(DEPDIR) contrib/yaml-cpp/src/contrib/$(DEPDIR) contrib/yaml-cpp/test/$(DEPDIR) contrib/yaml-cpp/test/old-api/$(DEPDIR) src/$(DEPDIR) tests/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-tags
@@ -1072,7 +1452,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf src/$(DEPDIR) tests/$(DEPDIR)
+	-rm -rf contrib/yaml-cpp/src/$(DEPDIR) contrib/yaml-cpp/src/contrib/$(DEPDIR) contrib/yaml-cpp/test/$(DEPDIR) contrib/yaml-cpp/test/old-api/$(DEPDIR) src/$(DEPDIR) tests/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1096,13 +1476,14 @@ uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS \
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-checkPROGRAMS clean-cscope \
-	clean-generic clean-libLTLIBRARIES clean-libtool cscope \
-	cscopelist-am ctags ctags-am dist dist-all dist-bzip2 \
-	dist-gzip dist-lzip dist-shar dist-tarZ dist-xz dist-zip \
-	distcheck distclean distclean-compile distclean-generic \
-	distclean-hdr distclean-libtool distclean-tags distcleancheck \
-	distdir distuninstallcheck dvi dvi-am html html-am info \
-	info-am install install-am install-binPROGRAMS install-data \
+	clean-generic clean-libLTLIBRARIES clean-libtool \
+	clean-noinstLTLIBRARIES cscope cscopelist-am ctags ctags-am \
+	dist dist-all dist-bzip2 dist-gzip dist-lzip dist-shar \
+	dist-tarZ dist-xz dist-zip distcheck distclean \
+	distclean-compile distclean-generic distclean-hdr \
+	distclean-libtool distclean-tags distcleancheck distdir \
+	distuninstallcheck dvi dvi-am html html-am info info-am \
+	install install-am install-binPROGRAMS install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am \
 	install-includeHEADERS install-info install-info-am \

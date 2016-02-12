@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cctype>
 #include <cstdlib>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -30,6 +31,9 @@
 /* 3rd party headers */
 #include "czmq.h"
 
+/* 3rd party contrib */
+#include "yaml-cpp/yaml.h"
+
 /* fncs headers */
 #include "log.hpp"
 #include "fncs.hpp"
@@ -48,6 +52,10 @@ static zsock_t *client = NULL;
 static map<string,string> cache;
 static vector<string> events;
 static set<string> keys;
+
+static const string default_broker = "tcp://localhost:5570";
+static const string default_time_delta = "1s";
+static const string default_fatal = "yes";
 
 typedef map<string,vector<string> > clist_t;
 static clist_t cache_list;
@@ -82,7 +90,19 @@ static void signal_handler_reset()
 }
 #endif
 
+#if 0
+static inline string nodetype(const YAML::Node &node) {
+    if (node.Type() == YAML::NodeType::Scalar) { return "SCALAR"; } 
+    else if (node.Type() == YAML::NodeType::Sequence) { return "SEQUENCE"; } 
+    else if (node.Type() == YAML::NodeType::Map) { return "MAP"; } 
+    else { return "ERROR"; }
+}
+#endif
 
+static inline bool EndsWith(const string& a, const string& b) {
+    if (b.size() > a.size()) return false;
+    return std::equal(a.begin() + a.size() - b.size(), a.end(), b.begin());
+}
 
 
 void fncs::start_logging()
@@ -174,7 +194,8 @@ void fncs::start_logging()
 void fncs::initialize()
 {
     const char *fncs_config_file = NULL;
-    zconfig_t *config = NULL;
+    zconfig_t *zconfig = NULL;
+    fncs::Config config;
 
     /* name for fncs config file from environment */
     fncs_config_file = getenv("FNCS_CONFIG_FILE");
@@ -182,17 +203,32 @@ void fncs::initialize()
         fncs_config_file = "fncs.zpl";
     }
 
-    /* open and parse fncs configuration */
-    config = zconfig_load(fncs_config_file);
-    if (!config) {
-        cerr << "could not open " << fncs_config_file << endl;
-        /* create an empty ZPL file in case all info was provided on
-         * command line */
-        config = zconfig_new("root", NULL);
+    if (EndsWith(fncs_config_file, "zpl")) {
+        zconfig = zconfig_load(fncs_config_file);
+        if (zconfig) {
+            config = parse_config(zconfig);
+            zconfig_destroy(&zconfig);
+        }
+        else {
+            cerr << "could not open " << fncs_config_file << endl;
+        }
+    }
+    else if (EndsWith(fncs_config_file, "yaml")) {
+        try {
+            ifstream fin(fncs_config_file);
+            YAML::Parser parser(fin);
+            YAML::Node doc;
+            parser.GetNextDocument(doc);
+            config = parse_config(doc);
+        } catch (YAML::ParserException &ex) {
+            cerr << "could not open " << fncs_config_file << endl;
+        }
+    }
+    else {
+        cerr << "fncs config file must end in *.zpl or *.yaml" << endl;
     }
 
     initialize(config);
-    zconfig_destroy(&config);
 }
 
 
@@ -201,118 +237,95 @@ void fncs::initialize()
 void fncs::initialize(const string &configuration)
 {
     zchunk_t *zchunk = NULL;
-    zconfig_t *config = NULL;
+    zconfig_t *zconfig = NULL;
+    fncs::Config config;
 
-    /* create a zchunk for parsing */
-    zchunk = zchunk_new(configuration.c_str(), configuration.size());
+    config = parse_config(configuration);
 
-    /* open and parse fncs configuration */
-    config = zconfig_chunk_load(zchunk);
-    if (!config) {
-        cerr << "could not load configuration chunk" << endl;
-        cerr << "-- configuration was as follows --" << endl;
-        cerr << configuration << endl;
-    }
-    else {
-        zchunk_destroy(&zchunk);
-        initialize(config);
-        zconfig_destroy(&config);
-    }
+    initialize(config);
 }
 
 
-void fncs::initialize(zconfig_t *config)
+void fncs::initialize(Config config)
 {
-    const char *fatal = NULL;
-    const char *name = NULL;
-    const char *broker_endpoint = NULL;
-    const char *time_delta_string = NULL;
+    const char *env_fatal = NULL;
+    const char *env_name = NULL;
+    const char *env_broker = NULL;
+    const char *env_time_delta = NULL;
     int rc;
     zmsg_t *msg = NULL;
     zchunk_t *zchunk = NULL;
     zconfig_t *config_values = NULL;
-    /* name from env var is tried first */
-    name = getenv("FNCS_NAME");
-    if (!name) {
-        /* read sim name from config */
-        name = zconfig_resolve(config, "/name", NULL);
-        if (!name) {
-            cerr << "FNCS_NAME env var not set and" << endl;
-            cerr << "fncs config does not contain 'name'" << endl;
-            die();
-            return;
-        }
+
+    /* name from env var overrides config file */
+    env_name = getenv("FNCS_NAME");
+    if (env_name) {
+        config.name = env_name;
     }
-    else {
-        /* put what we got from env var so it sends on to broker */
-        zconfig_put(config, "/name", name);
+    else if (config.name.empty()) {
+        cerr << "FNCS_NAME env var not set and" << endl;
+        cerr << "fncs config does not contain 'name'" << endl;
+        die();
+        return;
     }
-    simulation_name = name;
+    simulation_name = config.name;
 
     fncs::start_logging();
 
     /* whether die() should exit() */
-    fatal = getenv("FNCS_FATAL");
-    if (!fatal) {
-        fatal =  "yes";
+    env_fatal = getenv("FNCS_FATAL");
+    if (env_fatal) {
+        config.fatal = env_fatal;
+        LINFO << "fatal set by FNCS_FATAL env var";
     }
-    if (fatal[0] == 'N'
-            || fatal[0] == 'n'
-            || fatal[0] == 'F'
-            || fatal[0] == 'f') {
-        LINFO << "fncs::die() will not call exit()";
-        die_is_fatal = false;
+    else if (config.fatal.empty()) {
+        LINFO << "FNCS_FATAL env var not set and fncs config does not contain 'fatal'";
+        LINFO << "defaulting to " << default_fatal;
+        config.fatal = default_fatal;
     }
-    else {
-        LINFO << "fncs::die() will call exit(EXIT_FAILURE)";
-        die_is_fatal = true;
-    }
-
-    /* broker location from env var is tried first */
-    broker_endpoint = getenv("FNCS_BROKER");
-    if (!broker_endpoint) {
-        /* read broker location from config */
-        broker_endpoint = zconfig_resolve(config, "/broker", NULL);
-        if (!broker_endpoint) {
-            LINFO << "fncs config does not contain 'broker'";
-            LINFO << "broker default is tcp://localhost:5570";
-            broker_endpoint = "tcp://localhost:5570";
+    {
+        char fc = config.fatal[0];
+        if (fc == 'N' || fc == 'n' || fc == 'F' || fc == 'f') {
+            die_is_fatal = false;
+            LINFO << "fncs::die() will not call exit()";
+        }
+        else {
+            die_is_fatal = true;
+            LINFO << "fncs::die() will call exit(EXIT_FAILURE)";
         }
     }
-    else {
+
+    /* broker location from env var overrides config file */
+    env_broker = getenv("FNCS_BROKER");
+    if (env_broker) {
         LINFO << "FNCS_BROKER env var sets the broker endpoint location";
-        /* don't need to send broker address to broker */
-        /*zconfig_put(config, "/broker", broker_endpoint);*/
+        config.broker = env_broker;
+    } else if (config.broker.empty()) {
+        LINFO << "FNCS_BROKER env var not set and fncs config does not contain 'broker'" << endl;
+        LINFO << "defaulting to " << default_broker;
+        config.broker = default_broker;
     }
-    LDEBUG << "broker = " << broker_endpoint;
+    LDEBUG << "broker = " << config.broker;
 
     /* time_delta from env var is tried first */
-    time_delta_string = getenv("FNCS_TIME_DELTA");
-    if (!time_delta_string) {
-        /* read time delta from config */
-        time_delta_string = zconfig_resolve(config, "/time_delta", NULL);
-        if (!time_delta_string) {
-            LWARNING << "fncs config does not contain 'time_delta'";
-            LWARNING << "time_delta default is 1s";
-            time_delta_string = "1s";
-        }
+    env_time_delta = getenv("FNCS_TIME_DELTA");
+    if (env_time_delta) {
+        LINFO << "FNCS_TIME_DELTA env var sets the time_delta";
+        config.time_delta = env_time_delta;
+    } else if (config.time_delta.empty()) {
+        LINFO << "FNCS_TIME_DELTA env var not set and fncs config does not contain 'time_delta'" << endl;
+        LINFO << "defaulting to " << default_time_delta;
+        config.time_delta = default_time_delta;
     }
-    else {
-        LINFO << "FNCS_TIME_DELTA env var sets the time_delta_string";
-        /* put what we got from env var so it sends on to broker */
-        zconfig_put(config, "/time_delta", time_delta_string);
-    }
-    LDEBUG << "time_delta_string = " << time_delta_string;
-    time_delta = parse_time(time_delta_string);
+    LDEBUG << "time_delta string = " << config.time_delta;
+    time_delta = parse_time(config.time_delta);
     LDEBUG << "time_delta = " << time_delta;
-    time_delta_multiplier = time_unit_to_multiplier(time_delta_string);
+    time_delta_multiplier = time_unit_to_multiplier(config.time_delta);
     LDEBUG << "time_delta_multiplier = " << time_delta_multiplier;
 
     /* parse subscriptions */
-    config_values = zconfig_locate(config, "/values");
-    if (config_values) {
-        vector<fncs::Subscription> subs =
-            fncs::parse_values(config_values);
+    {
+        vector<Subscription> subs = config.values;
         for (size_t i=0; i<subs.size(); ++i) {
             subs_string.insert(make_pair(subs[i].topic, subs[i]));
             LDEBUG2 << "initializing cache for '" << subs[i].key << "'='"
@@ -330,11 +343,8 @@ void fncs::initialize(zconfig_t *config)
             }
         }
         if (subs.empty()) {
-            LDEBUG2 << "'values' appears in config but no subscriptions";
+            LDEBUG2 << "config did not contain any subscriptions";
         }
-    }
-    else {
-        LDEBUG2 << "no subscriptions";
     }
 
     /* create zmq context and client socket */
@@ -354,14 +364,14 @@ void fncs::initialize(zconfig_t *config)
     signal_handler_reset();
 
     /* set client identity */
-    rc = zmq_setsockopt(zsock_resolve(client), ZMQ_IDENTITY, name, strlen(name));
+    rc = zmq_setsockopt(zsock_resolve(client), ZMQ_IDENTITY, config.name.c_str(), config.name.size());
     if (rc) {
         LERROR << "socket identity failed";
         die();
         return;
     }
     /* finally connect to broker */
-    rc = zsock_attach(client, broker_endpoint, false);
+    rc = zsock_attach(client, config.broker.c_str(), false);
     if (rc) {
         LERROR << "socket connection to broker failed";
         die();
@@ -381,19 +391,13 @@ void fncs::initialize(zconfig_t *config)
         die();
         return;
     }
-    zchunk = zconfig_chunk_save(config);
-    if (!zchunk) {
+    LDEBUG2 << "-- sending configuration as follows --" << endl << config.to_string();
+    rc = zmsg_addstr(msg, config.to_string().c_str());
+    if (rc) {
         LERROR << "failed to save config for HELLO message";
         die();
         return;
     }
-    rc = zmsg_addmem(msg, zchunk_data(zchunk), zchunk_size(zchunk));
-    if (rc) {
-        LERROR << "failed to add config to HELLO message";
-        die();
-        return;
-    }
-    zchunk_destroy(&zchunk);
     LDEBUG2 << "sending HELLO";
     rc = zmsg_send(&msg, client);
     if (rc) {
@@ -959,6 +963,192 @@ fncs::time fncs::parse_time(const string &value)
 }
 
 
+fncs::Config fncs::parse_config(const string &configuration)
+{
+    LDEBUG4 << "fncs::parse_config(string)";
+
+    zchunk_t *zchunk = NULL;
+    zconfig_t *zconfig = NULL;
+    fncs::Config config;
+    bool is_zpl = false;
+
+    /* if we detect '=' in the first line, we assume zpl */
+    {
+        istringstream is(configuration);
+        string line;
+        getline(is, line);
+        is_zpl = (line.find('=') != string::npos);
+    }
+
+    if (is_zpl) {
+        /* create a zchunk for parsing */
+        zchunk = zchunk_new(configuration.c_str(), configuration.size());
+        /* open and parse fncs configuration */
+        zconfig = zconfig_chunk_load(zchunk);
+        if (!zconfig) {
+            cerr << "could not load ZPL configuration string" << endl;
+            cerr << "-- configuration was as follows --" << endl;
+            cerr << configuration << endl;
+        }
+        else {
+            zchunk_destroy(&zchunk);
+            config = parse_config(zconfig);
+            zconfig_destroy(&zconfig);
+        }
+    }
+    else {
+        /* attempt to load as a YAML document */
+        try {
+            istringstream sin(configuration);
+            YAML::Parser parser(sin);
+            YAML::Node doc;
+            parser.GetNextDocument(doc);
+            config = parse_config(doc);
+        } catch (YAML::ParserException &ex) {
+            cerr << "could not load YAML configuration string" << endl;
+            cerr << "-- configuration was as follows --" << endl;
+            cerr << configuration << endl;
+        }
+    }
+
+    return config;
+}
+
+
+fncs::Config fncs::parse_config(const YAML::Node &doc)
+{
+    LDEBUG4 << "fncs::parse_config(YAML::Node)";
+
+    fncs::Config config;
+
+    if (const YAML::Node *node = doc.FindValue("name")) {
+        if (node->Type() != YAML::NodeType::Scalar) {
+            cerr << "YAML 'name' must be a Scalar" << endl;
+        }
+        else {
+            *node >> config.name;
+        }
+    }
+
+    if (const YAML::Node *node = doc.FindValue("broker")) {
+        if (node->Type() != YAML::NodeType::Scalar) {
+            cerr << "YAML 'broker' must be a Scalar" << endl;
+        }
+        else {
+            *node >> config.broker;
+        }
+    }
+
+    if (const YAML::Node *node = doc.FindValue("time_delta")) {
+        if (node->Type() != YAML::NodeType::Scalar) {
+            cerr << "YAML 'time_delta' must be a Scalar" << endl;
+        }
+        else {
+            *node >> config.time_delta;
+        }
+    }
+
+    if (const YAML::Node *node = doc.FindValue("fatal")) {
+        if (node->Type() != YAML::NodeType::Scalar) {
+            cerr << "YAML 'fatal' must be a Scalar" << endl;
+        }
+        else {
+            *node >> config.fatal;
+        }
+    }
+
+    /* parse subscriptions */
+    if (const YAML::Node *node = doc.FindValue("values")) {
+        config.values = parse_values(*node);
+    }
+
+    return config;
+}
+
+
+fncs::Config fncs::parse_config(zconfig_t *zconfig)
+{
+    LDEBUG4 << "fncs::parse_config(zconfig_t*)";
+
+    fncs::Config config;
+    zconfig_t *config_values = NULL;
+
+    /* read sim name from zconfig */
+    config.name = zconfig_resolve(zconfig, "/name", "");
+
+    /* read broker location from config */
+    config.broker = zconfig_resolve(zconfig, "/broker", "");
+
+    /* read time delta from config */
+    config.time_delta = zconfig_resolve(zconfig, "/time_delta", "");
+
+    /* read whether die() is fatal from zconfig */
+    config.fatal = zconfig_resolve(zconfig, "/fatal", "");
+
+    /* parse subscriptions */
+    config_values = zconfig_locate(zconfig, "/values");
+    if (config_values) {
+        config.values = parse_values(config_values);
+    }
+
+    return config;
+}
+
+
+fncs::Subscription fncs::parse_value(const YAML::Node &node)
+{
+    LDEBUG4 << "fncs::parse_value(YAML::Node)";
+
+    /* a "value" block for a FNCS subscription looks like this
+    foo:                    # lookup key, optional topic
+        topic:  some_topic  # required iff topic did not appear earlier
+        default:  10        # optional; default value
+        type:  int          # optional; currently unused; data type
+        list:  false        # optional; defaults to "false"
+    */
+
+    fncs::Subscription sub;
+
+    if (const YAML::Node *child = node.FindValue("topic")) {
+        if (child->Type() != YAML::NodeType::Scalar) {
+            cerr << "YAML 'topic' must be a Scalar" << endl;
+        }
+        else {
+            *child >> sub.topic;
+        }
+    }
+
+    if (const YAML::Node *child = node.FindValue("default")) {
+        if (child->Type() != YAML::NodeType::Scalar) {
+            cerr << "YAML 'default' must be a Scalar" << endl;
+        }
+        else {
+            *child >> sub.def;
+        }
+    }
+
+    if (const YAML::Node *child = node.FindValue("type")) {
+        if (child->Type() != YAML::NodeType::Scalar) {
+            cerr << "YAML 'type' must be a Scalar" << endl;
+        }
+        else {
+            *child >> sub.type;
+        }
+    }
+
+    if (const YAML::Node *child = node.FindValue("list")) {
+        if (child->Type() != YAML::NodeType::Scalar) {
+            cerr << "YAML 'list' must be a Scalar" << endl;
+        }
+        else {
+            *child >> sub.list;
+        }
+    }
+
+    return sub;
+}
+
+
 fncs::Subscription fncs::parse_value(zconfig_t *config)
 {
     LDEBUG4 << "fncs::parse_value(zconfig_t*)";
@@ -1013,6 +1203,55 @@ fncs::Subscription fncs::parse_value(zconfig_t *config)
     sub.list = value? value : "false";
 
     return sub;
+}
+
+
+vector<fncs::Subscription> fncs::parse_values(const YAML::Node &node)
+{
+    LDEBUG4 << "fncs::parse_values(YAML::Node)";
+
+    vector<fncs::Subscription> subs;
+
+    if (YAML::NodeType::Sequence == node.Type()) {
+        for (YAML::Iterator it=node.begin(); it!=node.end(); ++it) {
+            fncs::Subscription sub;
+            const YAML::Node &child = *it;
+            if (YAML::NodeType::Scalar == child.Type()) {
+                child >> sub.key;
+                child >> sub.topic;
+            }
+            else if (YAML::NodeType::Map == child.Type()) {
+                for (YAML::Iterator it2=child.begin();
+                        it2!=child.end(); ++it2) {
+                    if (YAML::NodeType::Scalar == it2.second().Type()) {
+                        it2.first() >> sub.key;
+                        it2.second() >> sub.topic;
+                    }
+                    else if (YAML::NodeType::Map == it2.second().Type()) {
+                        sub = parse_value(it2.second());
+                        it2.first() >> sub.key;
+                    }
+                }
+            }
+            subs.push_back(sub);
+        }
+    }
+    else if (YAML::NodeType::Map == node.Type()) {
+        for (YAML::Iterator it=node.begin(); it!=node.end(); ++it) {
+            fncs::Subscription sub;
+            if (YAML::NodeType::Scalar == it.second().Type()) {
+                it.first() >> sub.key;
+                it.second() >> sub.topic;
+            }
+            if (YAML::NodeType::Map == it.second().Type()) {
+                sub = parse_value(it.second());
+                it.first() >> sub.key;
+            }
+            subs.push_back(sub);
+        }
+    }
+
+    return subs;
 }
 
 
