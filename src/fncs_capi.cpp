@@ -119,6 +119,16 @@ char** fncs_get_values(const char *key)
     return convert(fncs::get_values(key));
 }
 
+size_t fncs_get_keys_size()
+{
+    return fncs::get_keys().size();
+}
+
+char** fncs_get_keys()
+{
+    return convert(fncs::get_keys());
+}
+
 const char* fncs_get_name()
 {
     return fncs::get_name().c_str();

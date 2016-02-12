@@ -65,6 +65,9 @@ namespace fncs {
      * Will return a vector of size 1 if only a single value exists. */
     FNCS_EXPORT vector<string> get_values(const string &key);
 
+    /** Get a vector of configured keys. */
+    FNCS_EXPORT vector<string> get_keys();
+
     /** Return the name of the simulator. */
     FNCS_EXPORT string get_name();
 

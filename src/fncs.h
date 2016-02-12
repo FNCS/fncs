@@ -67,6 +67,13 @@ extern "C" {
      * Will return an array of size 1 if only a single value exists. */
     FNCS_EXPORT char** fncs_get_values(const char *key);
 
+    /** Get the number of subscribed keys. */
+    FNCS_EXPORT size_t fncs_get_keys_size();
+
+    /** Get the subscribed keys.
+     * Will return NULL if fncs_get_keys_size() returns 0. */
+    FNCS_EXPORT char** fncs_get_keys();
+
     /** Return the name of the simulator. */
     FNCS_EXPORT const char * fncs_get_name();
 

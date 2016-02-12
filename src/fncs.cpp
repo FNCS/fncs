@@ -51,7 +51,8 @@ static fncs::time time_delta = 0;
 static zsock_t *client = NULL;
 static map<string,string> cache;
 static vector<string> events;
-static set<string> keys;
+static set<string> keys; /* keys that other sims subscribed to */
+static vector<string> mykeys; /* keys from the fncs config file */
 
 static const string default_broker = "tcp://localhost:5570";
 static const string default_time_delta = "1s";
@@ -328,6 +329,7 @@ void fncs::initialize(Config config)
         vector<Subscription> subs = config.values;
         for (size_t i=0; i<subs.size(); ++i) {
             subs_string.insert(make_pair(subs[i].topic, subs[i]));
+            mykeys.push_back(subs[i].key);
             LDEBUG2 << "initializing cache for '" << subs[i].key << "'='"
                 << subs[i].def << "'";
             if (subs[i].is_list()) {
@@ -1338,6 +1340,19 @@ vector<string> fncs::get_values(const string &key)
     values = cache_list[key];
     LDEBUG4 << "key '" << key << "' has " << values.size() << " values";
     return values;
+}
+
+
+vector<string> fncs::get_keys()
+{
+    LDEBUG4 << "fncs::get_keys()";
+
+    if (!is_initialized_) {
+        LWARNING << "fncs is not initialized";
+        return vector<string>();
+    }
+
+    return mykeys;
 }
 
 

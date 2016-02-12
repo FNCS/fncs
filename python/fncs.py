@@ -96,6 +96,20 @@ def get_values(key):
     _free_char_pp(_values, size)
     return values
 
+get_keys_size = _lib.fncs_get_keys_size
+get_keys_size.argtypes = []
+get_keys_size.restype = ctypes.c_size_t
+
+_get_keys = _lib.fncs_get_keys
+_get_keys.argtypes = []
+_get_keys.restype = ctypes.POINTER(ctypes.c_char_p)
+def get_keys():
+    _keys = _get_keys(key)
+    size = get_keys_size(key)
+    keys = [_keys[i].value for i in xrange(size)]
+    _free_char_pp(_keys, size)
+    return keys
+
 get_name = _lib.fncs_get_name
 get_name.argtypes = []
 get_name.restype = ctypes.c_char_p
