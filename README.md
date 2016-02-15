@@ -1,6 +1,6 @@
-# Framework for Network Co-Simulation 2
+# Framework for Network Co-Simulation
 
-Version 2 of FNCS is simplifying and extending [the original FNCS](https://github.com/GridOPTICS/FNCS), focusing on the needs to support the development of control algorithms across diverse simulator software packages and hardware.
+FNCS 2.0 is simplifying and extending [the original FNCS](https://github.com/GridOPTICS/FNCS), focusing on the needs to support the development of control algorithms across diverse simulator software packages and hardware.
 
 ## Table of Contents
 
@@ -23,7 +23,7 @@ Version 2 of FNCS is simplifying and extending [the original FNCS](https://githu
 
 ## How to Install FNCS (Linux)
 
-The FNCS code is available at https://github.com/GridOPTICS/FNCS2.  FNCS depends on two other software libraries,
+The FNCS code is available at https://github.com/FNCS/fncs.  FNCS depends on two other software libraries,
 
  1. [ZeroMQ](http://zeromq.org/), and
  2. its higher-level C binding [CZMQ](http://czmq.zeromq.org/).
@@ -78,7 +78,7 @@ make install
 
 ### FNCS
 
-Installing FNCS2 is like any other software using configure and make.  The main challenge is specifying the installation location (--prefix) for FNCS2 as well as the location where ZeroMQ and CZMQ were installed.  If you installed ZeroMQ and CZMQ as written above, the following will work for you.
+Installing FNCS is like any other software using configure and make.  The main challenge is specifying the installation location (--prefix) for FNCS2 as well as the location where ZeroMQ and CZMQ were installed.  If you installed ZeroMQ and CZMQ as written above, the following will work for you.
 
 Please note that you must use your own username to clone the git repository as indicated by <USER> below. If while attempting to clone FNCS from the git repository, you get an error "server certificate verification failed," check here for what to do: http://stackoverflow.com/questions/21181231/server-certificate-verification-failed-cafile-etc-ssl-certs-ca-certificates-c.
 
@@ -177,18 +177,11 @@ values                      # optional; list of exact-string-matching topic subs
         default = 0.1       # see "foo" above; here we used a floating point default
         type = double       # see "foo" above
         list = true         # see "foo" above; this is the only difference between "foo" and "bar" here
-matches                     # optional; list of regular-expression matching topic subscriptions
-    baz                     # required; lookup key
-        topic = sim1/.*     # required; topic (a regex)
 ```
 
 ##### Values
 
 The list of exact-string-matching topic subscriptions is intended to model a list of simple key-value pairs.  Think of your simulator code and its variables - each variable has a name and its associated value.  That is how you would write the list of "values" in the FNCS ZPL file as well as how you would retrieve values at runtime using the string `fncs::get_value(string key)` or the `vector<string> fncs::get_values(string key)` functions.  In most cases each subscription is for a single value (or array of values perhaps).  In some cases, a reduction operation is useful such as when computing a sum of values from individual publishers – we need the values to queue up rather than have the last value overwrite all the others.
-
-##### Matches
-
-The list of regular-expression matching topic subscriptions is considerably different from a string-matching topic.  Different from "values", the matches always queue up.  In addition, since the regular expression may include wildcards such as '*' or '.' or '?', the exact topic that was matched is not known until runtime.  The actual topic string received at runtime is valuable information and as such is returned to the caller of `vector<pair<string,string>> fncs::get_matches(string key)`.  Formally, the function returns a vector of string pairs, with the pair being the matched topic and the associated value.
 
 ### Environment Variables
 
