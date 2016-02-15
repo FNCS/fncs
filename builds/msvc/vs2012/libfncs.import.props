@@ -15,7 +15,7 @@
   
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\fncs\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\fncs\src\;%$(ProjectDir)..\..\..\..\..\fncs\contrib\yaml-cpp\include\;%$(ProjectDir)..\..\..\..\..\fncs\contrib\yaml-cpp\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Linkage-libfncs)' == 'static' Or '$(Linkage-libfncs)' == 'ltcg'">LIBFNCS_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>

@@ -11,7 +11,7 @@
   
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(BuildRoot);$(ProjectDir)..\..\..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BuildRoot);$(ProjectDir)..\..\..\..\src;$(ProjectDir)..\..\..\..\contrib;$(ProjectDir)..\..\..\..\contrib\yaml-cpp\include;$(ProjectDir)..\..\..\..\contrib\yaml-cpp\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <EnablePREfast>false</EnablePREfast>
