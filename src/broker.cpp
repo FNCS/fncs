@@ -287,6 +287,10 @@ int main(int argc, char **argv)
                     time_real_start = fncs::timer_ft();
                     time_real = 0;
                     if (realtime_interval) {
+#ifdef _WIN32
+                        cerr << "realtime clock not yet supported on WIN32" << endl;
+                        exit(EXIT_FAILURE);
+#else
                         struct itimerval it_val;  /* for setting itimer */
 
                         /* setitimer call needs seconds and useconds */
@@ -302,6 +306,7 @@ int main(int argc, char **argv)
                         if (setitimer(ITIMER_REAL, &it_val, NULL) == -1) {
                             broker_die(simulators, server);
                         }
+#endif
                     }
                     /* easier to keep a counter than iterating over states */
                     n_processing = n_sims;
@@ -407,6 +412,10 @@ int main(int argc, char **argv)
                     time_granted = *min_element(time_actionable.begin(),
                                                 time_actionable.end());
                     LDEBUG4 << "time_granted = " << time_granted;
+#ifdef _WIN32
+                    cerr << "realtime clock not yet supported on WIN32" << endl;
+                    exit(EXIT_FAILURE);
+#else
                     if (realtime_interval) {
                         LDEBUG4 << "time_real = " << time_real;
                         while (time_granted > time_real) {
@@ -416,6 +425,7 @@ int main(int argc, char **argv)
                         }
                         LDEBUG4 << "time_real = " << time_real;
                     }
+#endif
                     for (size_t i=0; i<n_sims; ++i) {
                         if (time_granted == time_actionable[i]) {
                             LDEBUG4 << "granting " << time_granted
