@@ -1196,13 +1196,13 @@ fncs::Subscription fncs::parse_value(zconfig_t *config)
     if (!value) {
         LDEBUG4 << "parsing value '" << sub.key << "', missing 'type'";
     }
-    sub.type = value? value : "double";
+    sub.type = value? value : "";
 
     value = zconfig_resolve(config, "list", NULL);
     if (!value) {
         LDEBUG4 << "parsing value '" << sub.key << "', missing 'list'";
     }
-    sub.list = value? value : "false";
+    sub.list = value? value : "";
 
     return sub;
 }

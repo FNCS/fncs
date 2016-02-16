@@ -50,9 +50,15 @@ namespace fncs {
                 ostringstream os;
                 os << indent << key << ":" << endl;
                 os << indent << indent << "topic: " << topic << endl;
-                os << indent << indent << "default: " << def << endl;
-                os << indent << indent << "type: " << type << endl;
-                os << indent << indent << "list: " << list << endl;
+                if (!def.empty()) {
+                    os << indent << indent << "default: " << def << endl;
+                }
+                if (!type.empty()) {
+                    os << indent << indent << "type: " << type << endl;
+                }
+                if (!list.empty()) {
+                    os << indent << indent << "list: " << list << endl;
+                }
                 return os.str();
             }
     };
@@ -75,10 +81,18 @@ namespace fncs {
 
             string to_string() {
                 ostringstream os;
-                os << "name: " << name << endl;
-                os << "broker: " << broker << endl;
-                os << "time_delta: " << time_delta << endl;
-                os << "fatal: " << fatal << endl;
+                if (!name.empty()) {
+                    os << "name: " << name << endl;
+                }
+                if (!broker.empty()) {
+                    os << "broker: " << broker << endl;
+                }
+                if (!time_delta.empty()) {
+                    os << "time_delta: " << time_delta << endl;
+                }
+                if (!fatal.empty()) {
+                    os << "fatal: " << fatal << endl;
+                }
                 if (values.size()) {
                     os << "values:" << endl;
                     for (size_t i=0; i<values.size(); ++i) {
