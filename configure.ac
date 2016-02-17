@@ -197,7 +197,7 @@ esac
 #
 # Changes:
 #
-# FNCS versions prior to 2.0.0 use 0:0:0 (undefined)
+# FNCS versions prior to 2.0.1 use 0:0:0 (undefined)
 # FNCS versions 2.0.x: 1:0:0 (ABI version 1)
 #
 # libfncs -version-info current:revision:age
