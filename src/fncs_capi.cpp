@@ -144,3 +144,10 @@ int fncs_get_simulator_count()
     return fncs::get_simulator_count();
 }
 
+void fncs_get_version(int *major, int *minor, int *patch)
+{
+    *major = FNCS_VERSION_MAJOR;
+    *minor = FNCS_VERSION_MINOR;
+    *patch = FNCS_VERSION_PATCH;
+}
+

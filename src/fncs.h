@@ -89,6 +89,9 @@ extern "C" {
     /** Helper, free allocated array of character buffers. */
     FNCS_EXPORT void _fncs_free_char_pp(char ** ptr, size_t size);
 
+    /*  Run-time API version detection. */
+    FNCS_EXPORT void fncs_get_version(int *major, int *minor, int *patch);
+
 #ifdef __cplusplus
 }
 #endif

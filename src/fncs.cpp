@@ -1427,3 +1427,11 @@ double fncs::timer()
     return double(timer_ft())/1000000000.0;
 }
 
+
+void get_version(int *major, int *minor, int *patch)
+{
+    *major = FNCS_VERSION_MAJOR;
+    *minor = FNCS_VERSION_MINOR;
+    *patch = FNCS_VERSION_PATCH;
+}
+

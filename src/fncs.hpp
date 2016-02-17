@@ -9,6 +9,16 @@ using ::std::pair;
 using ::std::string;
 using ::std::vector;
 
+/*  Version macros for compile-time API version detection                     */
+#define FNCS_VERSION_MAJOR 2
+#define FNCS_VERSION_MINOR 0
+#define FNCS_VERSION_PATCH 0
+
+#define FNCS_MAKE_VERSION(major, minor, patch) \
+    ((major) * 10000 + (minor) * 100 + (patch))
+#define FNCS_VERSION \
+    FNCS_MAKE_VERSION(FNCS_VERSION_MAJOR, FNCS_VERSION_MINOR, FNCS_VERSION_PATCH)
+
 #if (defined WIN32 || defined _WIN32)
 #   if defined LIBFNCS_STATIC
 #       define FNCS_EXPORT
@@ -79,6 +89,9 @@ namespace fncs {
 
     /** Return the number of simulators connected to the broker. */
     FNCS_EXPORT int get_simulator_count();
+
+    /*  Run-time API version detection. */
+    FNCS_EXPORT void get_version(int *major, int *minor, int *patch);
 
 }
 
