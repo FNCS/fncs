@@ -385,6 +385,7 @@ LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+LTVER = @LTVER@
 LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
@@ -482,6 +483,28 @@ pkgconfig_DATA = src/libfncs.pc
 libfncs_la_SOURCES = src/echo.cpp src/echo.hpp src/fncs.cpp \
 	src/fncs_capi.cpp src/fncs_internal.hpp
 libfncs_la_LIBADD = $(CZMQ_LIBS) $(ZMQ_LIBS) libyamlcpp.la
+@ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_FALSE@@ON_MINGW_FALSE@libfncs_la_LDFLAGS = \
+@ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_FALSE@@ON_MINGW_FALSE@    -version-info @LTVER@ \
+@ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_FALSE@@ON_MINGW_FALSE@    -Wl
+
+@ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_TRUE@@ON_MINGW_FALSE@libfncs_la_LDFLAGS = \
+@ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_TRUE@@ON_MINGW_FALSE@    -version-info @LTVER@ \
+@ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_TRUE@@ON_MINGW_FALSE@    -Wl,--version-script=$(srcdir)/src/libfncs.vers
+
+@ON_ANDROID_TRUE@@ON_CYGWIN_FALSE@@ON_MINGW_FALSE@libfncs_la_LDFLAGS = \
+@ON_ANDROID_TRUE@@ON_CYGWIN_FALSE@@ON_MINGW_FALSE@    -avoid-version \
+@ON_ANDROID_TRUE@@ON_CYGWIN_FALSE@@ON_MINGW_FALSE@    -version-info @LTVER@
+
+@ON_CYGWIN_TRUE@@ON_MINGW_FALSE@libfncs_la_LDFLAGS = \
+@ON_CYGWIN_TRUE@@ON_MINGW_FALSE@    -no-undefined \
+@ON_CYGWIN_TRUE@@ON_MINGW_FALSE@    -avoid-version \
+@ON_CYGWIN_TRUE@@ON_MINGW_FALSE@    -version-info @LTVER@
+
+@ON_MINGW_TRUE@libfncs_la_LDFLAGS = \
+@ON_MINGW_TRUE@    -no-undefined \
+@ON_MINGW_TRUE@    -avoid-version \
+@ON_MINGW_TRUE@    -version-info @LTVER@
+
 libyamlcpp_la_SOURCES = contrib/yaml-cpp/src/aliasmanager.cpp \
 	contrib/yaml-cpp/src/binary.cpp \
 	contrib/yaml-cpp/src/collectionstack.h \
@@ -528,8 +551,6 @@ libyamlcpp_la_SOURCES = contrib/yaml-cpp/src/aliasmanager.cpp \
 	contrib/yaml-cpp/src/stringsource.h \
 	contrib/yaml-cpp/src/tag.cpp contrib/yaml-cpp/src/tag.h \
 	contrib/yaml-cpp/src/token.h
-@ON_MINGW_FALSE@libfncs_la_LDFLAGS = $(AM_LDFLAGS)
-@ON_MINGW_TRUE@libfncs_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined -avoid-version
 contrib_yaml_cpp_test_test_SOURCES =  \
 	contrib/yaml-cpp/test/emittertests.cpp \
 	contrib/yaml-cpp/test/emittertests.h \

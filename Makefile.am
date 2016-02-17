@@ -40,6 +40,35 @@ libfncs_la_LIBADD =
 libfncs_la_LIBADD += $(CZMQ_LIBS)
 libfncs_la_LIBADD += $(ZMQ_LIBS)
 libfncs_la_LIBADD += libyamlcpp.la
+if ON_MINGW
+libfncs_la_LDFLAGS = \
+    -no-undefined \
+    -avoid-version \
+    -version-info @LTVER@
+else
+if ON_CYGWIN
+libfncs_la_LDFLAGS = \
+    -no-undefined \
+    -avoid-version \
+    -version-info @LTVER@
+else
+if ON_ANDROID
+libfncs_la_LDFLAGS = \
+    -avoid-version \
+    -version-info @LTVER@
+else
+if ON_LINUX
+libfncs_la_LDFLAGS = \
+    -version-info @LTVER@ \
+    -Wl,--version-script=$(srcdir)/src/libfncs.vers
+else
+libfncs_la_LDFLAGS = \
+    -version-info @LTVER@ \
+    -Wl
+endif
+endif
+endif
+endif
 
 noinst_LTLIBRARIES += libyamlcpp.la
 libyamlcpp_la_SOURCES =
@@ -94,12 +123,6 @@ libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/stringsource.h
 libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/tag.cpp
 libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/tag.h
 libyamlcpp_la_SOURCES += contrib/yaml-cpp/src/token.h
-
-if ON_MINGW
-libfncs_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined -avoid-version
-else
-libfncs_la_LDFLAGS = $(AM_LDFLAGS)
-endif
 
 check_PROGRAMS += contrib/yaml-cpp/test/test
 contrib_yaml_cpp_test_test_SOURCES =

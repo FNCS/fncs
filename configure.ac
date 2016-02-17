@@ -5,8 +5,8 @@
 # Init autoconf
 ###############################################################################
 AC_PREREQ([2.69])
-AC_INIT([Framework for Network Co-Simulation 2],
-        [0.1],
+AC_INIT([Framework for Network Co-Simulation],
+        [m4_esyscmd([./version.sh])],
         [jeff.daily@pnnl.gov],
         [fncs])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -19,6 +19,7 @@ AC_CONFIG_SRCDIR([src/fncs.hpp])
 ###############################################################################
 AM_INIT_AUTOMAKE([foreign subdir-objects -Wall -Werror])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+AM_MAINTAINER_MODE
 
 ###############################################################################
 # Misc. information and package setup.
@@ -29,8 +30,6 @@ FNCS_TOP_SRCDIR="`pwd`"
 cd "$FNCS_TOP_BUILDDIR"
 AS_IF([test "$FNCS_TOP_BUILDDIR" != "$FNCS_TOP_SRCDIR"],
       [AC_MSG_NOTICE([Detected VPATH build])])
-
-AM_MAINTAINER_MODE
 
 AC_CANONICAL_HOST
 
@@ -106,9 +105,21 @@ FNCS_CHECK_FUNCS([gettimeofday])
 # OS-specific tests
 
 libfncs_on_mingw32="no"
+libfncs_on_cygwin="no"
+libfncs_on_android="no"
+libfncs_on_linux="no"
+libfncs_on_gnu="no"
 
 case "${host_os}" in
-    *mingw32*)
+    *linux*)
+        libfncs_on_linux="yes"
+        case "${host_os}" in
+            *android*)
+                libfncs_on_android="yes"
+            ;;
+        esac
+    ;;
+    *mingw*)
         AC_CHECK_HEADERS(windows.h)
         AC_CHECK_LIB(ws2_32, main, ,
             [AC_MSG_ERROR([cannot link with ws2_32.dll.])])
@@ -120,10 +131,21 @@ case "${host_os}" in
         if test "x$enable_static" = "xyes"; then
             AC_MSG_ERROR([Building static libraries is not supported under MinGW32])
         fi
-        ;;
+    ;;
+    *cygwin*)
+        libfncs_on_cygwin="yes"
+    ;;
+    gnu*)
+        libfncs_on_gnu="yes"
+    ;;
 esac
 
 AM_CONDITIONAL(ON_MINGW, test "x$libfncs_on_mingw32" = "xyes")
+AM_CONDITIONAL(ON_CYGWIN, test "x$libfncs_on_cygwin" = "xyes")
+AM_CONDITIONAL(ON_ANDROID, test "x$libfncs_on_android" = "xyes")
+AM_CONDITIONAL(ON_LINUX, test "x$libfncs_on_linux" = "xyes")
+AM_CONDITIONAL(ON_GNU, test "x$libfncs_on_gnu" = "xyes")
+
 
 ###############################################################################
 # C compiler
@@ -166,6 +188,21 @@ case "${host_os}" in
         AC_ENABLE_STATIC
     ;;
 esac
+
+# Libtool -version-info (ABI version)
+#
+# Don't change this unless you know exactly what you're doing and have read and
+# understand:
+# http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+#
+# Changes:
+#
+# FNCS versions prior to 2.0.0 use 0:0:0 (undefined)
+# FNCS versions 2.0.x: 1:0:0 (ABI version 1)
+#
+# libfncs -version-info current:revision:age
+LTVER="1:0:0"
+AC_SUBST(LTVER)
 
 LT_INIT([win32-dll])
 
