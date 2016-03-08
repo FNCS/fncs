@@ -67,7 +67,7 @@ _get_events.restype = ctypes.POINTER(ctypes.c_char_p)
 def get_events():
     _events = _get_events()
     size = get_events_size()
-    events = [_events[i].value for i in xrange(size)]
+    events = [_events[i] for i in xrange(size)]
     _free_char_pp(_events, size)
     return events
 
@@ -92,7 +92,7 @@ _get_values.restype = ctypes.POINTER(ctypes.c_char_p)
 def get_values(key):
     _values = _get_values(key)
     size = get_values_size(key)
-    values = [_values[i].value for i in xrange(size)]
+    values = [_values[i] for i in xrange(size)]
     _free_char_pp(_values, size)
     return values
 
@@ -104,9 +104,9 @@ _get_keys = _lib.fncs_get_keys
 _get_keys.argtypes = []
 _get_keys.restype = ctypes.POINTER(ctypes.c_char_p)
 def get_keys():
-    _keys = _get_keys(key)
-    size = get_keys_size(key)
-    keys = [_keys[i].value for i in xrange(size)]
+    _keys = _get_keys()
+    size = get_keys_size()
+    keys = [_keys[i] for i in xrange(size)]
     _free_char_pp(_keys, size)
     return keys
 
