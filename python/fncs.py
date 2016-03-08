@@ -28,9 +28,12 @@ time_request = _lib.fncs_time_request
 time_request.argtypes = [ctypes.c_ulonglong]
 time_request.restype = ctypes.c_ulonglong
 
-publish = _lib.fncs_publish
-publish.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
-publish.restype = None
+_publish = _lib.fncs_publish
+_publish.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+_publish.restype = None
+
+def publish(key, value):
+    _publish(str(key), str(value))
 
 route = _lib.fncs_route
 route.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
