@@ -1,11 +1,11 @@
 import ctypes
-import sys
+import platform
 
 _libname = "libfncs.so"
 
-if sys.platform == 'darwin':
+if platform.system() == 'Darwin':
     _libname = "libfncs.dylib"
-elif sys.platform == 'Windows':
+elif platform.system() == 'Windows':
     _libname = "libfncs"
 
 _lib = ctypes.CDLL(_libname)
