@@ -14,6 +14,7 @@ The Unreleased section will be empty for tagged releases. Unreleased functionali
 - Windows termination bugs.
   - FNCS clients experienced hangs during exit.
   - fncs_broker would experience a WSAStartup assertion.
+  - fncs_broker would exit even if realtime mode was not attempted.
 
 ## [2.1.1] - 2016-03-08
 
