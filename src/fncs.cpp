@@ -727,6 +727,7 @@ void fncs::die()
     if (client) {
         zstr_send(client, fncs::DIE);
         zsock_destroy(&client);
+        zsys_shutdown(); /* without this, Windows will hang */
     }
 
     is_initialized_ = false;
@@ -815,6 +816,7 @@ void fncs::finalize()
     }
 
     zsock_destroy(&client);
+    zsys_shutdown(); /* without this, Windows will hang */
 
     return;
 }

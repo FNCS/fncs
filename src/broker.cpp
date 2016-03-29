@@ -61,6 +61,7 @@ static inline void broker_die(const SimVec &simulators, zsock_t *server) {
         zstr_send(server, fncs::DIE);
     }
     zsock_destroy(&server);
+    zsys_shutdown(); /* without this, Windows will assert */
     if (trace.is_open()) {
         trace.close();
     }
@@ -587,6 +588,7 @@ int main(int argc, char **argv)
     }
 
     zsock_destroy(&server);
+    zsys_shutdown(); /* without this, Windows will assert */
 
     if (trace.is_open()) {
         trace.close();
