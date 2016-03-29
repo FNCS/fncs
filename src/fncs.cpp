@@ -817,8 +817,6 @@ void fncs::finalize()
 
     zsock_destroy(&client);
     zsys_shutdown(); /* without this, Windows will hang */
-
-    return;
 }
 
 

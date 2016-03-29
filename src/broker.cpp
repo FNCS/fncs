@@ -413,11 +413,11 @@ int main(int argc, char **argv)
                     time_granted = *min_element(time_actionable.begin(),
                                                 time_actionable.end());
                     LDEBUG4 << "time_granted = " << time_granted;
-#ifdef _WIN32
-                    cerr << "realtime clock not yet supported on WIN32" << endl;
-                    exit(EXIT_FAILURE);
-#else
                     if (realtime_interval) {
+#ifdef _WIN32
+                        cerr << "realtime clock not yet supported on WIN32" << endl;
+                        exit(EXIT_FAILURE);
+#else
                         LDEBUG4 << "time_real = " << time_real;
                         while (time_granted > time_real) {
                             useconds_t u = (time_granted-time_real)/1000;
@@ -425,8 +425,8 @@ int main(int argc, char **argv)
                             usleep(u);
                         }
                         LDEBUG4 << "time_real = " << time_real;
-                    }
 #endif
+                    }
                     for (size_t i=0; i<n_sims; ++i) {
                         if (time_granted == time_actionable[i]) {
                             LDEBUG4 << "granting " << time_granted
