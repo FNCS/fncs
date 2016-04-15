@@ -42,7 +42,7 @@
 using namespace ::std;
 
 static bool is_initialized_ = false;
-static bool die_is_fatal = false;
+static bool die_is_fatal = true;
 static string simulation_name = "";
 static int simulation_id = 0;
 static int n_sims = 0;
@@ -114,7 +114,7 @@ void fncs::start_logging()
     const char *fncs_log_level = NULL;
     string simlog = simulation_name + ".log";
     bool log_file = false;
-    bool log_stdout = false;
+    bool log_stdout = true;
 
     /* name for fncs log file from environment */
     fncs_log_filename = getenv("FNCS_LOG_FILENAME");
@@ -131,7 +131,7 @@ void fncs::start_logging()
     /* whether to echo to stdout from environment */
     fncs_log_stdout = getenv("FNCS_LOG_STDOUT");
     if (!fncs_log_stdout) {
-        fncs_log_stdout = "no";
+        fncs_log_stdout = "yes";
     }
 
     /* whether to enable logging at all from environment */
@@ -151,17 +151,13 @@ void fncs::start_logging()
             || fncs_log_stdout[0] == 'n'
             || fncs_log_stdout[0] == 'F'
             || fncs_log_stdout[0] == 'f') {
-    }
-    else {
-        log_stdout = true;
+        log_stdout = false;
     }
 
-    if (fncs_log_file[0] == 'N'
-            || fncs_log_file[0] == 'n'
-            || fncs_log_file[0] == 'F'
-            || fncs_log_file[0] == 'f') {
-    }
-    else {
+    if (fncs_log_file[0] == 'Y'
+            || fncs_log_file[0] == 'y'
+            || fncs_log_file[0] == 'T'
+            || fncs_log_file[0] == 't') {
         log_file = true;
     }
 
@@ -873,8 +869,8 @@ fncs::time fncs::time_unit_to_multiplier(const string &value)
 {
     LDEBUG4 << "fncs::time_unit_to_multiplier(string)";
 
-    fncs::time retval; 
-    fncs::time ignore; 
+    fncs::time retval = 1;
+    fncs::time ignore;
     string unit;
     istringstream iss(value);
 

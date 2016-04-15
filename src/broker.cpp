@@ -1,6 +1,14 @@
 /* autoconf header */
 #include "config.h"
 
+/* system headers */
+#if defined(_MSC_VER)
+#include "wingetopt/src/getopt.c"
+#else
+#include <pwd.h>
+#include <unistd.h>
+#endif
+
 /* C++ standard headers */
 #include <algorithm>
 #include <cassert>
@@ -74,6 +82,19 @@ static void time_real_update(void)
 }
 
 
+static unsigned int _parse_nsims(char *arg)
+{
+    int n_sims_signed = 0;
+    istringstream iss(arg);
+    iss >> n_sims_signed;
+    LDEBUG4 << "n_sims_signed = " << n_sims_signed;
+    if (n_sims_signed <= 0) {
+        cerr << "number of simulators arg must be >= 1" << endl;
+        exit(EXIT_FAILURE);
+    }
+    return static_cast<unsigned int>(n_sims_signed);
+}
+
 
 
 int main(int argc, char **argv)
@@ -91,32 +112,70 @@ int main(int argc, char **argv)
     zsock_t *server = NULL;     /* the broker socket */
     bool do_trace = false;      /* whether to dump all received messages */
     fncs::time realtime_interval = 0;
+    int c = 0;                  /* getopt */
 
     fncs::start_logging();
 
-    /* how many simulators are connecting? */
-    if (argc > 3) {
-        LERROR << "too many command line args";
-        exit(EXIT_FAILURE);
-    }
-    if (argc < 2) {
-        LERROR << "missing command line arg for number of simulators";
-        exit(EXIT_FAILURE);
-    }
-    if (argc >= 2) {
-        int n_sims_signed = 0;
-        istringstream iss(argv[1]);
-        iss >> n_sims_signed;
-        LDEBUG4 << "n_sims_signed = " << n_sims_signed;
-        if (n_sims_signed <= 0) {
-            LERROR << "number of simulators arg must be >= 1";
-            exit(EXIT_FAILURE);
+    while ((c = getopt(argc, argv, "dn:r:")) != -1) {
+        switch (c) {
+            case 'd':
+                break;
+            case 'n':
+                n_sims = _parse_nsims(optarg);
+                break;
+            case 'r':
+                realtime_interval = fncs::parse_time(optarg);
+                break;
+            case '?':
+                if (optopt == 'n' || optopt == 'r') {
+                    cerr << "Option -" << optopt << " requires an argument." << endl;
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            default:
+                cerr << "default case in getopt" << endl;
+                exit(EXIT_FAILURE);
+                break;
         }
-        n_sims = static_cast<unsigned int>(n_sims_signed);
     }
-    if (argc == 3) {
-        realtime_interval = fncs::parse_time(argv[2]);
-        LDEBUG4 << "realtime_interval = " << realtime_interval << " ns";
+    /* first positional arg is number of simulators */
+    if (optind != argc) {
+        if (0 == n_sims) {
+            n_sims = _parse_nsims(argv[optind]);
+        }
+        else {
+            unsigned int n_sims_ = _parse_nsims(argv[optind]);
+            if (n_sims != n_sims_) {
+                cerr << "number of simulators specified by -n and positional argument, and values differ" << endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+        ++optind;
+    }
+    /* second positional arg is real-time interval */
+    if (optind != argc) {
+        if (0 == realtime_interval) {
+            realtime_interval = fncs::parse_time(argv[2]);
+        }
+        else {
+            fncs::time realtime_interval_ = fncs::parse_time(argv[2]);
+            if (realtime_interval != realtime_interval_) {
+                cerr << "realtime interval specified by -r and positional argument, and values differ" << endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+        ++optind;
+    }
+    LDEBUG4 << "realtime_interval = " << realtime_interval << " ns";
+    /* no more positional args */
+    if (optind != argc) {
+        cerr << "too many command line args" << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    if (0 == n_sims) {
+        cerr << "missing command line arg for number of simulators" << endl;
+        exit(EXIT_FAILURE);
     }
 
     {
