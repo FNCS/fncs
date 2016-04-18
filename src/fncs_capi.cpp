@@ -18,6 +18,11 @@ void fncs_initialize_config(const char *configuration)
     fncs::initialize(configuration);
 }
 
+int fncs_is_initialized()
+{
+    fncs::is_initialized();
+}
+
 fncs_time fncs_time_request(fncs_time next)
 {
     return fncs::time_request(next);

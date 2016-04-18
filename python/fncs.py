@@ -24,6 +24,13 @@ def initialize(config=None):
     else:
         _initialize()
 
+_is_initialized = _lib.fncs_is_initialized
+_is_initialized.argtypes = []
+_is_initialized.restype = ctypes.c_int
+
+def is_initialized():
+    return 1 == _is_initialized()
+
 time_request = _lib.fncs_time_request
 time_request.argtypes = [ctypes.c_ulonglong]
 time_request.restype = ctypes.c_ulonglong

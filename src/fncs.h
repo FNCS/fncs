@@ -25,6 +25,9 @@ extern "C" {
     /** Connect to broker and parse inline configuration. */
     FNCS_EXPORT void fncs_initialize_config(const char *configuration);
 
+    /** Check whether simulator is configured and connected to broker. */
+    FNCS_EXPORT int fncs_is_initialized();
+
     /** Request the next time step to process. */
     FNCS_EXPORT fncs_time fncs_time_request(fncs_time next);
 
