@@ -18,37 +18,33 @@
 class Output2Tee
 {
 public:
-    static FILE*& Stream1();
-    static FILE*& Stream2();
-    static void Output(const std::string& msg);
+    static FILE*& Stream1()
+    {
+        static FILE* pStream = NULL;
+        return pStream;
+    }
+
+    static FILE*& Stream2()
+    {
+        static FILE* pStream = NULL;
+        return pStream;
+    }
+
+    static void Output(const std::string& msg)
+    {
+        FILE* pStream1 = Stream1();
+        if (!pStream1)
+            return;
+        fprintf(pStream1, "%s", msg.c_str());
+        fflush(pStream1);
+
+        FILE* pStream2 = Stream2();
+        if (!pStream2)
+            return;
+        fprintf(pStream2, "%s", msg.c_str());
+        fflush(pStream2);
+    }
 };
-
-inline FILE*& Output2Tee::Stream1()
-{
-    static FILE* pStream = NULL;
-    return pStream;
-}
-
-inline FILE*& Output2Tee::Stream2()
-{
-    static FILE* pStream = NULL;
-    return pStream;
-}
-
-inline void Output2Tee::Output(const std::string& msg)
-{
-    FILE* pStream1 = Stream1();
-    if (!pStream1)
-        return;
-    fprintf(pStream1, "%s", msg.c_str());
-    fflush(pStream1);
-
-    FILE* pStream2 = Stream2();
-    if (!pStream2)
-        return;
-    fprintf(pStream2, "%s", msg.c_str());
-    fflush(pStream2);
-}
 
 class FNCS_EXPORT FNCSLog : public Log<Output2Tee> {};
 

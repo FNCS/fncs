@@ -93,6 +93,8 @@ int main(int argc, char **argv)
     fncs::time realtime_interval = 0;
 
     fncs::start_logging();
+    fncs::replicate_logging(FNCSLog::ReportingLevel(),
+            Output2Tee::Stream1(), Output2Tee::Stream2());
 
     /* how many simulators are connecting? */
     if (argc > 3) {
