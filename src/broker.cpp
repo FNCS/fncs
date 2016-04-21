@@ -429,7 +429,7 @@ static int server_event(zloop_t *loop, zsock_t *server, void *arg)
         zmsg_destroy(&msg);
     }
 
-    return -1;
+    return 0;
 }
 
 
@@ -443,6 +443,8 @@ int main(int argc, char **argv)
     int rc = 0;
 
     fncs::start_logging();
+    fncs::replicate_logging(FNCSLog::ReportingLevel(),
+            Output2Tee::Stream1(), Output2Tee::Stream2()); 
 
     /* how many simulators are connecting? */
     if (argc > 3) {
@@ -517,6 +519,7 @@ int main(int argc, char **argv)
     zloop_reader_set_tolerant(loop, server);
 
     zloop_start(loop);
+    LDEBUG4 << "zloop finished";
 
     zsock_destroy(&server);
     zsys_shutdown(); /* without this, Windows will assert */

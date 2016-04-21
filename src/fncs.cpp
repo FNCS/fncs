@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <functional>
@@ -114,7 +115,7 @@ void fncs::start_logging()
     const char *fncs_log_level = NULL;
     string simlog = simulation_name + ".log";
     bool log_file = false;
-    bool log_stdout = false;
+    bool log_stdout = true;
 
     /* name for fncs log file from environment */
     fncs_log_filename = getenv("FNCS_LOG_FILENAME");
@@ -131,7 +132,7 @@ void fncs::start_logging()
     /* whether to echo to stdout from environment */
     fncs_log_stdout = getenv("FNCS_LOG_STDOUT");
     if (!fncs_log_stdout) {
-        fncs_log_stdout = "no";
+        fncs_log_stdout = "yes";
     }
 
     /* whether to enable logging at all from environment */
@@ -151,17 +152,13 @@ void fncs::start_logging()
             || fncs_log_stdout[0] == 'n'
             || fncs_log_stdout[0] == 'F'
             || fncs_log_stdout[0] == 'f') {
-    }
-    else {
-        log_stdout = true;
+        log_stdout = false;
     }
 
-    if (fncs_log_file[0] == 'N'
-            || fncs_log_file[0] == 'n'
-            || fncs_log_file[0] == 'F'
-            || fncs_log_file[0] == 'f') {
-    }
-    else {
+    if (fncs_log_file[0] == 'Y'
+            || fncs_log_file[0] == 'y'
+            || fncs_log_file[0] == 'T'
+            || fncs_log_file[0] == 't') {
         log_file = true;
     }
 
@@ -187,6 +184,14 @@ void fncs::start_logging()
     }
 
     FNCSLog::ReportingLevel() = FNCSLog::FromString(fncs_log_level);
+}
+
+
+void fncs::replicate_logging(TLogLevel &level, FILE *& one, FILE *& two)
+{
+    level = FNCSLog::ReportingLevel();
+    one = Output2Tee::Stream1();
+    two = Output2Tee::Stream2();
 }
 
 
