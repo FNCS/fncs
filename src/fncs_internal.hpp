@@ -11,6 +11,7 @@
 
 #include "yaml-cpp/yaml.h"
 #include "fncs.hpp"
+#include "log.h"
 
 using ::std::endl;
 using ::std::ostream;
@@ -116,6 +117,9 @@ namespace fncs {
 
     /** Starts the FNCS logger. */
     FNCS_EXPORT void start_logging();
+
+    /** Retrieve the internal logging streams. */
+    FNCS_EXPORT void replicate_logging(TLogLevel &level, FILE *& one, FILE *& two);
 
     /** Converts given time string, e.g., '1ms', into a fncs time value.
      * Ignores the value; only converts the unit into a multiplier. */

@@ -11,7 +11,7 @@
 #include <sstream>
 #include <string>
 
-inline std::string NowTime();
+static std::string NowTime();
 
 enum TLogLevel {
     logERROR,
@@ -108,24 +108,21 @@ TLogLevel Log<T>::FromString(const std::string& level)
 class Output2FILE
 {
 public:
-    static FILE*& Stream();
-    static void Output(const std::string& msg);
+    static FILE*& Stream()
+    {
+        static FILE* pStream = stderr;
+        return pStream;
+    }
+
+    static void Output(const std::string& msg)
+    {
+        FILE* pStream = Stream();
+        if (!pStream)
+            return;
+        fprintf(pStream, "%s", msg.c_str());
+        fflush(pStream);
+    }
 };
-
-inline FILE*& Output2FILE::Stream()
-{
-    static FILE* pStream = stderr;
-    return pStream;
-}
-
-inline void Output2FILE::Output(const std::string& msg)
-{   
-    FILE* pStream = Stream();
-    if (!pStream)
-        return;
-    fprintf(pStream, "%s", msg.c_str());
-    fflush(pStream);
-}
 
 /* FNCS doesn't need FILELog */
 #if 0
@@ -158,7 +155,7 @@ class FILELOG_DECLSPEC FILELog : public Log<Output2FILE> {};
 
 #include <windows.h>
 
-inline std::string NowTime()
+static std::string NowTime()
 {
     const int MAX_LEN = 200;
     char buffer[MAX_LEN];
@@ -176,7 +173,7 @@ inline std::string NowTime()
 
 #include <sys/time.h>
 
-inline std::string NowTime()
+static std::string NowTime()
 {
     char buffer[11];
     time_t t;
