@@ -61,6 +61,8 @@ typedef map<string,set<string> > SimKeyMap;
 static fncs::time time_real_start;
 static fncs::time time_real;
 static ofstream trace; /* the trace stream, if requested */
+static ofstream dot; /* the dot output, if requested */
+static SimIndex dot_record;
 
 static inline void broker_die(const SimVec &simulators, zsock_t *server) {
     /* repeat the fatal die to all connected sims */
@@ -72,6 +74,10 @@ static inline void broker_die(const SimVec &simulators, zsock_t *server) {
     zsys_shutdown(); /* without this, Windows will assert */
     if (trace.is_open()) {
         trace.close();
+    }
+    if (dot.is_open()) {
+        dot << "}" << endl;
+        dot.close();
     }
     exit(EXIT_FAILURE);
 }
@@ -113,12 +119,14 @@ int main(int argc, char **argv)
     bool do_trace = false;      /* whether to dump all received messages */
     fncs::time realtime_interval = 0;
     int c = 0;                  /* getopt */
+    bool do_dot = false;        /* whether to output summary dot files */
 
     fncs::start_logging();
 
     while ((c = getopt(argc, argv, "dn:r:")) != -1) {
         switch (c) {
             case 'd':
+                do_dot = true;
                 break;
             case 'n':
                 n_sims = _parse_nsims(optarg);
@@ -176,6 +184,15 @@ int main(int argc, char **argv)
     if (0 == n_sims) {
         cerr << "missing command line arg for number of simulators" << endl;
         exit(EXIT_FAILURE);
+    }
+
+    if (do_dot) {
+        dot.open("broker.dot");
+        if (!dot) {
+            LERROR << "Could not open dot file 'broker.dot'";
+            exit(EXIT_FAILURE);
+        }
+        dot << "digraph broker {" << endl;
     }
 
     {
@@ -301,11 +318,23 @@ int main(int argc, char **argv)
                 /* parse subscription values */
                 set<string> subscription_values;
                 if (!config.values.empty()) {
+                    if (dot.is_open()) {
+                        dot << '"' << sender << "\" [shape = house];" << endl;
+                    }
                     vector<fncs::Subscription> &subs = config.values;
                     for (size_t i=0; i<subs.size(); ++i) {
                         string topic = subs[i].topic;
                         LDEBUG4 << "adding value '" << topic << "'";
                         subscription_values.insert(topic);
+                        if (dot.is_open()) {
+                            dot << '"' << topic << '"'
+                                << " -> "
+                                << '"' << subs[i].key << '"'
+                                << " -> "
+                                << '"' << sender << '"'
+                                << ';' << endl;
+                            dot << '"' << subs[i].key << "\" [shape = box];" << endl;
+                        }
                         TopicMap::iterator it = topic_to_indexes.find(topic);
                         if (it != topic_to_indexes.end()) {
                             it->second.push_back(index);
@@ -587,6 +616,15 @@ int main(int argc, char **argv)
                             found_one = true;
                             simulators[i].messages_pending = true;
                             LDEBUG4 << "pub to " << simulators[i].name;
+                            if (dot.is_open()) {
+                                if (0 == dot_record.count(topic)) {
+                                    dot_record[topic] = 1;
+                                    dot << '"' << topic << "\" [color = green];" << endl;
+                                }
+                                else {
+                                    dot_record[topic] += 1;
+                                }
+                            }
                         }
                     }
                 }
@@ -652,6 +690,11 @@ int main(int argc, char **argv)
     if (trace.is_open()) {
         trace.close();
     }
+    if (dot.is_open()) {
+        dot << "}" << endl;
+        dot.close();
+    }
+
 
     return 0;
 }
