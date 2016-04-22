@@ -52,7 +52,9 @@ typedef map<string,set<string> > SimKeyMap;
 
 static fncs::time time_real_start;
 static fncs::time time_real;
+static int64_t mono_clock; /* microsecond monotonic clock */
 static ofstream trace; /* the trace stream, if requested */
+static ofstream clock_out; /* the clock stream, if requested */
 
 static inline void broker_die(const SimVec &simulators, zsock_t *server) {
     /* repeat the fatal die to all connected sims */
@@ -64,6 +66,9 @@ static inline void broker_die(const SimVec &simulators, zsock_t *server) {
     zsys_shutdown(); /* without this, Windows will assert */
     if (trace.is_open()) {
         trace.close();
+    }
+    if (clock_out.is_open()) {
+        clock_out.close();
     }
     exit(EXIT_FAILURE);
 }
@@ -90,6 +95,7 @@ int main(int argc, char **argv)
     fncs::time time_granted = 0;/* global clock */
     zsock_t *server = NULL;     /* the broker socket */
     bool do_trace = false;      /* whether to dump all received messages */
+    bool do_rt_check = false;   /* whether to dump real-time clock checks */
     fncs::time realtime_interval = 0;
 
     fncs::start_logging();
@@ -131,6 +137,18 @@ int main(int argc, char **argv)
         }
     }
 
+    {
+        const char *env_do_rt_check = getenv("FNCS_RT_CHECK");
+        if (env_do_rt_check) {
+            if (env_do_rt_check[0] == 'Y'
+                    || env_do_rt_check[0] == 'y'
+                    || env_do_rt_check[0] == 'T'
+                    || env_do_rt_check[0] == 't') {
+                do_rt_check = true;
+            }
+        }
+    }
+
     if (do_trace) {
         LDEBUG4 << "tracing of all published messages enabled";
         trace.open("broker_trace.txt");
@@ -139,6 +157,15 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
         trace << "#nanoseconds\ttopic\tvalue" << endl;
+    }
+
+    if (do_rt_check) {
+        LDEBUG4 << "real-time clock check enabled";
+        clock_out.open("broker_rt_check.csv");
+        if (!clock_out) {
+            LERROR << "Could not open trace file 'broker_rt_check.csv'";
+            exit(EXIT_FAILURE);
+        }
     }
 
     /* broker endpoint may come from env var */
@@ -326,6 +353,7 @@ int main(int argc, char **argv)
                         zstr_send(server, fncs::ACK);
                         LDEBUG4 << "ACK sent to '" << simulators[i].name;
                     }
+                    mono_clock = zclock_usecs();
                 }
             }
             else if (fncs::TIME_REQUEST == message_type
@@ -410,6 +438,7 @@ int main(int argc, char **argv)
                             time_actionable[i] = simulators[i].time_requested;
                         }
                     }
+                    fncs::time time_last = time_granted;
                     time_granted = *min_element(time_actionable.begin(),
                                                 time_actionable.end());
                     LDEBUG4 << "time_granted = " << time_granted;
@@ -443,6 +472,17 @@ int main(int argc, char **argv)
                             fncs::time jump = (time_granted - simulators[i].time_last_processed) / simulators[i].time_delta;
                             simulators[i].time_last_processed += simulators[i].time_delta * jump;
                         }
+                    }
+                    {
+                        int64_t new_mono_clock = zclock_usecs();
+                        fncs::time time_elapsed = time_granted-time_last;
+                        int64_t mono_elapsed = (new_mono_clock-mono_clock)*1000;
+                        clock_out << time_granted
+                            << "," << time_elapsed
+                            << "," << mono_elapsed
+                            << "," << time_elapsed-mono_elapsed
+                            << endl;
+                        mono_clock = new_mono_clock;
                     }
                 }
             }
@@ -592,6 +632,14 @@ int main(int argc, char **argv)
 
     if (trace.is_open()) {
         trace.close();
+    }
+    if (clock_out.is_open()) {
+        clock_out.close();
+    }
+    {
+        int64_t new_mono_clock = zclock_usecs();
+        int64_t mono_elapsed = (new_mono_clock-mono_clock)*1.0/1000000;
+        cout << "co-sim finished in " << mono_elapsed << " seconds" << endl;
     }
 
     return 0;
