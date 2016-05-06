@@ -50,9 +50,16 @@ typedef map<string,IndexVec> TopicMap;
 typedef map<string,set<string> > SimKeyMap;
 
 static ofstream trace; /* the trace stream, if requested */
+static ofstream ofs_status; /* the trace stream, if requested */
 static unsigned int n_sims = 0; /* how many sims will connect */
+static fncs::time time_granted = 0; /* global clock */
+static int64_t time_zclock_last = 0; /* global real-time mono clock */
+static unsigned long long count_publish = 0;
+static unsigned long long count_time_request = 0;
+static bool is_running = false;
 
 static inline void broker_die(const SimVec &simulators, zsock_t *server) {
+    is_running = false;
     /* repeat the fatal die to all connected sims */
     for (size_t i=0; i<simulators.size(); ++i) {
         zstr_sendm(server, simulators[i].name.c_str());
@@ -63,11 +70,14 @@ static inline void broker_die(const SimVec &simulators, zsock_t *server) {
     if (trace.is_open()) {
         trace.close();
     }
+    if (ofs_status.is_open()) {
+        ofs_status.close();
+    }
     exit(EXIT_FAILURE);
 }
 
 
-static int server_event(zloop_t *loop, zsock_t *server, void *arg)
+static int server_handler(zloop_t *loop, zsock_t *server, void *arg)
 {
     /* declare all variables */
     static set<string> byes;           /* which sims have disconnected */
@@ -76,7 +86,6 @@ static int server_event(zloop_t *loop, zsock_t *server, void *arg)
     static SimIndex name_to_index;     /* quickly lookup sim state index */
     static TopicMap topic_to_indexes;  /* quickly lookup subscribed sims */
     static SimKeyMap name_to_keys;     /* summary of topics per sim name */
-    static fncs::time time_granted = 0;/* global clock */
 
     {
         int rc = 0;
@@ -193,6 +202,7 @@ static int server_event(zloop_t *loop, zsock_t *server, void *arg)
             if (simulators.size() == n_sims) {
                 /* easier to keep a counter than iterating over states */
                 n_processing = n_sims;
+                is_running = true;
                 /* send ACK to all registered sims */
                 for (size_t i=0; i<n_sims; ++i) {
                     set<string> &keys = name_to_keys[simulators[i].name];
@@ -242,6 +252,7 @@ static int server_event(zloop_t *loop, zsock_t *server, void *arg)
 
                 /* if all byes received, then exit */
                 if (byes.size() == n_sims) {
+                    is_running = false;
                     /* let all sims know that globally we are finished */
                     for (size_t i=0; i<n_sims; ++i) {
                         zstr_sendm(server, simulators[i].name.c_str());
@@ -257,6 +268,7 @@ static int server_event(zloop_t *loop, zsock_t *server, void *arg)
                 simulators[index].time_requested = ULLONG_MAX;
             }
             else if (fncs::TIME_REQUEST == message_type) {
+                ++count_time_request;
                 /* next frame is time */
                 frame = zmsg_next(msg);
                 if (!frame) {
@@ -319,6 +331,8 @@ static int server_event(zloop_t *loop, zsock_t *server, void *arg)
             bool found_one = false;
 
             LDEBUG4 << "PUBLISH received";
+
+            ++count_publish;
 
             /* did we receive message from a connected sim? */
             if (name_to_index.count(sender) == 0) {
@@ -433,6 +447,33 @@ static int server_event(zloop_t *loop, zsock_t *server, void *arg)
 }
 
 
+int status_handler(zloop_t *loop, int timer_id, void *arg)
+{
+    static fncs::time time_granted_last = 0;
+    static unsigned long long count_publish_last = 0;
+    static unsigned long long count_time_request_last = 0;
+
+    int64_t time_zclock_now = zclock_mono();
+    fncs::time time_granted_diff = time_granted - time_granted_last;
+    int64_t time_zclock_diff = time_zclock_now - time_zclock_last;
+    unsigned long long count_publish_diff = count_publish - count_publish_last;
+    unsigned long long count_time_request_diff = count_time_request - count_time_request_last;
+
+    if (is_running) {
+        ofs_status << time_granted_diff
+            << "," << time_zclock_diff
+            << "," << count_publish_diff
+            << "," << count_time_request_diff
+            << endl;
+    }
+
+    time_zclock_last = time_zclock_now;
+    time_granted_last = time_granted;
+    count_publish_last = count_publish;
+    count_time_request_last = count_time_request;
+}
+
+
 int main(int argc, char **argv)
 {
     /* declare all variables */
@@ -440,14 +481,22 @@ int main(int argc, char **argv)
     zsock_t *server = NULL;     /* the broker socket */
     bool do_trace = false;      /* whether to dump all received messages */
     fncs::time realtime_interval = 0;
+    fncs::time status_interval = 0;
     int rc = 0;
+
+    /* initialize global static counters */
+    time_granted = 0;
+    time_zclock_last = zclock_mono();
+    count_publish = 0;
+    count_time_request = 0;
+    is_running = false;
 
     fncs::start_logging();
     fncs::replicate_logging(FNCSLog::ReportingLevel(),
             Output2Tee::Stream1(), Output2Tee::Stream2()); 
 
     /* how many simulators are connecting? */
-    if (argc > 3) {
+    if (argc > 4) {
         LERROR << "too many command line args";
         exit(EXIT_FAILURE);
     }
@@ -466,9 +515,13 @@ int main(int argc, char **argv)
         }
         n_sims = static_cast<unsigned int>(n_sims_signed);
     }
-    if (argc == 3) {
+    if (argc >= 3) {
         realtime_interval = fncs::parse_time(argv[2]);
         LDEBUG4 << "realtime_interval = " << realtime_interval << " ns";
+    }
+    if (argc == 4) {
+        status_interval = fncs::parse_time(argv[3]);
+        LDEBUG4 << "status_interval = " << status_interval << " ns";
     }
 
     {
@@ -514,9 +567,22 @@ int main(int argc, char **argv)
     assert(loop);
     zloop_set_verbose(loop, true);
 
-    rc = zloop_reader(loop, server, server_event, NULL);
+    rc = zloop_reader(loop, server, server_handler, NULL);
     assert(0 == rc);
     zloop_reader_set_tolerant(loop, server);
+
+    if (0 != status_interval) {
+        if (0 != status_interval%1000000) {
+            LWARNING << "status interval must have millisecond resolution";
+        }
+        ofs_status.open("broker_status.csv");
+        if (!ofs_status) {
+            LERROR << "Could not open status file 'broker_status.csv'";
+            exit(EXIT_FAILURE);
+        }
+        ofs_status << "model time (ns),wall time (ms),published count,time request count" << endl;
+        zloop_timer(loop, status_interval/1000000, 0, status_handler, NULL);
+    }
 
     zloop_start(loop);
     LDEBUG4 << "zloop finished";
@@ -526,6 +592,9 @@ int main(int argc, char **argv)
 
     if (trace.is_open()) {
         trace.close();
+    }
+    if (ofs_status.is_open()) {
+        ofs_status.close();
     }
 
     return 0;
