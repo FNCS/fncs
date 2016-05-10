@@ -49,6 +49,9 @@ static int simulation_id = 0;
 static int n_sims = 0;
 static fncs::time time_delta_multiplier = 0;
 static fncs::time time_delta = 0;
+static fncs::time time_peer = 0;
+static fncs::time time_current = 0;
+static fncs::time time_window = 0;
 static zsock_t *client = NULL;
 static map<string,string> cache;
 static vector<string> events;
@@ -472,6 +475,17 @@ void fncs::initialize(Config config)
         LDEBUG2 << "key is " << key;
     }
 
+    /* next frame is peer time */
+    frame = zmsg_next(msg);
+    if (!frame) {
+        LERROR << "ACK message missing peer time";
+        die();
+        return;
+    }
+    long time_peer_long = atol(fncs::to_string(frame).c_str());
+    LDEBUG2 << "time_peer_long is " << time_peer_long;
+    time_peer = time_peer_long;
+
     /* last frame is second ACK */
     frame = zmsg_next(msg);
     if (!zframe_streq(frame, ACK)) {
@@ -482,6 +496,8 @@ void fncs::initialize(Config config)
     LDEBUG2 << "received second ACK";
     zmsg_destroy(&msg);
 
+    time_current = 0;
+    time_window = 0;
     is_initialized_ = true;
 }
 
@@ -492,34 +508,44 @@ bool fncs::is_initialized()
 }
 
 
-fncs::time fncs::time_request(fncs::time next)
+fncs::time fncs::time_request(fncs::time time_next)
 {
     LDEBUG4 << "fncs::time_request(fncs::time)";
 
     if (!is_initialized_) {
         LWARNING << "fncs is not initialized";
-        return next;
+        return time_next;
     }
 
-    fncs::time granted;
+    fncs::time time_granted;
+    fncs::time time_passed;
 
     /* send TIME_REQUEST */
-    LDEBUG2 << "sending TIME_REQUEST of " << next << " in sim units";
-    next *= time_delta_multiplier;
+    LDEBUG2 << "sending TIME_REQUEST of " << time_next << " in sim units";
+    time_next *= time_delta_multiplier;
 
-    if (next % time_delta != 0) {
+    if (time_next % time_delta != 0) {
         LERROR << "time request "
-            << next
-            << " is not a multiple of time delta ("
+            << time_next
+            << " ns is not a multiple of time delta ("
             << time_delta
-            << ")!";
+            << " ns)!";
         die();
-        return next;
+        return time_next;
     }
 
-    LDEBUG1 << "sending TIME_REQUEST of " << next << " nanoseconds";
-    zstr_sendm(client, fncs::TIME_REQUEST);
-    zstr_sendf(client, "%llu", next);
+    if (time_next < time_current) {
+        LERROR << "time request "
+            << time_next
+            << " ns is smaller than the current time ("
+            << time_current
+            << " ns)!";
+        die();
+        return time_next;
+    }
+
+    time_passed = time_next - time_current;
+    LDEBUG2 << "time advanced " << time_passed << " ns since last request";
 
     /* sending of the time request implies we are done with the cache
      * list, but the other cache remains as a last value cache */
@@ -529,6 +555,22 @@ fncs::time fncs::time_request(fncs::time next)
     for (clist_t::iterator it=cache_list.begin(); it!=cache_list.end(); ++it) {
         it->second.clear();
     }
+
+    if (time_passed < time_window) {
+        time_window -= time_passed;
+        LDEBUG1 << "there are " << time_window << " nanoseconds left in the window";
+        LDEBUG1 << "time_granted " << time_next << " nanoseonds";
+        time_current = time_next;
+        return time_next;
+    }
+    else {
+        LDEBUG1 << "time_window expired";
+        time_window = 0;
+    }
+
+    LDEBUG1 << "sending TIME_REQUEST of " << time_next << " nanoseconds";
+    zstr_sendm(client, fncs::TIME_REQUEST);
+    zstr_sendf(client, "%llu", time_next);
 
     /* receive TIME_REQUEST and perhaps other message types */
     zmq_pollitem_t items[] = { { zsock_resolve(client), 0, ZMQ_POLLIN, 0 } };
@@ -540,7 +582,7 @@ fncs::time fncs::time_request(fncs::time next)
         if (rc == -1) {
             LERROR << "client polling error: " << strerror(errno);
             die(); /* interrupted */
-            return next;
+            return time_next;
         }
 
         if (items[0].revents & ZMQ_POLLIN) {
@@ -553,7 +595,7 @@ fncs::time fncs::time_request(fncs::time next)
             if (!msg) {
                 LERROR << "null message received";
                 die();
-                return next;
+                return time_next;
             }
 
             /* first frame is message type identifier */
@@ -561,7 +603,7 @@ fncs::time fncs::time_request(fncs::time next)
             if (!frame) {
                 LERROR << "message missing type identifier";
                 die();
-                return next;
+                return time_next;
             }
             message_type = fncs::to_string(frame);
 
@@ -569,17 +611,17 @@ fncs::time fncs::time_request(fncs::time next)
             if (fncs::TIME_REQUEST == message_type) {
                 LDEBUG4 << "TIME_REQUEST received";
 
-                /* next frame is time */
+                /* time_next frame is time */
                 frame = zmsg_next(msg);
                 if (!frame) {
                     LERROR << "message missing time";
                     die();
-                    return next;
+                    return time_next;
                 }
                 /* convert time string to nanoseconds */
                 {
                     istringstream iss(fncs::to_string(frame));
-                    iss >> granted;
+                    iss >> time_granted;
                 }
 
                 /* destroy message early since a returned TIME_REQUEST
@@ -601,7 +643,7 @@ fncs::time fncs::time_request(fncs::time next)
                 if (!frame) {
                     LERROR << "message missing topic";
                     die();
-                    return next;
+                    return time_next;
                 }
                 topic = fncs::to_string(frame);
 
@@ -610,7 +652,7 @@ fncs::time fncs::time_request(fncs::time next)
                 if (!frame) {
                     LERROR << "message missing value";
                     die();
-                    return next;
+                    return time_next;
                 }
                 value = fncs::to_string(frame);
 
@@ -647,18 +689,29 @@ fncs::time fncs::time_request(fncs::time next)
             else {
                 LERROR << "unrecognized message type";
                 die();
-                return next;
+                return time_next;
             }
 
             zmsg_destroy(&msg);
         }
     }
 
-    LDEBUG1 << "granted " << granted << " nanoseonds";
+    LDEBUG1 << "time_granted " << time_granted << " nanoseonds";
+
+    time_current = time_granted;
+
+    /* the peers this sim interacts with have a larger 'tick' */
+    if (time_peer > time_delta) {
+        /* how much time is left before reaching the peers' time? */
+        time_window = time_peer - (time_current % time_peer);
+        LDEBUG1 << "new time_window of " << time_window << " nanoseconds";
+    }
+
     /* convert nanoseonds to sim's time unit */
-    granted = convert_broker_to_sim_time(granted);
-    LDEBUG2 << "granted " << granted << " in sim units";
-    return granted;
+    time_granted = convert_broker_to_sim_time(time_granted);
+    LDEBUG2 << "time_granted " << time_granted << " in sim units";
+
+    return time_granted;
 }
 
 

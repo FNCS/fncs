@@ -46,8 +46,10 @@ class SimulatorState {
 typedef map<string,size_t> SimIndex;
 typedef vector<SimulatorState> SimVec;
 typedef vector<size_t> IndexVec;
+typedef vector<fncs::time> TimeVec;
 typedef map<string,IndexVec> TopicMap;
 typedef map<string,set<string> > SimKeyMap;
+typedef map<string,TimeVec> SimTimeMap;
 
 static ofstream trace; /* the trace stream, if requested */
 static ofstream ofs_status; /* the trace stream, if requested */
@@ -86,6 +88,8 @@ static int server_handler(zloop_t *loop, zsock_t *server, void *arg)
     static SimIndex name_to_index;     /* quickly lookup sim state index */
     static TopicMap topic_to_indexes;  /* quickly lookup subscribed sims */
     static SimKeyMap name_to_keys;     /* summary of topics per sim name */
+    static SimKeyMap name_to_peers;    /* summary of peers per sim name */
+    static SimTimeMap name_to_peertimes; /* summary of peer deltas */
 
     {
         int rc = 0;
@@ -156,10 +160,12 @@ static int server_handler(zloop_t *loop, zsock_t *server, void *arg)
                 LWARNING << sender << " time_delta defaulting to 1s";
                 time_delta = "1s";
             }
+            state.time_delta = fncs::parse_time(time_delta);
 
             /* parse subscription values */
             if (!config.values.empty()) {
                 vector<fncs::Subscription> &subs = config.values;
+                set<string> peers;
                 for (size_t i=0; i<subs.size(); ++i) {
                     string topic = subs[i].topic;
                     LDEBUG4 << "adding value '" << topic << "'";
@@ -179,8 +185,20 @@ static int server_handler(zloop_t *loop, zsock_t *server, void *arg)
                         string key = topic.substr(loc+1);
                         name_to_keys[name].insert(key);
                         LDEBUG4 << "name_to_keys[" << name << "]=" << key;
+                        peers.insert(name);
                     }
                 }
+                for (set<string>::iterator it=peers.begin();
+                        it!=peers.end(); ++it) {
+                    SimTimeMap::iterator stm = name_to_peertimes.find(*it);
+                    if (stm == name_to_peertimes.end()) {
+                        name_to_peertimes[*it] = TimeVec(1, state.time_delta);
+                    }
+                    else {
+                        name_to_peertimes[*it].push_back(state.time_delta);
+                    }
+                }
+                name_to_peers[sender] = peers;
             }
             else {
                 LDEBUG4 << "no subscription values";
@@ -188,7 +206,7 @@ static int server_handler(zloop_t *loop, zsock_t *server, void *arg)
 
             /* populate sim state object */
             state.name = sender;
-            state.time_delta = fncs::parse_time(time_delta);
+            /*state.time_delta = fncs::parse_time(time_delta);*/ /*above*/
             state.time_requested = 0;
             state.time_last_processed = 0;
             state.processing = false;
@@ -214,6 +232,26 @@ static int server_handler(zloop_t *loop, zsock_t *server, void *arg)
                     zstr_sendfm(server, "%llu", (unsigned long long)keys.size());
                     for (set<string>::iterator it=keys.begin(); it!=keys.end(); ++it) {
                         zstr_sendm(server, it->c_str());
+                    }
+                    /* smallest delta of any clients */
+                    {
+                        fncs::time time_peer = 0;
+                        TimeVec &peertimes = name_to_peertimes[simulators[i].name];
+                        set<string> &peers = name_to_peers[simulators[i].name];
+                        for (set<string>::iterator it=peers.begin();
+                                it!=peers.end(); ++it) {
+                            assert(name_to_index.count(*it));
+                            size_t index = name_to_index[*it];
+                            peertimes.push_back(simulators[index].time_delta);
+                        }
+                        if (!peertimes.empty()) {
+                            time_peer = *min_element(
+                                    peertimes.begin(),
+                                    peertimes.end());
+                        }
+                        LDEBUG4 << "time_peer = " << time_peer;
+                        LDEBUG4 << "time_delta= " << simulators[i].time_delta;
+                        zstr_sendfm(server, "%llu", (unsigned long long)time_peer);
                     }
                     zstr_send(server, fncs::ACK);
                     LDEBUG4 << "ACK sent to '" << simulators[i].name;
