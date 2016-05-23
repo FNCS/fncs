@@ -66,7 +66,20 @@ static sub_string_t subs_string;
 
 
 #if defined(_WIN32)
-static void signal_handler_reset() { } /* no-op */
+static BOOL WINAPI
+s_handler_fn_shim (DWORD ctrltype)
+{
+    if (ctrltype == CTRL_C_EVENT) {
+        zctx_interrupted = 1;
+        zsys_interrupted = 1;
+    }
+    return FALSE;
+}
+static void signal_handler_reset()
+{
+    zsys_handler_set(NULL);
+    SetConsoleCtrlHandler(s_handler_fn_shim, TRUE);
+}
 #else
 #include <signal.h>
 static struct sigaction sigint_default;
