@@ -234,7 +234,7 @@ void fncs::initialize()
             YAML::Node doc;
             parser.GetNextDocument(doc);
             config = parse_config(doc);
-        } catch (YAML::ParserException &ex) {
+        } catch (YAML::ParserException &) {
             cerr << "could not open " << fncs_config_file << endl;
         }
     }
@@ -886,8 +886,8 @@ fncs::time fncs::time_unit_to_multiplier(const string &value)
 {
     LDEBUG4 << "fncs::time_unit_to_multiplier(string)";
 
-    fncs::time retval; 
-    fncs::time ignore; 
+    fncs::time retval = 0;
+    fncs::time ignore = 0;
     string unit;
     istringstream iss(value);
 
@@ -1019,7 +1019,7 @@ fncs::Config fncs::parse_config(const string &configuration)
             YAML::Node doc;
             parser.GetNextDocument(doc);
             config = parse_config(doc);
-        } catch (YAML::ParserException &ex) {
+        } catch (YAML::ParserException &) {
             cerr << "could not load YAML configuration string" << endl;
             cerr << "-- configuration was as follows --" << endl;
             cerr << configuration << endl;
