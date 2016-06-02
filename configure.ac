@@ -201,9 +201,10 @@ esac
 # FNCS versions 2.1.0: 1:0:0 (ABI version 1)
 # FNCS versions 2.1.1: 1:0:0 (ABI version 1) - C/C++ library unchanged
 # FNCS versions 2.1.2: 1:1:0 (ABI version 1)
+# FNCS versions 2.2.0: 2:0:1 (ABI version 1) - C added fncs_is_initialized()
 #
 # libfncs -version-info current:revision:age
-LTVER="1:1:0"
+LTVER="2:0:1"
 AC_SUBST(LTVER)
 
 LT_INIT([win32-dll])

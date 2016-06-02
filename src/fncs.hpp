@@ -11,8 +11,8 @@ using ::std::vector;
 
 /*  Version macros for compile-time API version detection                     */
 #define FNCS_VERSION_MAJOR 2
-#define FNCS_VERSION_MINOR 1
-#define FNCS_VERSION_PATCH 2
+#define FNCS_VERSION_MINOR 2
+#define FNCS_VERSION_PATCH 0
 
 #define FNCS_MAKE_VERSION(major, minor, patch) \
     ((major) * 10000 + (minor) * 100 + (patch))
