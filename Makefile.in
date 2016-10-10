@@ -193,9 +193,7 @@ am_contrib_yaml_cpp_test_test_OBJECTS = contrib/yaml-cpp/test/contrib_yaml_cpp_t
 	contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-tests.$(OBJEXT)
 contrib_yaml_cpp_test_test_OBJECTS =  \
 	$(am_contrib_yaml_cpp_test_test_OBJECTS)
-contrib_yaml_cpp_test_test_LDADD = $(LDADD)
-contrib_yaml_cpp_test_test_DEPENDENCIES = libfncs.la \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+contrib_yaml_cpp_test_test_DEPENDENCIES = libyamlcpp.la
 am_fncs_broker_OBJECTS = src/broker.$(OBJEXT)
 fncs_broker_OBJECTS = $(am_fncs_broker_OBJECTS)
 fncs_broker_LDADD = $(LDADD)
@@ -565,6 +563,7 @@ contrib_yaml_cpp_test_test_SOURCES =  \
 	contrib/yaml-cpp/test/tests.cpp contrib/yaml-cpp/test/tests.h
 contrib_yaml_cpp_test_test_CPPFLAGS = $(AM_CPPFLAGS) \
 	-I$(top_srcdir)/contrib/yaml-cpp/test
+contrib_yaml_cpp_test_test_LDADD = libyamlcpp.la
 tests_config_SOURCES = tests/config.cpp
 tests_test_SOURCES = tests/test.cpp
 tests_fncs_netdelay_SOURCES = tests/netdelay.cpp

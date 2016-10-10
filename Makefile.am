@@ -143,6 +143,8 @@ contrib_yaml_cpp_test_test_CPPFLAGS =
 contrib_yaml_cpp_test_test_CPPFLAGS += $(AM_CPPFLAGS)
 contrib_yaml_cpp_test_test_CPPFLAGS += -I$(top_srcdir)/contrib/yaml-cpp/test
 
+contrib_yaml_cpp_test_test_LDADD = libyamlcpp.la
+
 check_PROGRAMS += tests/config
 tests_config_SOURCES = tests/config.cpp
 
