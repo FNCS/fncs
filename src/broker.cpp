@@ -351,9 +351,11 @@ int main(int argc, char **argv)
                             set<string> &peers = name_to_peers[simulators[i].name];
                             for (set<string>::iterator it=peers.begin();
                                     it!=peers.end(); ++it) {
-                                assert(name_to_index.count(*it));
-                                size_t index = name_to_index[*it];
-                                peertimes.push_back(simulators[index].time_delta);
+                                SimIndex::iterator simit = name_to_index.find(*it);
+                                if (simit != name_to_index.end()) {
+                                    size_t index = simit->second;
+                                    peertimes.push_back(simulators[index].time_delta);
+                                }
                             }
                             if (!peertimes.empty()) {
                                 time_peer = *min_element(
