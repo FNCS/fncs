@@ -85,7 +85,7 @@ bin_PROGRAMS = fncs_broker$(EXEEXT) fncs_tracer$(EXEEXT) \
 	fncs_player$(EXEEXT) fncs_player_anon$(EXEEXT)
 check_PROGRAMS = contrib/yaml-cpp/test/test$(EXEEXT) \
 	tests/config$(EXEEXT) tests/test$(EXEEXT) \
-	tests/fncs_netdelay$(EXEEXT)
+	tests/fncs_netdelay$(EXEEXT) benchmarks/bencher$(EXEEXT)
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
@@ -185,6 +185,11 @@ am_libyamlcpp_la_OBJECTS = contrib/yaml-cpp/src/aliasmanager.lo \
 	contrib/yaml-cpp/src/stream.lo contrib/yaml-cpp/src/tag.lo
 libyamlcpp_la_OBJECTS = $(am_libyamlcpp_la_OBJECTS)
 PROGRAMS = $(bin_PROGRAMS)
+am_benchmarks_bencher_OBJECTS = benchmarks/bencher.$(OBJEXT)
+benchmarks_bencher_OBJECTS = $(am_benchmarks_bencher_OBJECTS)
+benchmarks_bencher_LDADD = $(LDADD)
+benchmarks_bencher_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 am_contrib_yaml_cpp_test_test_OBJECTS = contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.$(OBJEXT) \
 	contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.$(OBJEXT) \
 	contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.$(OBJEXT) \
@@ -282,11 +287,13 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libfncs_la_SOURCES) $(libyamlcpp_la_SOURCES) \
+	$(benchmarks_bencher_SOURCES) \
 	$(contrib_yaml_cpp_test_test_SOURCES) $(fncs_broker_SOURCES) \
 	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
 	$(fncs_tracer_SOURCES) $(tests_config_SOURCES) \
 	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES)
 DIST_SOURCES = $(libfncs_la_SOURCES) $(libyamlcpp_la_SOURCES) \
+	$(benchmarks_bencher_SOURCES) \
 	$(contrib_yaml_cpp_test_test_SOURCES) $(fncs_broker_SOURCES) \
 	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
 	$(fncs_tracer_SOURCES) $(tests_config_SOURCES) \
@@ -567,6 +574,7 @@ contrib_yaml_cpp_test_test_LDADD = libyamlcpp.la
 tests_config_SOURCES = tests/config.cpp
 tests_test_SOURCES = tests/test.cpp
 tests_fncs_netdelay_SOURCES = tests/netdelay.cpp
+benchmarks_bencher_SOURCES = benchmarks/bencher.cpp
 fncs_broker_SOURCES = src/broker.cpp
 fncs_tracer_SOURCES = src/tracer.cpp
 fncs_player_SOURCES = src/player.cpp
@@ -828,6 +836,18 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+benchmarks/$(am__dirstamp):
+	@$(MKDIR_P) benchmarks
+	@: > benchmarks/$(am__dirstamp)
+benchmarks/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) benchmarks/$(DEPDIR)
+	@: > benchmarks/$(DEPDIR)/$(am__dirstamp)
+benchmarks/bencher.$(OBJEXT): benchmarks/$(am__dirstamp) \
+	benchmarks/$(DEPDIR)/$(am__dirstamp)
+
+benchmarks/bencher$(EXEEXT): $(benchmarks_bencher_OBJECTS) $(benchmarks_bencher_DEPENDENCIES) $(EXTRA_benchmarks_bencher_DEPENDENCIES) benchmarks/$(am__dirstamp)
+	@rm -f benchmarks/bencher$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(benchmarks_bencher_OBJECTS) $(benchmarks_bencher_LDADD) $(LIBS)
 contrib/yaml-cpp/test/$(am__dirstamp):
 	@$(MKDIR_P) contrib/yaml-cpp/test
 	@: > contrib/yaml-cpp/test/$(am__dirstamp)
@@ -913,6 +933,7 @@ tests/test$(EXEEXT): $(tests_test_OBJECTS) $(tests_test_DEPENDENCIES) $(EXTRA_te
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f benchmarks/*.$(OBJEXT)
 	-rm -f contrib/yaml-cpp/src/*.$(OBJEXT)
 	-rm -f contrib/yaml-cpp/src/*.lo
 	-rm -f contrib/yaml-cpp/src/contrib/*.$(OBJEXT)
@@ -926,6 +947,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@benchmarks/$(DEPDIR)/bencher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/aliasmanager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/binary.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/conversion.Plo@am__quote@
@@ -1097,6 +1119,7 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+	-rm -rf benchmarks/.libs benchmarks/_libs
 	-rm -rf contrib/yaml-cpp/src/.libs contrib/yaml-cpp/src/_libs
 	-rm -rf contrib/yaml-cpp/src/contrib/.libs contrib/yaml-cpp/src/contrib/_libs
 	-rm -rf contrib/yaml-cpp/test/.libs contrib/yaml-cpp/test/_libs
@@ -1400,6 +1423,8 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f benchmarks/$(DEPDIR)/$(am__dirstamp)
+	-rm -f benchmarks/$(am__dirstamp)
 	-rm -f contrib/yaml-cpp/src/$(DEPDIR)/$(am__dirstamp)
 	-rm -f contrib/yaml-cpp/src/$(am__dirstamp)
 	-rm -f contrib/yaml-cpp/src/contrib/$(DEPDIR)/$(am__dirstamp)
@@ -1424,7 +1449,7 @@ clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf contrib/yaml-cpp/src/$(DEPDIR) contrib/yaml-cpp/src/contrib/$(DEPDIR) contrib/yaml-cpp/test/$(DEPDIR) contrib/yaml-cpp/test/old-api/$(DEPDIR) src/$(DEPDIR) tests/$(DEPDIR)
+	-rm -rf benchmarks/$(DEPDIR) contrib/yaml-cpp/src/$(DEPDIR) contrib/yaml-cpp/src/contrib/$(DEPDIR) contrib/yaml-cpp/test/$(DEPDIR) contrib/yaml-cpp/test/old-api/$(DEPDIR) src/$(DEPDIR) tests/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-tags
@@ -1472,7 +1497,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf contrib/yaml-cpp/src/$(DEPDIR) contrib/yaml-cpp/src/contrib/$(DEPDIR) contrib/yaml-cpp/test/$(DEPDIR) contrib/yaml-cpp/test/old-api/$(DEPDIR) src/$(DEPDIR) tests/$(DEPDIR)
+	-rm -rf benchmarks/$(DEPDIR) contrib/yaml-cpp/src/$(DEPDIR) contrib/yaml-cpp/src/contrib/$(DEPDIR) contrib/yaml-cpp/test/$(DEPDIR) contrib/yaml-cpp/test/old-api/$(DEPDIR) src/$(DEPDIR) tests/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
