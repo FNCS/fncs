@@ -17,6 +17,8 @@ const string LOWER("abcdefghijklmnopqrstuvwxyz");
 
 int main(int argc, char **argv)
 {
+    const char *env_FNCS_LOG_LEVEL = getenv("FNCS_LOG_LEVEL");
+    string FNCS_LOG_LEVEL = env_FNCS_LOG_LEVEL ? string(env_FNCS_LOG_LEVEL) : "";
     unsigned long long ticks = 0;
     unsigned long long topics = 0;
     unsigned long long size = 0;
@@ -47,8 +49,7 @@ int main(int argc, char **argv)
     }
 
     {
-        const char *env = getenv("FNCS_LOG_LEVEL");
-        if (env && string(env) == "DEBUG4") {
+        if (FNCS_LOG_LEVEL == "DEBUG4") {
             cout << "ticks = " << ticks << endl;
             cout << "topics = " << topics << endl;
             cout << "size = " << size << endl;
@@ -78,7 +79,9 @@ int main(int argc, char **argv)
 
         fncs::time requested = (tick+1)*delta;
         fncs::time granted = fncs::time_request(requested);
-        cout << "time requested " << requested << " granted " << granted << endl;
+        if (FNCS_LOG_LEVEL == "DEBUG4") {
+            cout << "time requested " << requested << " granted " << granted << endl;
+        }
     }
 
     fncs::finalize();
