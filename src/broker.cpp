@@ -335,6 +335,7 @@ int main(int argc, char **argv)
                     for (size_t i=0; i<n_sims; ++i) {
                         set<string> &keys = name_to_keys[simulators[i].name];
                         simulators[i].processing = true;
+                        LDEBUG4 << "sending first ACK to " << simulators[i].name;
                         zstr_sendm(server, simulators[i].name.c_str());
                         zstr_sendm(server, fncs::ACK);
                         zstr_sendfm(server, "%llu", (unsigned long long)i);
@@ -374,7 +375,7 @@ int main(int argc, char **argv)
                 fncs::time time_requested;
 
                 if (fncs::TIME_REQUEST == message_type) {
-                    LDEBUG4 << "TIME_REQUEST received";
+                    LDEBUG4 << "TIME_REQUEST received from " << sender;
                 }
                 else if (fncs::BYE == message_type) {
                     LDEBUG4 << "BYE received";
@@ -429,6 +430,8 @@ int main(int argc, char **argv)
 
                     /* update sim state */
                     simulators[index].time_requested = time_requested;
+
+                    LDEBUG4 << "TIME_REQUEST " << sender << " requested " << time_requested;
                 }
 
                 /* update sim state */
