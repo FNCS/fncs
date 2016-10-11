@@ -54,7 +54,7 @@ static fncs::time time_current = 0;
 static fncs::time time_window = 0;
 static zsock_t *client = NULL;
 static map<string,string> cache;
-static vector<string> events;
+static set<string> events;
 static set<string> keys; /* keys that other sims subscribed to */
 static vector<string> mykeys; /* keys from the fncs config file */
 
@@ -685,7 +685,7 @@ fncs::time fncs::time_request(fncs::time time_next)
 
                 /* if found then store in cache */
                 if (found) {
-                    events.push_back(subscription.key);
+                    (void)events.insert(subscription.key);
                     if (subscription.is_list()) {
                         cache_list[subscription.key].push_back(value);
                         LDEBUG4 << "updated cache_list "
@@ -1375,7 +1375,7 @@ vector<string> fncs::get_events()
         return vector<string>();
     }
 
-    return events;
+    return vector<string>(events.begin(), events.end());
 }
 
 
