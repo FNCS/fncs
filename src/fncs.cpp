@@ -572,9 +572,13 @@ fncs::time fncs::time_request(fncs::time time_next)
     if (time_passed < time_window) {
         time_window -= time_passed;
         LDEBUG1 << "there are " << time_window << " nanoseconds left in the window";
-        LDEBUG1 << "time_granted " << time_next << " nanoseonds";
-        time_current = time_next;
-        return time_next;
+        /* peers may publish after a window expires, so we can't skip
+         * until after one delta after a sync point */
+        if (time_next % time_peer != time_delta) {
+            LDEBUG1 << "time_granted " << time_next << " nanoseonds";
+            time_current = time_next;
+            return time_next;
+        }
     }
     else {
         LDEBUG1 << "time_window expired";
@@ -1435,7 +1439,7 @@ string fncs::get_name()
 
 fncs::time fncs::get_time_delta()
 {
-    return time_delta;
+    return convert_broker_to_sim_time(time_delta);
 }
 
 
