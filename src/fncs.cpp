@@ -577,7 +577,10 @@ fncs::time fncs::time_request(fncs::time time_next)
         if (time_next % time_peer != time_delta) {
             LDEBUG1 << "time_granted " << time_next << " nanoseonds";
             time_current = time_next;
-            return time_next;
+            /* convert nanoseonds to sim's time unit */
+            time_granted = convert_broker_to_sim_time(time_next);
+            LDEBUG2 << "time_granted " << time_granted << " in sim units";
+            return time_granted;
         }
     }
     else {
