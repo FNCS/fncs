@@ -85,7 +85,8 @@ bin_PROGRAMS = fncs_broker$(EXEEXT) fncs_tracer$(EXEEXT) \
 	fncs_player$(EXEEXT) fncs_player_anon$(EXEEXT)
 check_PROGRAMS = contrib/yaml-cpp/test/test$(EXEEXT) \
 	tests/config$(EXEEXT) tests/test$(EXEEXT) \
-	tests/fncs_netdelay$(EXEEXT) benchmarks/bencher$(EXEEXT)
+	tests/fncs_netdelay$(EXEEXT) benchmarks/bencher$(EXEEXT) \
+	benchmarks/bencher2$(EXEEXT)
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
@@ -190,6 +191,11 @@ benchmarks_bencher_OBJECTS = $(am_benchmarks_bencher_OBJECTS)
 benchmarks_bencher_LDADD = $(LDADD)
 benchmarks_bencher_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
+am_benchmarks_bencher2_OBJECTS = benchmarks/bencher2.$(OBJEXT)
+benchmarks_bencher2_OBJECTS = $(am_benchmarks_bencher2_OBJECTS)
+benchmarks_bencher2_LDADD = $(LDADD)
+benchmarks_bencher2_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 am_contrib_yaml_cpp_test_test_OBJECTS = contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.$(OBJEXT) \
 	contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.$(OBJEXT) \
 	contrib/yaml-cpp/test/old-api/contrib_yaml_cpp_test_test-parsertests.$(OBJEXT) \
@@ -287,13 +293,13 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libfncs_la_SOURCES) $(libyamlcpp_la_SOURCES) \
-	$(benchmarks_bencher_SOURCES) \
+	$(benchmarks_bencher_SOURCES) $(benchmarks_bencher2_SOURCES) \
 	$(contrib_yaml_cpp_test_test_SOURCES) $(fncs_broker_SOURCES) \
 	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
 	$(fncs_tracer_SOURCES) $(tests_config_SOURCES) \
 	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES)
 DIST_SOURCES = $(libfncs_la_SOURCES) $(libyamlcpp_la_SOURCES) \
-	$(benchmarks_bencher_SOURCES) \
+	$(benchmarks_bencher_SOURCES) $(benchmarks_bencher2_SOURCES) \
 	$(contrib_yaml_cpp_test_test_SOURCES) $(fncs_broker_SOURCES) \
 	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
 	$(fncs_tracer_SOURCES) $(tests_config_SOURCES) \
@@ -575,6 +581,7 @@ tests_config_SOURCES = tests/config.cpp
 tests_test_SOURCES = tests/test.cpp
 tests_fncs_netdelay_SOURCES = tests/netdelay.cpp
 benchmarks_bencher_SOURCES = benchmarks/bencher.cpp
+benchmarks_bencher2_SOURCES = benchmarks/bencher2.cpp
 fncs_broker_SOURCES = src/broker.cpp
 fncs_tracer_SOURCES = src/tracer.cpp
 fncs_player_SOURCES = src/player.cpp
@@ -848,6 +855,12 @@ benchmarks/bencher.$(OBJEXT): benchmarks/$(am__dirstamp) \
 benchmarks/bencher$(EXEEXT): $(benchmarks_bencher_OBJECTS) $(benchmarks_bencher_DEPENDENCIES) $(EXTRA_benchmarks_bencher_DEPENDENCIES) benchmarks/$(am__dirstamp)
 	@rm -f benchmarks/bencher$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(benchmarks_bencher_OBJECTS) $(benchmarks_bencher_LDADD) $(LIBS)
+benchmarks/bencher2.$(OBJEXT): benchmarks/$(am__dirstamp) \
+	benchmarks/$(DEPDIR)/$(am__dirstamp)
+
+benchmarks/bencher2$(EXEEXT): $(benchmarks_bencher2_OBJECTS) $(benchmarks_bencher2_DEPENDENCIES) $(EXTRA_benchmarks_bencher2_DEPENDENCIES) benchmarks/$(am__dirstamp)
+	@rm -f benchmarks/bencher2$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(benchmarks_bencher2_OBJECTS) $(benchmarks_bencher2_LDADD) $(LIBS)
 contrib/yaml-cpp/test/$(am__dirstamp):
 	@$(MKDIR_P) contrib/yaml-cpp/test
 	@: > contrib/yaml-cpp/test/$(am__dirstamp)
@@ -948,6 +961,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@benchmarks/$(DEPDIR)/bencher.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@benchmarks/$(DEPDIR)/bencher2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/aliasmanager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/binary.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/conversion.Plo@am__quote@

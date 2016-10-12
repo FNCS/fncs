@@ -157,6 +157,9 @@ tests_fncs_netdelay_SOURCES = tests/netdelay.cpp
 check_PROGRAMS += benchmarks/bencher
 benchmarks_bencher_SOURCES = benchmarks/bencher.cpp
 
+check_PROGRAMS += benchmarks/bencher2
+benchmarks_bencher2_SOURCES = benchmarks/bencher2.cpp
+
 bin_PROGRAMS += fncs_broker
 fncs_broker_SOURCES = src/broker.cpp
 
