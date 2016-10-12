@@ -18,17 +18,15 @@ fi
 
 if test "x$FNCS_LOG_LEVEL" = xDEBUG4
 then
-    T_OUT=t100.out
+    BROKER_OUT=fncs_broker.out
 else
-    T_OUT=/dev/null
+    BROKER_OUT=/dev/null
 fi
 
-export FNCS_BROKER="tcp://172.16.110.43:5570"
+$ECHO "$BLD/fncs_broker > $BROKER_OUT 1001 &"
+$BLD/fncs_broker > $BROKER_OUT 1001 &
 
-$ECHO "FNCS_CONFIG_FILE=t100.zpl $BLD/benchmarks/bencher 10000 2 16 > $T_OUT &"
-FNCS_CONFIG_FILE=t100.zpl $BLD/benchmarks/bencher 10000 2 16 > $T_OUT &
-
-for i in `seq 50 99`
+for i in `seq 0 499`
 do
     NAME=d$i
     if test "x$FNCS_LOG_LEVEL" = xDEBUG4

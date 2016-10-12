@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ECHO_OFF="${ECHO_OFF:-yes}"
-export FNCS_LOG_LEVEL=DEBUG4
+#export FNCS_LOG_LEVEL=DEBUG4
 
 if test "x$BLD" = x
 then
