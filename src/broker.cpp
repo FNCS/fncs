@@ -47,14 +47,16 @@ class SimulatorState {
 typedef map<string,size_t> SimIndex;
 typedef vector<SimulatorState> SimVec;
 typedef vector<size_t> IndexVec;
+typedef vector<fncs::time> TimeVec;
 typedef map<string,IndexVec> TopicMap;
 typedef map<string,set<string> > SimKeyMap;
+typedef map<string,TimeVec> SimTimeMap;
 
 static fncs::time time_real_start;
 static fncs::time time_real;
 static ofstream trace; /* the trace stream, if requested */
 
-static inline void broker_die(const SimVec &simulators, zsock_t *server) {
+static void broker_die(const SimVec &simulators, zsock_t *server) {
     /* repeat the fatal die to all connected sims */
     for (size_t i=0; i<simulators.size(); ++i) {
         zstr_sendm(server, simulators[i].name.c_str());
@@ -87,12 +89,16 @@ int main(int argc, char **argv)
     SimIndex name_to_index;     /* quickly lookup sim state index */
     TopicMap topic_to_indexes;  /* quickly lookup subscribed sims */
     SimKeyMap name_to_keys;     /* summary of topics per sim name */
+    SimKeyMap name_to_peers;    /* summary of peers per sim name */
+    SimTimeMap name_to_peertimes; /* summary of peer deltas */
     fncs::time time_granted = 0;/* global clock */
     zsock_t *server = NULL;     /* the broker socket */
     bool do_trace = false;      /* whether to dump all received messages */
     fncs::time realtime_interval = 0;
 
     fncs::start_logging();
+    fncs::replicate_logging(FNCSLog::ReportingLevel(),
+            Output2Tee::Stream1(), Output2Tee::Stream2());
 
     /* how many simulators are connecting? */
     if (argc > 3) {
@@ -238,11 +244,13 @@ int main(int argc, char **argv)
                     LWARNING << sender << " time_delta defaulting to 1s";
                     time_delta = "1s";
                 }
+                state.time_delta = fncs::parse_time(time_delta);
 
                 /* parse subscription values */
                 set<string> subscription_values;
                 if (!config.values.empty()) {
                     vector<fncs::Subscription> &subs = config.values;
+                    set<string> peers;
                     for (size_t i=0; i<subs.size(); ++i) {
                         string topic = subs[i].topic;
                         LDEBUG4 << "adding value '" << topic << "'";
@@ -263,8 +271,20 @@ int main(int argc, char **argv)
                             string key = topic.substr(loc+1);
                             name_to_keys[name].insert(key);
                             LDEBUG4 << "name_to_keys[" << name << "]=" << key;
+                            peers.insert(name);
                         }
                     }
+                    for (set<string>::iterator it=peers.begin();
+                            it!=peers.end(); ++it) {
+                        SimTimeMap::iterator stm = name_to_peertimes.find(*it);
+                        if (stm == name_to_peertimes.end()) {
+                            name_to_peertimes[*it] = TimeVec(1, state.time_delta);
+                        }
+                        else {
+                            name_to_peertimes[*it].push_back(state.time_delta);
+                        }
+                    }
+                    name_to_peers[sender] = peers;
                 }
                 else {
                     LDEBUG4 << "no subscription values";
@@ -272,7 +292,7 @@ int main(int argc, char **argv)
 
                 /* populate sim state object */
                 state.name = sender;
-                state.time_delta = fncs::parse_time(time_delta);
+                /*state.time_delta = fncs::parse_time(time_delta);*/ /*above*/
                 state.time_requested = 0;
                 state.time_last_processed = 0;
                 state.processing = false;
@@ -322,6 +342,26 @@ int main(int argc, char **argv)
                         zstr_sendfm(server, "%llu", (unsigned long long)keys.size());
                         for (set<string>::iterator it=keys.begin(); it!=keys.end(); ++it) {
                             zstr_sendm(server, it->c_str());
+                        }
+                        /* smallest delta of any clients */
+                        {
+                            fncs::time time_peer = 0;
+                            TimeVec &peertimes = name_to_peertimes[simulators[i].name];
+                            set<string> &peers = name_to_peers[simulators[i].name];
+                            for (set<string>::iterator it=peers.begin();
+                                    it!=peers.end(); ++it) {
+                                assert(name_to_index.count(*it));
+                                size_t index = name_to_index[*it];
+                                peertimes.push_back(simulators[index].time_delta);
+                            }
+                            if (!peertimes.empty()) {
+                                time_peer = *min_element(
+                                        peertimes.begin(),
+                                        peertimes.end());
+                            }
+                            LDEBUG4 << "time_peer = " << time_peer;
+                            LDEBUG4 << "time_delta= " << simulators[i].time_delta;
+                            zstr_sendfm(server, "%llu", (unsigned long long)time_peer);
                         }
                         zstr_send(server, fncs::ACK);
                         LDEBUG4 << "ACK sent to '" << simulators[i].name;
@@ -399,7 +439,7 @@ int main(int argc, char **argv)
 
                 /* if all sims are done, determine next time step */
                 if (0 == n_processing) {
-                    vector< fncs::time> time_actionable(n_sims);
+                    vector<fncs::time> time_actionable(n_sims);
                     for (size_t i=0; i<n_sims; ++i) {
                         if (simulators[i].messages_pending) {
                             time_actionable[i] = 

@@ -20,7 +20,7 @@ void fncs_initialize_config(const char *configuration)
 
 int fncs_is_initialized()
 {
-    return fncs::is_initialized();
+    return fncs::is_initialized() ? 1 : 0;
 }
 
 fncs_time fncs_time_request(fncs_time next)
