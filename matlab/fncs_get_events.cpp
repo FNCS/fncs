@@ -25,7 +25,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
     mwSize size = events.size();
 
     /* convert vector<string> to cell matrix */
-    mxArray *array = mxCreateCellMatrix(size, 1);
+    mxArray *array = mxCreateCellMatrix(1, size);
     if (array == NULL) {
         mexErrMsgIdAndTxt("MATLAB:fncs:get_events:mxCreateCellMatrix",
                 "Unable to create cell matrix.");

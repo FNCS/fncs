@@ -41,7 +41,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 
     /* clean up temporary strings */
     for (int i=0; i<NRHS; ++i) {
-        mxFree(strings[0]);
+        mxFree(strings[i]);
     }
 }
 
