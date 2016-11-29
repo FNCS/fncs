@@ -559,20 +559,22 @@ int main(int argc, char **argv)
                         IndexVec::iterator index;
                         for (index=iv.begin(); index!=iv.end(); index++) {
                             size_t i = *index;
-                            zmsg_t *msg_copy = zmsg_dup(msg);
-                            if (!msg_copy) {
-                                LERROR << "failed to copy pub message";
-                                broker_die(simulators, server);
-                            }
-                            /* swap out original sender with new destiation */
-                            zframe_reset(zmsg_first(msg_copy),
-                                    simulators[i].name.c_str(),
-                                    simulators[i].name.size());
-                            /* send it on */
-                            zmsg_send(&msg_copy, server);
-                            found_one = true;
-                            simulators[i].messages_pending = true;
-                            LDEBUG4 << "pub to " << simulators[i].name;
+							if (0 == byes.count(simulators[i].name)) {
+								zmsg_t *msg_copy = zmsg_dup(msg);
+								if (!msg_copy) {
+									LERROR << "failed to copy pub message";
+									broker_die(simulators, server);
+								}
+								/* swap out original sender with new destiation */
+								zframe_reset(zmsg_first(msg_copy),
+										simulators[i].name.c_str(),
+										simulators[i].name.size());
+								/* send it on */
+								zmsg_send(&msg_copy, server);
+								found_one = true;
+								simulators[i].messages_pending = true;
+								LDEBUG4 << "pub to " << simulators[i].name;
+							}
                         }
                     }
                 }
