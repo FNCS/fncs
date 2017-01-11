@@ -18,3 +18,14 @@ bld*/
 /bin/
 /obj/
 /lib/
+.autotools
+.cproject
+.project
+.pydevproject
+.settings/
+fncs_broker
+fncs_player
+fncs_player_anon
+fncs_tracer
+libyamlcpp.la
+src/libfncs.pc
