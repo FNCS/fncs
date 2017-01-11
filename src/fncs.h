@@ -34,6 +34,9 @@ extern "C" {
     /** Publish value using the given key. */
     FNCS_EXPORT void fncs_publish(const char *key, const char *value);
 
+    /** Publish value anonymously using the given key. */
+    FNCS_EXPORT void fncs_publish_anon(const char *key, const char *value);
+
     /** Publish value using the given key, adding from:to into the key. */
     FNCS_EXPORT void fncs_route(
             const char *from,

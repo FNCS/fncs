@@ -50,6 +50,9 @@ namespace fncs {
     /** Publish value using the given key. */
     FNCS_EXPORT void publish(const string &key, const string &value);
 
+    /** Publish value anonymously using the given key. */
+    FNCS_EXPORT void publish_anon(const string &key, const string &value);
+
     /** Publish value using the given key, adding from:to into the key. */
     FNCS_EXPORT void route(const string &from, const string &to, const string &key, const string &value);
 

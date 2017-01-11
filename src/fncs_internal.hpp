@@ -155,9 +155,6 @@ namespace fncs {
     /** Converts given czmq frame into a string. */
     FNCS_EXPORT string to_string(zframe_t *frame);
 
-    /** Publish value anonymously using the given key. */
-    FNCS_EXPORT void publish_anon(const string &key, const string &value);
-
     /** Current time in seconds with nanosecond precision. */
     FNCS_EXPORT double timer();
 

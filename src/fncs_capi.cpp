@@ -33,6 +33,11 @@ void fncs_publish(const char *key, const char *value)
     fncs::publish(key, value);
 }
 
+void fncs_publish_anon(const char *key, const char *value)
+{
+    fncs::publish_anon(key, value);
+}
+
 void fncs_route(
             const char *from,
             const char *to,

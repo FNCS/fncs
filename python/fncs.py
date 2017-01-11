@@ -42,6 +42,13 @@ _publish.restype = None
 def publish(key, value):
     _publish(str(key), str(value))
 
+_publish_anon = _lib.fncs_publish_anon
+_publish_anon.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+_publish_anon.restype = None
+
+def publish_anon(key, value):
+    _publish_anon(str(key), str(value))
+
 route = _lib.fncs_route
 route.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
 route.restype = None
