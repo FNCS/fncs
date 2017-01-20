@@ -41,6 +41,12 @@ namespace fncs {
     /** Connect to broker and parse inline configuration. */
     FNCS_EXPORT void initialize(const string &configuration);
 
+    /** Connect to broker and parse config file for Transactive agents. */
+	FNCS_EXPORT void agentRegister();
+
+	/** Connect to broker and parse inline configuration for transactive agents. */
+	FNCS_EXPORT void agentRegister(const string &configuration);
+
     /** Check whether simulator is configured and connected to broker. */
     FNCS_EXPORT bool is_initialized();
 

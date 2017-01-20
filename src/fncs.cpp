@@ -34,6 +34,7 @@
 
 /* 3rd party contrib */
 #include "yaml-cpp/yaml.h"
+#include "json-cpp/json/json.h"
 
 /* fncs headers */
 #include "log.hpp"
@@ -265,6 +266,49 @@ void fncs::initialize(const string &configuration)
     config = parse_config(configuration);
 
     initialize(config);
+}
+
+/* This function allows applications to use json structure as the initialize()
+ * configuration. */
+void fncs::agentRegister()
+{
+	const char *fncs_config_file = NULL;
+	fncs::Config config;
+
+	/* name for fncs config file from environment */
+	fncs_config_file = getenv("FNCS_CONFIG_FILE");
+	if (!fncs_config_file) {
+		fncs_config_file = "fncs.json";
+	}
+
+	if (EndsWith(fncs_config_file, "json")) {
+		ifstream fin(fncs_config_file);
+		Json::Value json_config;
+		fin >> json_config;
+		if (zconfig) {
+			config = parse_config(zconfig);
+			zconfig_destroy(&zconfig);
+		}
+		else {
+			cerr << "could not open " << fncs_config_file << endl;
+		}
+	}
+	else if (EndsWith(fncs_config_file, "yaml")) {
+		try {
+			ifstream fin(fncs_config_file);
+			YAML::Parser parser(fin);
+			YAML::Node doc;
+			parser.GetNextDocument(doc);
+			config = parse_config(doc);
+		} catch (YAML::ParserException &) {
+			cerr << "could not open " << fncs_config_file << endl;
+		}
+	}
+	else {
+		cerr << "fncs config file must end in *.zpl or *.yaml" << endl;
+	}
+
+	initialize(config);
 }
 
 

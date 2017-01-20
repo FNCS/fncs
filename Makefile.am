@@ -40,6 +40,7 @@ libfncs_la_LIBADD =
 libfncs_la_LIBADD += $(CZMQ_LIBS)
 libfncs_la_LIBADD += $(ZMQ_LIBS)
 libfncs_la_LIBADD += libyamlcpp.la
+libfncs_la_LIBADD += libjsoncpp.la
 if ON_MINGW
 libfncs_la_LDFLAGS = \
     -no-undefined \
@@ -144,6 +145,12 @@ contrib_yaml_cpp_test_test_CPPFLAGS += $(AM_CPPFLAGS)
 contrib_yaml_cpp_test_test_CPPFLAGS += -I$(top_srcdir)/contrib/yaml-cpp/test
 
 contrib_yaml_cpp_test_test_LDADD = libyamlcpp.la
+
+noinst_LTLIBRARIES += libjsoncpp.la
+libjsoncpp_la_SOURCES =
+libjsoncpp_la_SOURCES += contrib/json-cpp/json.cpp
+libjsoncpp_la_SOURCES += contrib/json-cpp/json/json.h
+libjsoncpp_la_SOURCES += contrib/json-cpp/json/json-forwards.h
 
 check_PROGRAMS += tests/config
 tests_config_SOURCES = tests/config.cpp
