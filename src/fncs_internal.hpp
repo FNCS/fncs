@@ -10,6 +10,7 @@
 #include "czmq.h"
 
 #include "yaml-cpp/yaml.h"
+#include "json-cpp/json/json.h"
 #include "fncs.hpp"
 #include "log.h"
 
@@ -145,6 +146,9 @@ namespace fncs {
 
     /** Parses the given zconfig object. */
     FNCS_EXPORT Config parse_config(zconfig_t *zconfig);
+
+    /** Converts the given Json::Value into a fncs Config. */
+    FNCS_EXPORT Config parse_config(const Json::Value &json_config);
 
     /** Converts given 'value' zconfig into a fncs Subscription value. */
     FNCS_EXPORT fncs::Subscription parse_value(zconfig_t *config);

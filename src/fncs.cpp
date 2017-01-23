@@ -274,39 +274,36 @@ void fncs::agentRegister()
 {
 	const char *fncs_config_file = NULL;
 	fncs::Config config;
-
 	/* name for fncs config file from environment */
 	fncs_config_file = getenv("FNCS_CONFIG_FILE");
 	if (!fncs_config_file) {
 		fncs_config_file = "fncs.json";
 	}
-
 	if (EndsWith(fncs_config_file, "json")) {
 		ifstream fin(fncs_config_file);
 		Json::Value json_config;
-		fin >> json_config;
-		if (zconfig) {
-			config = parse_config(zconfig);
-			zconfig_destroy(&zconfig);
-		}
-		else {
-			cerr << "could not open " << fncs_config_file << endl;
-		}
-	}
-	else if (EndsWith(fncs_config_file, "yaml")) {
 		try {
-			ifstream fin(fncs_config_file);
-			YAML::Parser parser(fin);
-			YAML::Node doc;
-			parser.GetNextDocument(doc);
-			config = parse_config(doc);
-		} catch (YAML::ParserException &) {
+			fin >> json_config;
+		} catch (Json::Exception &) {
 			cerr << "could not open " << fncs_config_file << endl;
 		}
+		config = parse_config(json_config);
 	}
-	else {
-		cerr << "fncs config file must end in *.zpl or *.yaml" << endl;
+	initialize(config);
+}
+
+
+void fncs::agentRegister(const string &configuration)
+{
+	fncs::Config config;
+	Json::Value json_config;
+	Json::Reader json_reader;
+	try {
+		json_reader.parse(configuration, json_config);
+	} catch (Json::Exception &) {
+		cerr << "could not recognize the configuration as a json string. " << configuration << endl;
 	}
+	config = parse_config(json_config);
 
 	initialize(config);
 }
@@ -1218,6 +1215,83 @@ fncs::Config fncs::parse_config(zconfig_t *zconfig)
     }
 
     return config;
+}
+
+fncs::Config fncs::parse_config(const Json::Value &json_config)
+{
+	fncs::Config config;
+	string agentType = "";
+	string agentName = "";
+	Json::Value publications;
+	Json::Value subscriptions;
+	Json::Value values;
+	vector<string> configurationKeys;
+	configurationKeys.push_back("agentType");
+	configurationKeys.push_back("agentName");
+	configurationKeys.push_back("timeDelta");
+	configurationKeys.push_back("broker");
+	configurationKeys.push_back("publications");
+	configurationKeys.push_back("subscriptions");
+	for(vector<string>::iterator i = configurationKeys.begin();
+			i != configurationKeys.end(); ++i) {
+		if(!json_config.isMember(*i))
+			cerr << *i << "is not found in the json configuration" << endl;
+	}
+	agentType = json_config["agentType"].asString();
+	agentName = json_config["agentName"].asString();
+	if (!(agentType.empty() & agentName.empty())) {
+		cerr << "agentType and/or agentName are not defined. Please set both." << endl;
+	} else {
+		config.name = agentType + ":" + agentName;
+	}
+	config.time_delta = json_config["time_delta"].asString();
+	config.broker = json_config["broker"].asString();
+	publications = json_config["publications"];
+	subscriptions = json_config["subscriptions"];
+	vector<fncs::Subscription> subs;
+	for (Json::ValueIterator it = subscriptions.begin(); it != subscriptions.end(); it++) {
+		const string subAgentType = it.name();
+		for(Json::ValueIterator it1 = subscriptions[it.name()].begin(); it1 != subscriptions[it.name()].end(); it1++) {
+			const string subAgentName = it1.name();
+			fncs::Subscription newSub;
+			newSub.key = subAgentType + ":" + subAgentName;
+			newSub.topic = subAgentType + ":" + subAgentName + "/TransactiveAgentOutput";
+			newSub.def = subscriptions[it.name()][it1.name()].asString();
+			/* TODO: find a way to specify transactive agent subscriptions as lists */
+			newSub.list = "false";
+			newSub.type = "JSON";
+			subs.push_back(newSub);
+		}
+	}
+	if (json_config.isMember("values")) {
+		for (Json::ValueIterator itr = json_config["values"].begin(); itr != json_config["values"].end(); itr++) {
+			fncs::Subscription valSub;
+			valSub.key = itr.name();
+			if (json_config["Values"][itr.name()].isMember("topic")) {
+				valSub.topic = json_config["Values"][itr.name()]["topic"].asString();
+			} else {
+				cerr << "\"topic\" couldn't be found in the json configuration!" << endl;
+			}
+			if (json_config["Values"][itr.name()].isMember("default")) {
+				valSub.def = json_config["Values"][itr.name()]["default"].asString();
+			} else {
+				cerr << "\"default\" couldn't be found in the json configuration!" << endl;
+			}
+			if (json_config["Values"][itr.name()].isMember("type")) {
+				valSub.type = json_config["Values"][itr.name()]["type"].asString();
+			} else {
+				cerr << "\"type\" couldn't be found in the json configuration!" << endl;
+			}
+			if (json_config["Values"][itr.name()].isMember("list")) {
+				valSub.list = json_config["Values"][itr.name()]["list"].asString();
+			} else {
+				cerr << "\"list\" couldn't be found in the json configuration!" << endl;
+			}
+			subs.push_back(valSub);
+		}
+	}
+	config.values = subs;
+	return config;
 }
 
 
