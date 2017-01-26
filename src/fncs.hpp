@@ -59,6 +59,9 @@ namespace fncs {
     /** Publish value anonymously using the given key. */
     FNCS_EXPORT void publish_anon(const string &key, const string &value);
 
+    /** Publish function for transactive agents. */
+    FNCS_EXPORT void agentPublish(const string &value);
+
     /** Publish value using the given key, adding from:to into the key. */
     FNCS_EXPORT void route(const string &from, const string &to, const string &key, const string &value);
 
@@ -75,6 +78,10 @@ namespace fncs {
     /** Get the keys for all values that were updated during the last
      * time_request. */
     FNCS_EXPORT vector<string> get_events();
+
+    /** Get the agent events for all values that were updated during the last
+	 * time_request. */
+	FNCS_EXPORT string agentGetEvents();
 
     /** Get a value from the cache with the given key.
      * Will hard fault if key is not found. */

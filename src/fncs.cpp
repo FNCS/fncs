@@ -46,6 +46,7 @@ using namespace ::std;
 static bool is_initialized_ = false;
 static bool die_is_fatal = false;
 static string simulation_name = "";
+static string agent_subtopic = "Output";
 static int simulation_id = 0;
 static int n_sims = 0;
 static fncs::time time_delta_multiplier = 0;
@@ -814,6 +815,23 @@ void fncs::publish_anon(const string &key, const string &value)
 }
 
 
+void fncs::agentPublish(const string &value)
+{
+	string agent_key = simulation_name + "/" + agent_subtopic;
+	LDEBUG4 << "fncs::publish_anon(string,string)";
+
+	if (!is_initialized_) {
+		LWARNING << "fncs is not initialized";
+		return;
+	}
+
+	zstr_sendm(client, fncs::PUBLISH);
+	zstr_sendm(client, agent_key.c_str());
+	zstr_send(client, value.c_str());
+	LDEBUG4 << "sent PUBLISH anon '" << agent_key << "'='" << value << "'";
+}
+
+
 void fncs::route(
         const string &from,
         const string &to,
@@ -1496,6 +1514,58 @@ vector<string> fncs::get_events()
     }
 
     return events;
+}
+
+
+string fncs::getAgentEvents()
+{
+    LDEBUG4 << "fncs::getAgentEvents() [" << events.size() << "]";
+
+    if (!is_initialized_) {
+        LWARNING << "fncs is not initialized";
+        return vector<string>();
+    }
+    string payload = "";
+    string message = "";
+    string key = "";
+    Json::Value agent_messages;
+    Json::Value json_message;
+    Json::Reader json_reader;
+    Json::StyledWriter json_writer;
+    Json::Value default_payload = "";
+    vector<string> unique_keys;
+    for (vector<string>::iterator keys = events.begin(); keys != events.end(); keys++) {
+    	key = *keys;
+    	bool is_key_unique = true;
+    	if (unique_keys.size() > 0) {
+    		for (vector<string>::iterator uk_itr = unique_keys.begin(); uk_itr != unique_keys.end(); uk_itr++) {
+    			if (key == *uk_itr) {
+    				is_key_unique = false;
+    				break;
+    			}
+    		}
+    	}
+    	if (is_key_unique) {
+			message = get_value(key);
+			json_reader.parse(message, json_message);
+			for (Json::ValueIterator itr1 = json_message.begin(); itr1 != json_message.end(); itr1++) {//iterating through agentType
+				if (!agent_messages.isMember(itr1.name())) {
+					agent_messages[itr1.name()];
+				}
+				for (Json::ValueIterator itr2 = json_message[itr1.name()].begin(); itr2 != json_message[itr1.name()].end(); itr2++) {//iterating through agentName
+					if (agent_messages[itr1.name()].isMember(itr2.name())) {
+						cerr << "You have recieved more than one message from the same transactive agent during the last time step. This shouldn't have happened." << endl;
+						die();
+					}
+					agent_messages[itr1.name()][itr2.name()] = json_message[itr1.name()][itr2.name];
+				}
+			}
+    	}
+    }
+    if(agent_messages.size() > 0) {
+    	payload = json_writer.write(agent_messages);
+    }
+    return payload;
 }
 
 

@@ -148,7 +148,7 @@ namespace fncs {
     FNCS_EXPORT Config parse_config(zconfig_t *zconfig);
 
     /** Converts the given Json::Value into a fncs Config. */
-    FNCS_EXPORT Config parse_config(const Json::Value &json_config);
+    FNCS_EXPORT Config parse_config(Json::Value &json_config);
 
     /** Converts given 'value' zconfig into a fncs Subscription value. */
     FNCS_EXPORT fncs::Subscription parse_value(zconfig_t *config);
