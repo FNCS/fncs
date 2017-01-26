@@ -1282,7 +1282,7 @@ fncs::Config fncs::parse_config(const Json::Value &json_config)
 		}
 	}
 	if (json_config.isMember("values")) {
-		for (Json::ValueIterator itr = json_config["values"].begin(); itr != json_config["values"].end(); itr++) {
+		for (Json::ValueConstIterator itr = json_config["values"].begin(); itr != json_config["values"].end(); itr++) {
 			fncs::Subscription valSub;
 			valSub.key = itr.name();
 			if (json_config["Values"][itr.name()].isMember("topic")) {
@@ -1517,13 +1517,13 @@ vector<string> fncs::get_events()
 }
 
 
-string fncs::getAgentEvents()
+string fncs::agentGetEvents()
 {
     LDEBUG4 << "fncs::getAgentEvents() [" << events.size() << "]";
 
     if (!is_initialized_) {
         LWARNING << "fncs is not initialized";
-        return vector<string>();
+        return string();
     }
     string payload = "";
     string message = "";
@@ -1557,7 +1557,7 @@ string fncs::getAgentEvents()
 						cerr << "You have recieved more than one message from the same transactive agent during the last time step. This shouldn't have happened." << endl;
 						die();
 					}
-					agent_messages[itr1.name()][itr2.name()] = json_message[itr1.name()][itr2.name];
+					agent_messages[itr1.name()][itr2.name()] = (json_message[itr1.name()][itr2.name()]);
 				}
 			}
     	}

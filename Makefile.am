@@ -148,7 +148,7 @@ contrib_yaml_cpp_test_test_LDADD = libyamlcpp.la
 
 noinst_LTLIBRARIES += libjsoncpp.la
 libjsoncpp_la_SOURCES =
-libjsoncpp_la_SOURCES += contrib/json-cpp/json.cpp
+libjsoncpp_la_SOURCES += contrib/json-cpp/jsoncpp.cpp
 libjsoncpp_la_SOURCES += contrib/json-cpp/json/json.h
 libjsoncpp_la_SOURCES += contrib/json-cpp/json/json-forwards.h
 
