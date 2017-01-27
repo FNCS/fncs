@@ -18,6 +18,16 @@ void fncs_initialize_config(const char *configuration)
     fncs::initialize(configuration);
 }
 
+void fncs_agentRegister()
+{
+    fncs::agentRegister();
+}
+
+void fncs_agentRegisterConfig(const char *configuration)
+{
+    fncs::agentRegister(configuration);
+}
+
 int fncs_is_initialized()
 {
     return fncs::is_initialized() ? 1 : 0;
@@ -36,6 +46,11 @@ void fncs_publish(const char *key, const char *value)
 void fncs_publish_anon(const char *key, const char *value)
 {
     fncs::publish_anon(key, value);
+}
+
+void fncs_agentPublish(const char *value)
+{
+    fncs::agentPublish(value);
 }
 
 void fncs_route(
@@ -112,6 +127,11 @@ size_t fncs_get_events_size()
 char** fncs_get_events()
 {
     return convert(fncs::get_events());
+}
+
+char* fncs_agentGetEvents()
+{
+    return convert(fncs::agentGetEvents());
 }
 
 char* fncs_get_value(const char *key)

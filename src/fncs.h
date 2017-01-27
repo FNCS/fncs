@@ -25,6 +25,12 @@ extern "C" {
     /** Connect to broker and parse inline configuration. */
     FNCS_EXPORT void fncs_initialize_config(const char *configuration);
 
+    /** Connect to broker and parse config file for Transactive agents. */
+	FNCS_EXPORT void fncs_agentRegister();
+
+	/** Connect to broker and parse inline configuration for transactive agents. */
+	FNCS_EXPORT void fncs_agentRegisterConfig(const string &configuration);
+
     /** Check whether simulator is configured and connected to broker. */
     FNCS_EXPORT int fncs_is_initialized();
 
@@ -36,6 +42,9 @@ extern "C" {
 
     /** Publish value anonymously using the given key. */
     FNCS_EXPORT void fncs_publish_anon(const char *key, const char *value);
+
+    /** Publish function for transactive agents. */
+    FNCS_EXPORT void fncs_agentPublish(const string &value);
 
     /** Publish value using the given key, adding from:to into the key. */
     FNCS_EXPORT void fncs_route(
@@ -61,6 +70,10 @@ extern "C" {
     /** Get the keys for all values that were updated during the last
      * time_request. */
     FNCS_EXPORT char** fncs_get_events();
+
+    /** Get the agent events for all values that were updated during the last
+	 * time_request. */
+	FNCS_EXPORT char* fncs_agentGetEvents();
 
     /** Get a value from the cache with the given key.
      * Will hard fault if key is not found. */
