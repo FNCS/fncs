@@ -24,6 +24,20 @@ def initialize(config=None):
     else:
         _initialize()
 
+_agentRegister = _lib.fncs_agentRegister
+_agentRegister.argtypes = []
+_agentRegister.restype = None
+
+_agentRegisterConfig = _lib.fncs_agentRegisterConfig
+_agentRegisterConfig.argtypes = [ctypes.c_char_p]
+_agentRegisterConfig.restype = None
+
+def agentRegister(config=None):
+    if config:
+        _agentRegisterConfig(config)
+    else:
+        _agentRegister()
+
 _is_initialized = _lib.fncs_is_initialized
 _is_initialized.argtypes = []
 _is_initialized.restype = ctypes.c_int
@@ -48,6 +62,13 @@ _publish_anon.restype = None
 
 def publish_anon(key, value):
     _publish_anon(str(key), str(value))
+
+_agentPublish = _lib.fncs_agentPublish
+_agentPublish.argtypes = [ctypes.c_char_p]
+_agentPublish.restype = None
+
+def agentPublish(value):
+    _publish(str(value))
 
 route = _lib.fncs_route
 route.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
@@ -87,6 +108,17 @@ def get_events():
     events = [_events[i] for i in xrange(size)]
     _free_char_pp(_events, size)
     return events
+
+_agentGetEvents = _lib.fncs_agentGetEvents
+_agentGetEvents.argtypes = []
+_agentGetEvents.restype = ctypes.POINTER(ctypes.c_char)
+
+def agentGetEvents():
+    raw = _agentGetEvents()
+    cast = ctypes.cast(raw, ctypes.c_char_p)
+    string = cast.value
+    _lib._fncs_free_char_p(cast)
+    return string
 
 _get_value = _lib.fncs_get_value
 _get_value.argtypes = [ctypes.c_char_p]
