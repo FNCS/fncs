@@ -22,6 +22,8 @@ using ::std::vector;
 #if (defined WIN32 || defined _WIN32)
 #   if defined LIBFNCS_STATIC
 #       define FNCS_EXPORT
+#   elif defined __MINGW32__
+#       define FNCS_EXPORT
 #   elif defined LIBFNCS_EXPORTS
 #       define FNCS_EXPORT __declspec(dllexport)
 #   else
