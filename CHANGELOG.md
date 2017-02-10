@@ -8,6 +8,20 @@ This project follows the [Gitflow Workflow model](https://www.atlassian.com/git/
 ## [Unreleased]
 The Unreleased section will be empty for tagged releases. Unreleased functionality appears in the develop branch.
 
+## [2.3.0] - 2017-02-09
+
+### Added
+- fncs::publish_anon() moved from private to public header
+
+### Fixed
+- Broker no longer publishes to sims that exited normally.
+- Bugs in MATLAB get_events and route.
+- Multiple bugs in time sync optimization.
+  - Unnecessary assert during peer calculation.
+  - Wrong time unit returned by time_request.
+- YAML test case linking for 'check' target.
+- fncs::finalize() did not reset initialized flag.
+
 ## [2.2.0] - 2016-06-02
 
 ### Changed
