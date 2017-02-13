@@ -242,8 +242,8 @@ void fncs::initialize()
             YAML::Node doc;
             parser.GetNextDocument(doc);
             config = parse_config(doc);
-        } catch (YAML::ParserException &) {
-            cerr << "could not open " << fncs_config_file << endl;
+        } catch (YAML::ParserException &ex) {
+            cerr << "could not open " << fncs_config_file << ": " << ex.what() << endl;
         }
     }
     else {
