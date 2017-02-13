@@ -29,7 +29,7 @@ extern "C" {
 	FNCS_EXPORT void fncs_agentRegister();
 
 	/** Connect to broker and parse inline configuration for transactive agents. */
-	FNCS_EXPORT void fncs_agentRegisterConfig(const string &configuration);
+	FNCS_EXPORT void fncs_agentRegisterConfig(const char *configuration);
 
     /** Check whether simulator is configured and connected to broker. */
     FNCS_EXPORT int fncs_is_initialized();
@@ -44,7 +44,7 @@ extern "C" {
     FNCS_EXPORT void fncs_publish_anon(const char *key, const char *value);
 
     /** Publish function for transactive agents. */
-    FNCS_EXPORT void fncs_agentPublish(const string &value);
+    FNCS_EXPORT void fncs_agentPublish(const char *value);
 
     /** Publish value using the given key, adding from:to into the key. */
     FNCS_EXPORT void fncs_route(
