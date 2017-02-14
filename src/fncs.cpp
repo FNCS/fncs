@@ -817,8 +817,8 @@ void fncs::publish_anon(const string &key, const string &value)
 
 void fncs::agentPublish(const string &value)
 {
-	string agent_key = simulation_name + "/" + agent_subtopic;
-	LDEBUG4 << "fncs::publish_anon(string,string)";
+	string agent_key = simulation_name;
+	LDEBUG4 << "fncs::agentPublish(string)";
 
 	if (!is_initialized_) {
 		LWARNING << "fncs is not initialized";
@@ -1244,12 +1244,14 @@ fncs::Config fncs::parse_config(const Json::Value &json_config)
 	Json::Value subscriptions;
 	Json::Value values;
 	vector<string> configurationKeys;
+	Json::FastWriter json_writer;
 	configurationKeys.push_back("agentType");
 	configurationKeys.push_back("agentName");
 	configurationKeys.push_back("timeDelta");
 	configurationKeys.push_back("broker");
 	configurationKeys.push_back("publications");
 	configurationKeys.push_back("subscriptions");
+
 	for(vector<string>::iterator i = configurationKeys.begin();
 			i != configurationKeys.end(); ++i) {
 		if(!json_config.isMember(*i))
@@ -1257,10 +1259,10 @@ fncs::Config fncs::parse_config(const Json::Value &json_config)
 	}
 	agentType = json_config["agentType"].asString();
 	agentName = json_config["agentName"].asString();
-	if (!(agentType.empty() & agentName.empty())) {
+	if ((agentType.empty() | agentName.empty())) {
 		cerr << "agentType and/or agentName are not defined. Please set both." << endl;
 	} else {
-		config.name = agentType + ":" + agentName;
+		config.name = agentType + "_" + agentName;
 	}
 	config.time_delta = json_config["time_delta"].asString();
 	config.broker = json_config["broker"].asString();
@@ -1271,16 +1273,19 @@ fncs::Config fncs::parse_config(const Json::Value &json_config)
 		const string subAgentType = it.name();
 		for(Json::ValueIterator it1 = subscriptions[it.name()].begin(); it1 != subscriptions[it.name()].end(); it1++) {
 			const string subAgentName = it1.name();
+
 			fncs::Subscription newSub;
-			newSub.key = subAgentType + ":" + subAgentName;
-			newSub.topic = subAgentType + ":" + subAgentName + "/TransactiveAgentOutput";
-			newSub.def = subscriptions[it.name()][it1.name()].asString();
+			newSub.key = subAgentType + "_" + subAgentName;
+			newSub.topic = subAgentType + "_" + subAgentName + "/TransactiveAgentOutput";
+			const string subDefault = json_writer.write(subscriptions[it.name()][it1.name()]);
+			newSub.def = subDefault;
 			/* TODO: find a way to specify transactive agent subscriptions as lists */
 			newSub.list = "false";
 			newSub.type = "JSON";
 			subs.push_back(newSub);
 		}
 	}
+
 	if (json_config.isMember("values")) {
 		for (Json::ValueConstIterator itr = json_config["values"].begin(); itr != json_config["values"].end(); itr++) {
 			fncs::Subscription valSub;
@@ -1337,12 +1342,13 @@ fncs::Subscription fncs::parse_value(const YAML::Node &node)
     }
 
     if (const YAML::Node *child = node.FindValue("default")) {
-        if (child->Type() != YAML::NodeType::Scalar) {
-            cerr << "YAML 'default' must be a Scalar" << endl;
-        }
-        else {
+        //if (child->Type() != YAML::NodeType::Scalar) {
+        //    cerr << "YAML 'default' must be a Scalar" << endl;
+        //}
+        //else {
             *child >> sub.def;
-        }
+            cout << "sub.def" << sub.def << endl;
+        //}
     }
 
     if (const YAML::Node *child = node.FindValue("type")) {
