@@ -69,6 +69,10 @@ int main() {
 	if(!fncs::is_initialized()) {
 		return EXIT_FAILURE;
 	} else {
+		Json::Value initialValueObject;
+		string initialValue = fncs::get_value("testFederate_testFederate1");
+		jsonReader.parse(initialValue, initialValueObject);
+		jsonStreamWriter.write(cout, initialValueObject);
 		for(int i = 0; i < 10; i++) {
 			string agentValue = fncs::agentGetEvents();
 			Json::Value agentValueObject;

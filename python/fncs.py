@@ -68,7 +68,7 @@ _agentPublish.argtypes = [ctypes.c_char_p]
 _agentPublish.restype = None
 
 def agentPublish(value):
-    _publish(str(value))
+    _agentPublish(str(value))
 
 route = _lib.fncs_route
 route.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
