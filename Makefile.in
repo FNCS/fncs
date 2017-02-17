@@ -92,7 +92,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = fncs_broker$(EXEEXT) fncs_tracer$(EXEEXT) \
-	fncs_player$(EXEEXT) fncs_player_anon$(EXEEXT)
+	fncs_player$(EXEEXT) fncs_player_anon$(EXEEXT) \
+	fncs_test_federate$(EXEEXT)
 check_PROGRAMS = contrib/yaml-cpp/test/test$(EXEEXT) \
 	tests/config$(EXEEXT) tests/test$(EXEEXT) \
 	tests/fncs_netdelay$(EXEEXT)
@@ -212,6 +213,9 @@ fncs_player_anon_OBJECTS = $(am_fncs_player_anon_OBJECTS)
 fncs_player_anon_LDADD = $(LDADD)
 fncs_player_anon_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
+am_fncs_test_federate_OBJECTS = src/test_federate.$(OBJEXT)
+fncs_test_federate_OBJECTS = $(am_fncs_test_federate_OBJECTS)
+fncs_test_federate_DEPENDENCIES = libjsoncpp.la libfncs.la
 am_fncs_tracer_OBJECTS = src/tracer.$(OBJEXT)
 fncs_tracer_OBJECTS = $(am_fncs_tracer_OBJECTS)
 fncs_tracer_LDADD = $(LDADD)
@@ -287,15 +291,15 @@ am__v_CCLD_1 =
 SOURCES = $(libfncs_la_SOURCES) $(libjsoncpp_la_SOURCES) \
 	$(libyamlcpp_la_SOURCES) $(contrib_yaml_cpp_test_test_SOURCES) \
 	$(fncs_broker_SOURCES) $(fncs_player_SOURCES) \
-	$(fncs_player_anon_SOURCES) $(fncs_tracer_SOURCES) \
-	$(tests_config_SOURCES) $(tests_fncs_netdelay_SOURCES) \
-	$(tests_test_SOURCES)
+	$(fncs_player_anon_SOURCES) $(fncs_test_federate_SOURCES) \
+	$(fncs_tracer_SOURCES) $(tests_config_SOURCES) \
+	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES)
 DIST_SOURCES = $(libfncs_la_SOURCES) $(libjsoncpp_la_SOURCES) \
 	$(libyamlcpp_la_SOURCES) $(contrib_yaml_cpp_test_test_SOURCES) \
 	$(fncs_broker_SOURCES) $(fncs_player_SOURCES) \
-	$(fncs_player_anon_SOURCES) $(fncs_tracer_SOURCES) \
-	$(tests_config_SOURCES) $(tests_fncs_netdelay_SOURCES) \
-	$(tests_test_SOURCES)
+	$(fncs_player_anon_SOURCES) $(fncs_test_federate_SOURCES) \
+	$(fncs_tracer_SOURCES) $(tests_config_SOURCES) \
+	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -594,6 +598,8 @@ fncs_tracer_SOURCES = src/tracer.cpp
 fncs_player_SOURCES = src/player.cpp
 fncs_player_anon_SOURCES = src/player.cpp
 fncs_player_anon_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_ANON
+fncs_test_federate_SOURCES = src/test_federate.cpp
+fncs_test_federate_LDADD = libjsoncpp.la libfncs.la
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -912,6 +918,12 @@ src/fncs_player_anon-player.$(OBJEXT): src/$(am__dirstamp) \
 fncs_player_anon$(EXEEXT): $(fncs_player_anon_OBJECTS) $(fncs_player_anon_DEPENDENCIES) $(EXTRA_fncs_player_anon_DEPENDENCIES) 
 	@rm -f fncs_player_anon$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(fncs_player_anon_OBJECTS) $(fncs_player_anon_LDADD) $(LIBS)
+src/test_federate.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+
+fncs_test_federate$(EXEEXT): $(fncs_test_federate_OBJECTS) $(fncs_test_federate_DEPENDENCIES) $(EXTRA_fncs_test_federate_DEPENDENCIES) 
+	@rm -f fncs_test_federate$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(fncs_test_federate_OBJECTS) $(fncs_test_federate_LDADD) $(LIBS)
 src/tracer.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 
@@ -1000,6 +1012,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_capi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_player_anon-player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/player.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/test_federate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tracer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/config.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/netdelay.Po@am__quote@

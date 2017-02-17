@@ -817,7 +817,7 @@ void fncs::publish_anon(const string &key, const string &value)
 
 void fncs::agentPublish(const string &value)
 {
-	string agent_key = simulation_name;
+	string agent_key = simulation_name + "/TransactiveAgentOutput";
 	LDEBUG4 << "fncs::agentPublish(string)";
 
 	if (!is_initialized_) {
@@ -1273,11 +1273,13 @@ fncs::Config fncs::parse_config(const Json::Value &json_config)
 		const string subAgentType = it.name();
 		for(Json::ValueIterator it1 = subscriptions[it.name()].begin(); it1 != subscriptions[it.name()].end(); it1++) {
 			const string subAgentName = it1.name();
-
 			fncs::Subscription newSub;
+			Json::Value defaultValue;
 			newSub.key = subAgentType + "_" + subAgentName;
 			newSub.topic = subAgentType + "_" + subAgentName + "/TransactiveAgentOutput";
-			const string subDefault = json_writer.write(subscriptions[it.name()][it1.name()]);
+			defaultValue[it.name()];
+			defaultValue[it.name()][it1.name()] = subscriptions[it.name()][it1.name()];
+			const string subDefault = json_writer.write(defaultValue);
 			newSub.def = subDefault;
 			/* TODO: find a way to specify transactive agent subscriptions as lists */
 			newSub.list = "false";
@@ -1342,13 +1344,13 @@ fncs::Subscription fncs::parse_value(const YAML::Node &node)
     }
 
     if (const YAML::Node *child = node.FindValue("default")) {
-        //if (child->Type() != YAML::NodeType::Scalar) {
-        //    cerr << "YAML 'default' must be a Scalar" << endl;
-        //}
-        //else {
+        if (child->Type() != YAML::NodeType::Scalar) {
+            cerr << "YAML 'default' must be a Scalar" << endl;
+        }
+        else {
             *child >> sub.def;
             cout << "sub.def" << sub.def << endl;
-        //}
+        }
     }
 
     if (const YAML::Node *child = node.FindValue("type")) {
