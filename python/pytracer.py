@@ -17,6 +17,7 @@ while time_granted < time_stop:
 	for key in events:
 		print (time_granted, key.decode(), fncs.get_value(key).decode(), file=op)
 
-op.close();
+fncs.finalize()
+op.close()
 
 
