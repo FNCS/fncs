@@ -1292,23 +1292,23 @@ fncs::Config fncs::parse_config(const Json::Value &json_config)
 		for (Json::ValueConstIterator itr = json_config["values"].begin(); itr != json_config["values"].end(); itr++) {
 			fncs::Subscription valSub;
 			valSub.key = itr.name();
-			if (json_config["Values"][itr.name()].isMember("topic")) {
-				valSub.topic = json_config["Values"][itr.name()]["topic"].asString();
+			if (json_config["values"][itr.name()].isMember("topic")) {
+				valSub.topic = json_config["values"][itr.name()]["topic"].asString();
 			} else {
 				cerr << "\"topic\" couldn't be found in the json configuration!" << endl;
 			}
-			if (json_config["Values"][itr.name()].isMember("default")) {
-				valSub.def = json_config["Values"][itr.name()]["default"].asString();
+			if (json_config["values"][itr.name()].isMember("default")) {
+				valSub.def = json_config["values"][itr.name()]["default"].asString();
 			} else {
 				cerr << "\"default\" couldn't be found in the json configuration!" << endl;
 			}
-			if (json_config["Values"][itr.name()].isMember("type")) {
-				valSub.type = json_config["Values"][itr.name()]["type"].asString();
+			if (json_config["values"][itr.name()].isMember("type")) {
+				valSub.type = json_config["values"][itr.name()]["type"].asString();
 			} else {
 				cerr << "\"type\" couldn't be found in the json configuration!" << endl;
 			}
-			if (json_config["Values"][itr.name()].isMember("list")) {
-				valSub.list = json_config["Values"][itr.name()]["list"].asString();
+			if (json_config["values"][itr.name()].isMember("list")) {
+				valSub.list = json_config["values"][itr.name()]["list"].asString();
 			} else {
 				cerr << "\"list\" couldn't be found in the json configuration!" << endl;
 			}
