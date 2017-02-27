@@ -1,0 +1,8 @@
+name: pytracer
+time_delta: 1s
+broker: tcp://localhost:5570
+values:
+    some_key:
+        topic: testpy/some_key
+        default: 0
+
