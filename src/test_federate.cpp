@@ -11,6 +11,14 @@
 #include "fncs.hpp"
 using namespace std;
 
+Json::Value testFederatePublish(const Json::Value recievedValue) {
+	Json::Value publishedValue = recievedValue;
+	publishedValue["testFederate1"]["intProperty"]["propertyValue"] = publishedValue["testFederate"]["testFederate1"]["intProperty"]["propertyValue"].asInt() + 1;
+	publishedValue["testFederate1"]["doubleProperty"]["propertyValue"] = publishedValue["testFederate"]["testFederate1"]["doubleProperty"]["propertyValue"].asDouble() * 3.0;
+	publishedValue["testFederate1"]["stringProperty"]["propertyValue"] = publishedValue["testFederate"]["testFederate1"]["stringProperty"]["propertyValue"].asString().append(" blue");
+	return publishedValue;
+}
+
 int main() {
 	Json::Value jsonConfig;
 	Json::Value jsonPublish;
@@ -18,6 +26,7 @@ int main() {
 	Json::StyledStreamWriter jsonStreamWriter;
 	Json::Reader jsonReader;
 	string jsonConfigString;
+	int regIntVal;
 	jsonConfig["agentType"] = "testFederate";
 	jsonConfig["agentName"] = "testFederate1";
 	jsonConfig["timeDelta"] = "1s";
@@ -50,6 +59,12 @@ int main() {
 	jsonConfig["subscriptions"]["testFederate"]["testFederate1"]["stringProperty"]["propertyType"] = "integer";
 	jsonConfig["subscriptions"]["testFederate"]["testFederate1"]["stringProperty"]["propertyUnit"] = "";
 	jsonConfig["subscriptions"]["testFederate"]["testFederate1"]["stringProperty"]["propertyValue"] = "green";
+	jsonConfig["values"];
+	jsonConfig["values"]["testKey"];
+	jsonConfig["values"]["testKey"]["topic"] = "testFederate_testFederate1/testKey";
+	jsonConfig["values"]["testKey"]["default"] = 12;
+	jsonConfig["values"]["testKey"]["type"] = "integer";
+	jsonConfig["values"]["testKey"]["list"] = "False";
 	jsonConfigString = jsonWriter.write(jsonConfig);
 	fncs::agentRegister(jsonConfigString);
 	jsonPublish["testFederate"];
@@ -71,6 +86,7 @@ int main() {
 	} else {
 		Json::Value initialValueObject;
 		string initialValue = fncs::get_value("testFederate_testFederate1");
+		string initialTestKey = fncs::get_value("testKey");
 		jsonReader.parse(initialValue, initialValueObject);
 		jsonStreamWriter.write(cout, initialValueObject);
 		for(int i = 0; i < 10; i++) {
@@ -79,9 +95,12 @@ int main() {
 			if(!agentValue.empty()) {
 				jsonReader.parse(agentValue, agentValueObject);
 				jsonStreamWriter.write(cout, agentValueObject);
+				jsonPublish = testFederatePublish(agentValueObject["testFederate"]);
 			}
+			//TODO: modify regulat topic subscription for publishing.
 			string publishValue = jsonWriter.write(jsonPublish);
 			fncs::agentPublish(publishValue);
+			fncs::publish("testKey", "13");
 			fncs::time_request((fncs::time)(i+1));
 		}
 		fncs::finalize();

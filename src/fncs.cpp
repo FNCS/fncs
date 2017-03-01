@@ -1542,11 +1542,11 @@ string fncs::agentGetEvents()
     Json::StyledWriter json_writer;
     Json::Value default_payload = "";
     vector<string> unique_keys;
-    for (vector<string>::iterator keys = events.begin(); keys != events.end(); keys++) {
+    for (vector<string>::iterator keys = events.begin(); keys != events.end(); ++keys) {
     	key = *keys;
     	bool is_key_unique = true;
     	if (unique_keys.size() > 0) {
-    		for (vector<string>::iterator uk_itr = unique_keys.begin(); uk_itr != unique_keys.end(); uk_itr++) {
+    		for (vector<string>::iterator uk_itr = unique_keys.begin(); uk_itr != unique_keys.end(); ++uk_itr) {
     			if (key == *uk_itr) {
     				is_key_unique = false;
     				break;
@@ -1556,17 +1556,21 @@ string fncs::agentGetEvents()
     	if (is_key_unique) {
 			message = get_value(key);
 			json_reader.parse(message, json_message);
-			for (Json::ValueIterator itr1 = json_message.begin(); itr1 != json_message.end(); itr1++) {//iterating through agentType
-				if (!agent_messages.isMember(itr1.name())) {
-					agent_messages[itr1.name()];
-				}
-				for (Json::ValueIterator itr2 = json_message[itr1.name()].begin(); itr2 != json_message[itr1.name()].end(); itr2++) {//iterating through agentName
-					if (agent_messages[itr1.name()].isMember(itr2.name())) {
-						cerr << "You have recieved more than one message from the same transactive agent during the last time step. This shouldn't have happened." << endl;
-						die();
+			if(json_message.isConvertibleTo(Json::objectValue)){
+				for (Json::ValueIterator itr1 = json_message.begin(); itr1 != json_message.end(); itr1++) {//iterating through agentType
+					if (!agent_messages.isMember(itr1.name())) {
+						agent_messages[itr1.name()];
 					}
-					agent_messages[itr1.name()][itr2.name()] = (json_message[itr1.name()][itr2.name()]);
+					for (Json::ValueIterator itr2 = json_message[itr1.name()].begin(); itr2 != json_message[itr1.name()].end(); itr2++) {//iterating through agentName
+						if (agent_messages[itr1.name()].isMember(itr2.name())) {
+							cerr << "You have recieved more than one message from the same transactive agent during the last time step. This shouldn't have happened." << endl;
+							die();
+						}
+						agent_messages[itr1.name()][itr2.name()] = (json_message[itr1.name()][itr2.name()]);
+					}
 				}
+			} else {
+				agent_messages[key] = message;
 			}
     	}
     }
