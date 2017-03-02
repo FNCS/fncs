@@ -53,7 +53,7 @@ fncs_save_LIBS="$LIBS"
 CPPFLAGS="$CPPFLAGS $ZMQ_CPPFLAGS"
 LDFLAGS="$LDFLAGS $ZMQ_LDFLAGS"
 LIBS="$LIBS $ZMQ_LIBS"
-FNCS_CHECK_PACKAGE([czmq], [czmq.h], [czmq], [zctx_new])
+FNCS_CHECK_PACKAGE([czmq], [czmq.h], [czmq], [zmsg_new])
 CPPFLAGS="$fncs_save_CPPFLAGS"
 LDFLAGS="$fncs_save_LDFLAGS"
 LIBS="$fncs_save_LIBS"
