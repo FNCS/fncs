@@ -28,6 +28,7 @@ fncs_broker
 fncs_player
 fncs_player_anon
 fncs_tracer
+fncs_test_federate
 libyamlcpp.la
 src/libfncs.pc
 build-aux/compile
