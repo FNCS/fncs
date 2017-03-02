@@ -7113,10 +7113,12 @@ esac
 # FNCS versions 2.1.0: 1:0:0 (ABI version 1)
 # FNCS versions 2.1.1: 1:0:0 (ABI version 1) - C/C++ library unchanged
 # FNCS versions 2.1.2: 1:1:0 (ABI version 1)
-# FNCS versions 2.2.0: 2:0:1 (ABI version 1) - C added fncs_is_initialized()
+# FNCS versions 2.2.0: 2:0:1 (ABI version 2) - C added fncs_is_initialized()
+# FNCS versions 2.3.0: 2:1:1 (ABI version 2)
+# FNCS versions 2.3.1: 2:1:1 (ABI version 2) - C/C++ library unchanged
 #
 # libfncs -version-info current:revision:age
-LTVER="2:0:1"
+LTVER="2:1:1"
 
 
 case `pwd` in

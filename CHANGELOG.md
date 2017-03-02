@@ -12,6 +12,7 @@ The Unreleased section will be empty for tagged releases. Unreleased functionali
 
 ### Fixed
 - configure test for CZMQ now uses zmsg_new, not deprecated zctx_new.
+- libtool library versioning was not updated for 2.3.0, now fixed.
 
 ## [2.3.0] - 2017-02-09
 
