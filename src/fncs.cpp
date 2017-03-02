@@ -1557,7 +1557,9 @@ string fncs::agentGetEvents()
 			message = get_value(key);
 			json_reader.parse(message, json_message);
 			if(json_message.isConvertibleTo(Json::objectValue)){
+				bool is_json = false;
 				for (Json::ValueIterator itr1 = json_message.begin(); itr1 != json_message.end(); itr1++) {//iterating through agentType
+					is_json = true;
 					if (!agent_messages.isMember(itr1.name())) {
 						agent_messages[itr1.name()];
 					}
@@ -1568,6 +1570,9 @@ string fncs::agentGetEvents()
 						}
 						agent_messages[itr1.name()][itr2.name()] = (json_message[itr1.name()][itr2.name()]);
 					}
+				}
+				if(!is_json) {
+					agent_messages[key] = message;
 				}
 			} else {
 				agent_messages[key] = message;
