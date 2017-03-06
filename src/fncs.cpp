@@ -1555,6 +1555,7 @@ string fncs::agentGetEvents()
     	}
     	if (is_key_unique) {
 			message = get_value(key);
+			unique_keys.push_back(key);
 			json_reader.parse(message, json_message);
 			if(json_message.isConvertibleTo(Json::objectValue)){
 				bool is_json = false;
