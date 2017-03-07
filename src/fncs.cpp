@@ -69,6 +69,16 @@ typedef map<string,fncs::Subscription> sub_string_t;
 static sub_string_t subs_string;
 
 
+
+/* INSTRUMENTATION part I starts */
+/* NEW VARIABLES FOR INSTRUMENTATION */
+float req_time = 0;
+float grant_time = 0;
+unsigned int num_grant = 0;
+unsigned int num_req = 0;
+/* INSTRUMENTATION part I ends */
+
+
 #if defined(_WIN32)
 static BOOL WINAPI
 s_handler_fn_shim (DWORD ctrltype)
@@ -589,6 +599,13 @@ fncs::time fncs::time_request(fncs::time time_next)
     }
 
     LDEBUG1 << "sending TIME_REQUEST of " << time_next << " nanoseconds";
+
+    /* INSTRUMENTATION PART II BEGINS */
+    req_time = clock();
+    num_req = num_req +1;
+    LDEBUG3 << "DISTRIBUTED I: Time is " << req_time << " for request # " << num_req;
+    /* INSTRUMENTATION PART II ENDS */
+
     zstr_sendm(client, fncs::TIME_REQUEST);
     zstr_sendf(client, "%llu", time_next);
 
@@ -717,6 +734,12 @@ fncs::time fncs::time_request(fncs::time time_next)
     }
 
     LDEBUG1 << "time_granted " << time_granted << " nanoseonds";
+
+    /* INSTRUMENTATION PART II BEGINS */
+    grant_time = clock();
+    num_grant = num_grant +1;
+    LDEBUG3 << "DISTRIBUTED II: Time is " << grant_time << " for grant # " << num_grant;
+    /* INSTRUMENTATION PART II ENDS */
 
     time_current = time_granted;
 
