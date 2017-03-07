@@ -749,7 +749,7 @@ fncs::time fncs::time_request(fncs::time time_next)
                 }
             }
             else {
-                LERROR << "unrecognized message type";
+                LERROR << "unrecognized message type:" << message_type;
                 die();
                 return time_next;
             }
@@ -1565,10 +1565,10 @@ string fncs::agentGetEvents()
 						agent_messages[itr1.name()];
 					}
 					for (Json::ValueIterator itr2 = json_message[itr1.name()].begin(); itr2 != json_message[itr1.name()].end(); itr2++) {//iterating through agentName
-						if (agent_messages[itr1.name()].isMember(itr2.name())) {
-							cerr << "You have recieved more than one message from the same transactive agent during the last time step. This shouldn't have happened." << endl;
-							die();
-						}
+//						if (agent_messages[itr1.name()].isMember(itr2.name())) {
+//							cerr << "You have recieved more than one message from the same transactive agent during the last time step. This shouldn't have happened." << endl;
+//							die();
+//						}
 						agent_messages[itr1.name()][itr2.name()] = (json_message[itr1.name()][itr2.name()]);
 					}
 				}
