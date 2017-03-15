@@ -69,14 +69,18 @@ typedef map<string,fncs::Subscription> sub_string_t;
 static sub_string_t subs_string;
 
 
-
 /* INSTRUMENTATION part I starts */
 /* NEW VARIABLES FOR INSTRUMENTATION */
-float req_time = 0;
-float grant_time = 0;
+static fncs::time start_clock = 0;
+static fncs::time start_time = 0;
+float req_clock = 0;
+static fncs::time req_time = 0;
+float grant_clock = 0;
+static fncs::time grant_time = 0;
 unsigned int num_grant = 0;
 unsigned int num_req = 0;
 /* INSTRUMENTATION part I ends */
+
 
 
 #if defined(_WIN32)
@@ -522,6 +526,16 @@ void fncs::initialize(Config config)
     time_current = 0;
     time_window = 0;
     is_initialized_ = true;
+
+
+    /* INSTRUMENTATION PART II STARTS */
+    start_clock = clock();
+    start_time = (timer_ft());
+    ofstream datafile;
+    datafile.open("instrumentation.csv", ios::out | ios::app);
+    datafile << simulation_name << "," << start_clock << "," << start_time << "\n";
+    /* INSTRUMENTATION PART II ENDS */
+
 }
 
 
@@ -600,11 +614,16 @@ fncs::time fncs::time_request(fncs::time time_next)
 
     LDEBUG1 << "sending TIME_REQUEST of " << time_next << " nanoseconds";
 
-    /* INSTRUMENTATION PART II BEGINS */
-    req_time = clock();
+
+    /* INSTRUMENTATION PART III BEGINS */
+    req_clock = clock()-start_clock;
+    req_time = (timer_ft()-start_time);
     num_req = num_req +1;
-    LDEBUG3 << "DISTRIBUTED I: Time is " << req_time << " for request # " << num_req;
-    /* INSTRUMENTATION PART II ENDS */
+    ofstream datafile;
+    datafile.open("instrumentation.csv", ios::out | ios::app);
+    datafile << "Request" << "," << simulation_name << "," << num_req << "," << req_clock << "," << req_time << "," << time_next << "\n";
+    /* INSTRUMENTATION PART III ENDS */
+
 
     zstr_sendm(client, fncs::TIME_REQUEST);
     zstr_sendf(client, "%llu", time_next);
@@ -735,11 +754,14 @@ fncs::time fncs::time_request(fncs::time time_next)
 
     LDEBUG1 << "time_granted " << time_granted << " nanoseonds";
 
-    /* INSTRUMENTATION PART II BEGINS */
-    grant_time = clock();
+    /* INSTRUMENTATION PART IV BEGINS */
+    grant_clock = clock() - start_clock;
+    grant_time = (timer_ft() - start_time);
     num_grant = num_grant +1;
-    LDEBUG3 << "DISTRIBUTED II: Time is " << grant_time << " for grant # " << num_grant;
-    /* INSTRUMENTATION PART II ENDS */
+    /* ofstream datafile;
+    datafile.open("instrumentation.csv", ios::out | ios::app); */
+    datafile << "Grant" << "," << simulation_name << "," << num_grant << "," << grant_clock << "," << grant_time << "," << time_granted << "\n";
+    /* INSTRUMENTATION PART IV ENDS */
 
     time_current = time_granted;
 
