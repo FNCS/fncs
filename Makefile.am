@@ -167,5 +167,5 @@ bin_PROGRAMS += fncs_player_anon
 fncs_player_anon_SOURCES = src/player.cpp
 fncs_player_anon_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_ANON
 
-bin_PROGRAMS += cffederate
-cffederate_SOURCES = src/cffederate.cpp
+bin_PROGRAMS += mini_federate
+mini_federate_SOURCES = src/mini_federate.cpp
