@@ -128,7 +128,7 @@ Input arguments
     for (int idx = 0; idx < param_message_size; idx++){
         value = value + "1";
     }
-    cout << "Standard topic value:  " << value << endl;
+    LDEBUG4 << "Standard topic value:  " << value << endl;
 
     // Connecting to FNCS broker
     fncs::initialize();
@@ -166,7 +166,6 @@ Input arguments
         // "Processing" received events at granted time
         events = fncs::get_events();
         LDEBUG3 << "Getting events...";
-        LDEBUG4 << "Number of events: " << events.size();
         for (vector<string>::iterator it=events.begin(); it!=events.end(); ++it) {
             key = *it;
             value = fncs::get_value(*it);
