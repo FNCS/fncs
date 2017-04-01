@@ -1345,17 +1345,17 @@ fncs::Subscription fncs::parse_value(const YAML::Node &node)
 
     if (const YAML::Node *child = node.FindValue("default")) {
         if (child->Type() != YAML::NodeType::Scalar) {
-            cerr << "YAML 'default' must be a Scalar" << endl;
+            cerr << "YAML 'default' must be a Scalar for " << sub.topic << endl;
         }
         else {
             *child >> sub.def;
-            cout << "sub.def" << sub.def << endl;
+//            cout << "sub.def " << sub.def << endl;
         }
     }
 
     if (const YAML::Node *child = node.FindValue("type")) {
         if (child->Type() != YAML::NodeType::Scalar) {
-            cerr << "YAML 'type' must be a Scalar" << endl;
+            cerr << "YAML 'type' must be a Scalar for " << sub.topic << endl;
         }
         else {
             *child >> sub.type;
@@ -1364,7 +1364,7 @@ fncs::Subscription fncs::parse_value(const YAML::Node &node)
 
     if (const YAML::Node *child = node.FindValue("list")) {
         if (child->Type() != YAML::NodeType::Scalar) {
-            cerr << "YAML 'list' must be a Scalar" << endl;
+            cerr << "YAML 'list' must be a Scalar for " << sub.topic << endl;
         }
         else {
             *child >> sub.list;
