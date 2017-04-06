@@ -62,6 +62,10 @@ extern "C" {
      * time_request. */
     FNCS_EXPORT char** fncs_get_events();
 
+    /** Get one key for the given event index that as updated during the
+     * last time_request. */
+    FNCS_EXPORT char* fncs_get_event_at(size_t index);
+
     /** Get a value from the cache with the given key.
      * Will hard fault if key is not found. */
     FNCS_EXPORT char* fncs_get_value(const char *key);
@@ -73,12 +77,19 @@ extern "C" {
      * Will return an array of size 1 if only a single value exists. */
     FNCS_EXPORT char** fncs_get_values(const char *key);
 
+    /** Get a single value from the array of values for the given key. */
+    FNCS_EXPORT char* fncs_get_value_at(const char *key, size_t index);
+
     /** Get the number of subscribed keys. */
     FNCS_EXPORT size_t fncs_get_keys_size();
 
     /** Get the subscribed keys.
      * Will return NULL if fncs_get_keys_size() returns 0. */
     FNCS_EXPORT char** fncs_get_keys();
+
+    /** Get the subscribed key at the given index.
+     * Will return NULL if fncs_get_keys_size() returns 0. */
+    FNCS_EXPORT char* fncs_get_key_at(size_t index);
 
     /** Return the name of the simulator. */
     FNCS_EXPORT const char * fncs_get_name();

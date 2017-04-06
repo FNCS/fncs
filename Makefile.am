@@ -13,6 +13,7 @@ LDADD =
 
 pkgconfig_DATA = src/libfncs.pc
 
+AM_CPPFLAGS += -I$(top_builddir)
 AM_CPPFLAGS += -I$(top_srcdir)/src
 AM_CPPFLAGS += -I$(top_srcdir)/contrib
 AM_CPPFLAGS += -I$(top_srcdir)/contrib/yaml-cpp/include
@@ -69,6 +70,40 @@ endif
 endif
 endif
 endif
+
+lib_LTLIBRARIES += libfncsf.la
+libfncsf_la_SOURCES = src/fncs_fapi.F90
+libfncsf_la_LIBADD = libfncs.la
+if ON_MINGW
+libfncsf_la_LDFLAGS = \
+    -no-undefined \
+    -avoid-version \
+    -version-info @LTVER@
+else
+if ON_CYGWIN
+libfncsf_la_LDFLAGS = \
+    -no-undefined \
+    -avoid-version \
+    -version-info @LTVER@
+else
+if ON_ANDROID
+libfncsf_la_LDFLAGS = \
+    -avoid-version \
+    -version-info @LTVER@
+else
+if ON_LINUX
+libfncsf_la_LDFLAGS = \
+    -version-info @LTVER@ \
+    -Wl,--version-script=$(srcdir)/src/libfncsf.vers
+else
+libfncsf_la_LDFLAGS = \
+    -version-info @LTVER@ \
+    -Wl
+endif
+endif
+endif
+endif
+include_HEADERS += fncs.mod
 
 noinst_LTLIBRARIES += libyamlcpp.la
 libyamlcpp_la_SOURCES =
@@ -166,3 +201,7 @@ fncs_player_SOURCES = src/player.cpp
 bin_PROGRAMS += fncs_player_anon
 fncs_player_anon_SOURCES = src/player.cpp
 fncs_player_anon_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_ANON
+
+check_PROGRAMS += tests/test_fortran
+tests_test_fortran_SOURCES = tests/test_fortran.F90
+tests_test_fortran_LDADD = libfncsf.la

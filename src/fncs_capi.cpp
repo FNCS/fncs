@@ -114,6 +114,11 @@ char** fncs_get_events()
     return convert(fncs::get_events());
 }
 
+char* fncs_get_event_at(size_t index)
+{
+    return convert(fncs::get_events()[index]);
+}
+
 char* fncs_get_value(const char *key)
 {
     return convert(fncs::get_value(key));
@@ -129,6 +134,11 @@ char** fncs_get_values(const char *key)
     return convert(fncs::get_values(key));
 }
 
+char* fncs_get_value_at(const char *key, size_t index)
+{
+    return convert(fncs::get_values(key)[index]);
+}
+
 size_t fncs_get_keys_size()
 {
     return fncs::get_keys().size();
@@ -137,6 +147,11 @@ size_t fncs_get_keys_size()
 char** fncs_get_keys()
 {
     return convert(fncs::get_keys());
+}
+
+char* fncs_get_key_at(size_t index)
+{
+    return convert(fncs::get_keys()[index]);
 }
 
 const char* fncs_get_name()

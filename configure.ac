@@ -169,6 +169,27 @@ AC_PROG_CC
 AC_LANG_POP([C])
 
 ###############################################################################
+# Fortran compiler
+###############################################################################
+AC_MSG_NOTICE
+AC_MSG_NOTICE([Fortran compiler])
+AC_MSG_NOTICE
+AC_LANG_PUSH([Fortran])
+
+# Checks for programs.
+AC_PROG_FC
+
+# Checks for libraries.
+
+# Checks for header files.
+
+# Checks for typedefs, structures, and compiler characteristics.
+
+# Checks for library functions.
+
+AC_LANG_POP([Fortran])
+
+###############################################################################
 # Libtool setup -- no compiler/linker tests after this
 ###############################################################################
 AC_MSG_NOTICE
