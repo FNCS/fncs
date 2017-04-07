@@ -1391,7 +1391,22 @@ string fncs::get_value(const string &key)
     }
 
     if (0 == cache.count(key)) {
-        LERROR << "key '" << key << "' not found in cache";
+        if (0 == cache_list.count(key)) {
+            LERROR << "key '" << key << "' not found in either value cache";
+        }
+        else {
+            static set<string> warned;
+            if (0 == warned.count(key)) {
+                LWARNING << "key '" << key << "' not found in single value cache but was found in multi value cache. Did you mean to use fncs::get_values()? Returning first value in multi value list.";
+                warned.insert(key);
+            }
+            if (0 == cache_list[key].size()) {
+                LERROR << "key '" << key << "' had no associated values for this time step.";
+                die();
+                return "";
+            }
+            return cache_list[key][0];
+        }
         die();
         return "";
     }
@@ -1412,12 +1427,22 @@ vector<string> fncs::get_values(const string &key)
     vector<string> values;
 
     if (0 == cache_list.count(key)) {
-        LERROR << "key '" << key << "' not found in cache list";
-        die();
-        return values;
+        LDEBUG4 << "key '" << key << "' not found in multi value cache list";
+        if (0 == cache.count(key)) {
+            LERROR << "key '" << key << "' not found in either cache list";
+            die();
+            return values;
+        }
+        else {
+            LDEBUG4 << "key '" << key << "' found only in single value cache list with value '" << cache[key] << "'";
+            values.push_back(cache[key]);
+        }
+    }
+    else {
+        LDEBUG4 << "key '" << key << "' found in multi value cache list";
+        values = cache_list[key];
     }
 
-    values = cache_list[key];
     LDEBUG4 << "key '" << key << "' has " << values.size() << " values";
     return values;
 }
