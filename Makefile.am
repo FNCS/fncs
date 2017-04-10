@@ -202,6 +202,6 @@ bin_PROGRAMS += fncs_player_anon
 fncs_player_anon_SOURCES = src/player.cpp
 fncs_player_anon_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_ANON
 
-check_PROGRAMS += tests/test_fortran
-tests_test_fortran_SOURCES = tests/test_fortran.F90
-tests_test_fortran_LDADD = libfncsf.la
+check_PROGRAMS += tests/fcoverage
+tests_fcoverage_SOURCES = tests/fcoverage.F90
+tests_fcoverage_LDADD = libfncsf.la

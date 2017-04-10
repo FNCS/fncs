@@ -35,4 +35,4 @@ libfncsf.la
 tests/config
 tests/fncs_netdelay
 tests/test
-tests/test_fortran
+tests/fcoverage

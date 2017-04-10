@@ -85,7 +85,7 @@ bin_PROGRAMS = fncs_broker$(EXEEXT) fncs_tracer$(EXEEXT) \
 	fncs_player$(EXEEXT) fncs_player_anon$(EXEEXT)
 check_PROGRAMS = contrib/yaml-cpp/test/test$(EXEEXT) \
 	tests/config$(EXEEXT) tests/test$(EXEEXT) \
-	tests/fncs_netdelay$(EXEEXT) tests/test_fortran$(EXEEXT)
+	tests/fncs_netdelay$(EXEEXT) tests/fcoverage$(EXEEXT)
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
@@ -225,6 +225,9 @@ tests_config_OBJECTS = $(am_tests_config_OBJECTS)
 tests_config_LDADD = $(LDADD)
 tests_config_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
+am_tests_fcoverage_OBJECTS = tests/fcoverage.$(OBJEXT)
+tests_fcoverage_OBJECTS = $(am_tests_fcoverage_OBJECTS)
+tests_fcoverage_DEPENDENCIES = libfncsf.la
 am_tests_fncs_netdelay_OBJECTS = tests/netdelay.$(OBJEXT)
 tests_fncs_netdelay_OBJECTS = $(am_tests_fncs_netdelay_OBJECTS)
 tests_fncs_netdelay_LDADD = $(LDADD)
@@ -235,9 +238,6 @@ tests_test_OBJECTS = $(am_tests_test_OBJECTS)
 tests_test_LDADD = $(LDADD)
 tests_test_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
-am_tests_test_fortran_OBJECTS = tests/test_fortran.$(OBJEXT)
-tests_test_fortran_OBJECTS = $(am_tests_test_fortran_OBJECTS)
-tests_test_fortran_DEPENDENCIES = libfncsf.la
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -312,14 +312,14 @@ SOURCES = $(libfncs_la_SOURCES) $(libfncsf_la_SOURCES) \
 	$(libyamlcpp_la_SOURCES) $(contrib_yaml_cpp_test_test_SOURCES) \
 	$(fncs_broker_SOURCES) $(fncs_player_SOURCES) \
 	$(fncs_player_anon_SOURCES) $(fncs_tracer_SOURCES) \
-	$(tests_config_SOURCES) $(tests_fncs_netdelay_SOURCES) \
-	$(tests_test_SOURCES) $(tests_test_fortran_SOURCES)
+	$(tests_config_SOURCES) $(tests_fcoverage_SOURCES) \
+	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES)
 DIST_SOURCES = $(libfncs_la_SOURCES) $(libfncsf_la_SOURCES) \
 	$(libyamlcpp_la_SOURCES) $(contrib_yaml_cpp_test_test_SOURCES) \
 	$(fncs_broker_SOURCES) $(fncs_player_SOURCES) \
 	$(fncs_player_anon_SOURCES) $(fncs_tracer_SOURCES) \
-	$(tests_config_SOURCES) $(tests_fncs_netdelay_SOURCES) \
-	$(tests_test_SOURCES) $(tests_test_fortran_SOURCES)
+	$(tests_config_SOURCES) $(tests_fcoverage_SOURCES) \
+	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -629,8 +629,8 @@ fncs_tracer_SOURCES = src/tracer.cpp
 fncs_player_SOURCES = src/player.cpp
 fncs_player_anon_SOURCES = src/player.cpp
 fncs_player_anon_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_ANON
-tests_test_fortran_SOURCES = tests/test_fortran.F90
-tests_test_fortran_LDADD = libfncsf.la
+tests_fcoverage_SOURCES = tests/fcoverage.F90
+tests_fcoverage_LDADD = libfncsf.la
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -961,6 +961,12 @@ tests/config.$(OBJEXT): tests/$(am__dirstamp) \
 tests/config$(EXEEXT): $(tests_config_OBJECTS) $(tests_config_DEPENDENCIES) $(EXTRA_tests_config_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/config$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(tests_config_OBJECTS) $(tests_config_LDADD) $(LIBS)
+tests/fcoverage.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+tests/fcoverage$(EXEEXT): $(tests_fcoverage_OBJECTS) $(tests_fcoverage_DEPENDENCIES) $(EXTRA_tests_fcoverage_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/fcoverage$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(tests_fcoverage_OBJECTS) $(tests_fcoverage_LDADD) $(LIBS)
 tests/netdelay.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
@@ -973,12 +979,6 @@ tests/test.$(OBJEXT): tests/$(am__dirstamp) \
 tests/test$(EXEEXT): $(tests_test_OBJECTS) $(tests_test_DEPENDENCIES) $(EXTRA_tests_test_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/test$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(tests_test_OBJECTS) $(tests_test_LDADD) $(LIBS)
-tests/test_fortran.$(OBJEXT): tests/$(am__dirstamp) \
-	tests/$(DEPDIR)/$(am__dirstamp)
-
-tests/test_fortran$(EXEEXT): $(tests_test_fortran_OBJECTS) $(tests_test_fortran_DEPENDENCIES) $(EXTRA_tests_test_fortran_DEPENDENCIES) tests/$(am__dirstamp)
-	@rm -f tests/test_fortran$(EXEEXT)
-	$(AM_V_FCLD)$(FCLINK) $(tests_test_fortran_OBJECTS) $(tests_test_fortran_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

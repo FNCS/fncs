@@ -13,9 +13,6 @@ values
         list = true
 """ % name
 
-# generate some time steps
-time_steps = [i*2 for i in xrange(10)]
-
 print "pycoverage test running FNCS version", fncs.get_version()
 
 fncs.initialize(config)
@@ -26,7 +23,7 @@ print "I am federate %d out of %d other federates" % (
         fncs.get_id(),
         fncs.get_simulator_count())
 
-for time in time_steps:
+for time in [i*2 for i in xrange(10)]:
     current_time = fncs.time_request(time)
     events = fncs.get_events()
     print "current time is %d, received %d events" % (
