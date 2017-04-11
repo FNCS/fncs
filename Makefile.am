@@ -38,6 +38,9 @@ libfncsf_la_SOURCES = src/fncs_fapi_mod.f90
 include_HEADERS += fncs.mod
 endif
 
+fclibs:
+	@echo $(FCLIBS)
+
 lib_LTLIBRARIES += libfncs.la
 libfncs_la_SOURCES =
 libfncs_la_SOURCES += src/echo.cpp
