@@ -30,12 +30,21 @@ LDADD += $(ZMQ_LIBS)
 include_HEADERS += src/fncs.hpp
 include_HEADERS += src/fncs.h
 
+# If FORTRAN is enabled, build the mod file without creating a
+# dependency on FORTRAN libraries in the C/C++ libfncs.la library.
+if ENABLE_FORTRAN
+noinst_LTLIBRARIES += libfncsf.la
+libfncsf_la_SOURCES = src/fncs_fapi_mod.f90
+include_HEADERS += fncs.mod
+endif
+
 lib_LTLIBRARIES += libfncs.la
 libfncs_la_SOURCES =
 libfncs_la_SOURCES += src/echo.cpp
 libfncs_la_SOURCES += src/echo.hpp
 libfncs_la_SOURCES += src/fncs.cpp
 libfncs_la_SOURCES += src/fncs_capi.cpp
+libfncs_la_SOURCES += src/fncs_fapi.cpp
 libfncs_la_SOURCES += src/fncs_internal.hpp
 libfncs_la_LIBADD =
 libfncs_la_LIBADD += $(CZMQ_LIBS)
@@ -70,40 +79,6 @@ endif
 endif
 endif
 endif
-
-lib_LTLIBRARIES += libfncsf.la
-libfncsf_la_SOURCES = src/fncs_fapi.F90
-libfncsf_la_LIBADD = libfncs.la
-if ON_MINGW
-libfncsf_la_LDFLAGS = \
-    -no-undefined \
-    -avoid-version \
-    -version-info @LTVER@
-else
-if ON_CYGWIN
-libfncsf_la_LDFLAGS = \
-    -no-undefined \
-    -avoid-version \
-    -version-info @LTVER@
-else
-if ON_ANDROID
-libfncsf_la_LDFLAGS = \
-    -avoid-version \
-    -version-info @LTVER@
-else
-if ON_LINUX
-libfncsf_la_LDFLAGS = \
-    -version-info @LTVER@ \
-    -Wl,--version-script=$(srcdir)/src/libfncsf.vers
-else
-libfncsf_la_LDFLAGS = \
-    -version-info @LTVER@ \
-    -Wl
-endif
-endif
-endif
-endif
-include_HEADERS += fncs.mod
 
 noinst_LTLIBRARIES += libyamlcpp.la
 libyamlcpp_la_SOURCES =
@@ -202,6 +177,16 @@ bin_PROGRAMS += fncs_player_anon
 fncs_player_anon_SOURCES = src/player.cpp
 fncs_player_anon_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_ANON
 
+if ENABLE_FORTRAN
 check_PROGRAMS += tests/fcoverage
+endif
 tests_fcoverage_SOURCES = tests/fcoverage.F90
-tests_fcoverage_LDADD = libfncsf.la
+tests_fcoverage_LDADD = $(LDADD) $(FCLIBS)
+nodist_EXTRA_tests_fcoverage_SOURCES = dummy.cxx
+
+if ENABLE_FORTRAN
+check_PROGRAMS += tests/fcoverage_mod
+endif
+tests_fcoverage_mod_SOURCES = tests/fcoverage_mod.f90
+tests_fcoverage_mod_LDADD = $(LDADD) $(FCLIBS)
+nodist_EXTRA_tests_fcoverage_mod_SOURCES = dummy.cxx

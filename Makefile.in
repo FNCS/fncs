@@ -85,12 +85,19 @@ bin_PROGRAMS = fncs_broker$(EXEEXT) fncs_tracer$(EXEEXT) \
 	fncs_player$(EXEEXT) fncs_player_anon$(EXEEXT)
 check_PROGRAMS = contrib/yaml-cpp/test/test$(EXEEXT) \
 	tests/config$(EXEEXT) tests/test$(EXEEXT) \
-	tests/fncs_netdelay$(EXEEXT) tests/fcoverage$(EXEEXT)
+	tests/fncs_netdelay$(EXEEXT) $(am__EXEEXT_1)
+
+# If FORTRAN is enabled, build the mod file without creating a
+# dependency on FORTRAN libraries in the C/C++ libfncs.la library.
+@ENABLE_FORTRAN_TRUE@am__append_1 = libfncsf.la
+@ENABLE_FORTRAN_TRUE@am__append_2 = fncs.mod
+@ENABLE_FORTRAN_TRUE@am__append_3 = tests/fcoverage \
+@ENABLE_FORTRAN_TRUE@	tests/fcoverage_mod
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
 	$(srcdir)/config.h.in $(top_srcdir)/src/libfncs.pc.in \
-	$(top_srcdir)/build-aux/depcomp $(include_HEADERS) \
+	$(top_srcdir)/build-aux/depcomp $(am__include_HEADERS_DIST) \
 	build-aux/ar-lib build-aux/config.guess build-aux/config.sub \
 	build-aux/depcomp build-aux/install-sh build-aux/missing \
 	build-aux/ltmain.sh $(top_srcdir)/build-aux/ar-lib \
@@ -150,7 +157,8 @@ am__DEPENDENCIES_1 =
 libfncs_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	libyamlcpp.la
 am__dirstamp = $(am__leading_dot)dirstamp
-am_libfncs_la_OBJECTS = src/echo.lo src/fncs.lo src/fncs_capi.lo
+am_libfncs_la_OBJECTS = src/echo.lo src/fncs.lo src/fncs_capi.lo \
+	src/fncs_fapi.lo
 libfncs_la_OBJECTS = $(am_libfncs_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -159,12 +167,11 @@ am__v_lt_1 =
 libfncs_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(libfncs_la_LDFLAGS) $(LDFLAGS) -o $@
-libfncsf_la_DEPENDENCIES = libfncs.la
-am_libfncsf_la_OBJECTS = src/fncs_fapi.lo
+libfncsf_la_LIBADD =
+am__libfncsf_la_SOURCES_DIST = src/fncs_fapi_mod.f90
+@ENABLE_FORTRAN_TRUE@am_libfncsf_la_OBJECTS = src/fncs_fapi_mod.lo
 libfncsf_la_OBJECTS = $(am_libfncsf_la_OBJECTS)
-libfncsf_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=FC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(FCLD) $(AM_FCFLAGS) $(FCFLAGS) \
-	$(libfncsf_la_LDFLAGS) $(LDFLAGS) -o $@
+@ENABLE_FORTRAN_TRUE@am_libfncsf_la_rpath =
 libyamlcpp_la_LIBADD =
 am_libyamlcpp_la_OBJECTS = contrib/yaml-cpp/src/aliasmanager.lo \
 	contrib/yaml-cpp/src/binary.lo \
@@ -190,6 +197,8 @@ am_libyamlcpp_la_OBJECTS = contrib/yaml-cpp/src/aliasmanager.lo \
 	contrib/yaml-cpp/src/singledocparser.lo \
 	contrib/yaml-cpp/src/stream.lo contrib/yaml-cpp/src/tag.lo
 libyamlcpp_la_OBJECTS = $(am_libyamlcpp_la_OBJECTS)
+@ENABLE_FORTRAN_TRUE@am__EXEEXT_1 = tests/fcoverage$(EXEEXT) \
+@ENABLE_FORTRAN_TRUE@	tests/fcoverage_mod$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 am_contrib_yaml_cpp_test_test_OBJECTS = contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-emittertests.$(OBJEXT) \
 	contrib/yaml-cpp/test/contrib_yaml_cpp_test_test-main.$(OBJEXT) \
@@ -227,7 +236,14 @@ tests_config_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 am_tests_fcoverage_OBJECTS = tests/fcoverage.$(OBJEXT)
 tests_fcoverage_OBJECTS = $(am_tests_fcoverage_OBJECTS)
-tests_fcoverage_DEPENDENCIES = libfncsf.la
+am__DEPENDENCIES_2 = libfncs.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+tests_fcoverage_DEPENDENCIES = $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_1)
+am_tests_fcoverage_mod_OBJECTS = tests/fcoverage_mod.$(OBJEXT)
+tests_fcoverage_mod_OBJECTS = $(am_tests_fcoverage_mod_OBJECTS)
+tests_fcoverage_mod_DEPENDENCIES = $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_1)
 am_tests_fncs_netdelay_OBJECTS = tests/netdelay.$(OBJEXT)
 tests_fncs_netdelay_OBJECTS = $(am_tests_fncs_netdelay_OBJECTS)
 tests_fncs_netdelay_LDADD = $(LDADD)
@@ -290,6 +306,13 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
+FCCOMPILE = $(FC) $(AM_FCFLAGS) $(FCFLAGS)
+LTFCCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=FC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=compile $(FC) $(AM_FCFLAGS) $(FCFLAGS)
+AM_V_FC = $(am__v_FC_@AM_V@)
+am__v_FC_ = $(am__v_FC_@AM_DEFAULT_V@)
+am__v_FC_0 = @echo "  FC      " $@;
+am__v_FC_1 = 
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -313,19 +336,24 @@ SOURCES = $(libfncs_la_SOURCES) $(libfncsf_la_SOURCES) \
 	$(fncs_broker_SOURCES) $(fncs_player_SOURCES) \
 	$(fncs_player_anon_SOURCES) $(fncs_tracer_SOURCES) \
 	$(tests_config_SOURCES) $(tests_fcoverage_SOURCES) \
+	$(nodist_EXTRA_tests_fcoverage_SOURCES) \
+	$(tests_fcoverage_mod_SOURCES) \
+	$(nodist_EXTRA_tests_fcoverage_mod_SOURCES) \
 	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES)
-DIST_SOURCES = $(libfncs_la_SOURCES) $(libfncsf_la_SOURCES) \
+DIST_SOURCES = $(libfncs_la_SOURCES) $(am__libfncsf_la_SOURCES_DIST) \
 	$(libyamlcpp_la_SOURCES) $(contrib_yaml_cpp_test_test_SOURCES) \
 	$(fncs_broker_SOURCES) $(fncs_player_SOURCES) \
 	$(fncs_player_anon_SOURCES) $(fncs_tracer_SOURCES) \
 	$(tests_config_SOURCES) $(tests_fcoverage_SOURCES) \
-	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES)
+	$(tests_fcoverage_mod_SOURCES) $(tests_fncs_netdelay_SOURCES) \
+	$(tests_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
 DATA = $(pkgconfig_DATA)
+am__include_HEADERS_DIST = src/fncs.hpp src/fncs.h fncs.mod
 HEADERS = $(include_HEADERS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) \
 	$(LISP)config.h.in
@@ -399,6 +427,11 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FC = @FC@
 FCFLAGS = @FCFLAGS@
+FCFLAGS_F90 = @FCFLAGS_F90@
+FCFLAGS_f90 = @FCFLAGS_f90@
+FCLIBS = @FCLIBS@
+FC_MODEXT = @FC_MODEXT@
+FC_MODINC = @FC_MODINC@
 FGREP = @FGREP@
 GREP = @GREP@
 INSTALL = @INSTALL@
@@ -452,6 +485,7 @@ ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 ac_ct_FC = @ac_ct_FC@
+ac_empty = @ac_empty@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -499,9 +533,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
-include_HEADERS = src/fncs.hpp src/fncs.h fncs.mod
-lib_LTLIBRARIES = libfncs.la libfncsf.la
-noinst_LTLIBRARIES = libyamlcpp.la
+include_HEADERS = src/fncs.hpp src/fncs.h $(am__append_2)
+lib_LTLIBRARIES = libfncs.la
+noinst_LTLIBRARIES = $(am__append_1) libyamlcpp.la
 EXTRA_DIST = README
 AM_CXXFLAGS = 
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir)/src \
@@ -511,8 +545,9 @@ AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir)/src \
 AM_LDFLAGS = $(CZMQ_LDFLAGS) $(ZMQ_LDFLAGS)
 LDADD = libfncs.la $(CZMQ_LIBS) $(ZMQ_LIBS)
 pkgconfig_DATA = src/libfncs.pc
+@ENABLE_FORTRAN_TRUE@libfncsf_la_SOURCES = src/fncs_fapi_mod.f90
 libfncs_la_SOURCES = src/echo.cpp src/echo.hpp src/fncs.cpp \
-	src/fncs_capi.cpp src/fncs_internal.hpp
+	src/fncs_capi.cpp src/fncs_fapi.cpp src/fncs_internal.hpp
 libfncs_la_LIBADD = $(CZMQ_LIBS) $(ZMQ_LIBS) libyamlcpp.la
 @ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_FALSE@@ON_MINGW_FALSE@libfncs_la_LDFLAGS = \
 @ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_FALSE@@ON_MINGW_FALSE@    -version-info @LTVER@ \
@@ -532,30 +567,6 @@ libfncs_la_LIBADD = $(CZMQ_LIBS) $(ZMQ_LIBS) libyamlcpp.la
 @ON_CYGWIN_TRUE@@ON_MINGW_FALSE@    -version-info @LTVER@
 
 @ON_MINGW_TRUE@libfncs_la_LDFLAGS = \
-@ON_MINGW_TRUE@    -no-undefined \
-@ON_MINGW_TRUE@    -avoid-version \
-@ON_MINGW_TRUE@    -version-info @LTVER@
-
-libfncsf_la_SOURCES = src/fncs_fapi.F90
-libfncsf_la_LIBADD = libfncs.la
-@ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_FALSE@@ON_MINGW_FALSE@libfncsf_la_LDFLAGS = \
-@ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_FALSE@@ON_MINGW_FALSE@    -version-info @LTVER@ \
-@ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_FALSE@@ON_MINGW_FALSE@    -Wl
-
-@ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_TRUE@@ON_MINGW_FALSE@libfncsf_la_LDFLAGS = \
-@ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_TRUE@@ON_MINGW_FALSE@    -version-info @LTVER@ \
-@ON_ANDROID_FALSE@@ON_CYGWIN_FALSE@@ON_LINUX_TRUE@@ON_MINGW_FALSE@    -Wl,--version-script=$(srcdir)/src/libfncsf.vers
-
-@ON_ANDROID_TRUE@@ON_CYGWIN_FALSE@@ON_MINGW_FALSE@libfncsf_la_LDFLAGS = \
-@ON_ANDROID_TRUE@@ON_CYGWIN_FALSE@@ON_MINGW_FALSE@    -avoid-version \
-@ON_ANDROID_TRUE@@ON_CYGWIN_FALSE@@ON_MINGW_FALSE@    -version-info @LTVER@
-
-@ON_CYGWIN_TRUE@@ON_MINGW_FALSE@libfncsf_la_LDFLAGS = \
-@ON_CYGWIN_TRUE@@ON_MINGW_FALSE@    -no-undefined \
-@ON_CYGWIN_TRUE@@ON_MINGW_FALSE@    -avoid-version \
-@ON_CYGWIN_TRUE@@ON_MINGW_FALSE@    -version-info @LTVER@
-
-@ON_MINGW_TRUE@libfncsf_la_LDFLAGS = \
 @ON_MINGW_TRUE@    -no-undefined \
 @ON_MINGW_TRUE@    -avoid-version \
 @ON_MINGW_TRUE@    -version-info @LTVER@
@@ -630,12 +641,16 @@ fncs_player_SOURCES = src/player.cpp
 fncs_player_anon_SOURCES = src/player.cpp
 fncs_player_anon_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_ANON
 tests_fcoverage_SOURCES = tests/fcoverage.F90
-tests_fcoverage_LDADD = libfncsf.la
+tests_fcoverage_LDADD = $(LDADD) $(FCLIBS)
+nodist_EXTRA_tests_fcoverage_SOURCES = dummy.cxx
+tests_fcoverage_mod_SOURCES = tests/fcoverage_mod.f90
+tests_fcoverage_mod_LDADD = $(LDADD) $(FCLIBS)
+nodist_EXTRA_tests_fcoverage_mod_SOURCES = dummy.cxx
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .F90 .cpp .lo .o .obj
+.SUFFIXES: .F90 .cpp .cxx .f90 .lo .o .obj
 am--refresh: Makefile
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -742,13 +757,15 @@ src/$(DEPDIR)/$(am__dirstamp):
 src/echo.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
 src/fncs.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
 src/fncs_capi.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/fncs_fapi.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
 
 libfncs.la: $(libfncs_la_OBJECTS) $(libfncs_la_DEPENDENCIES) $(EXTRA_libfncs_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(libfncs_la_LINK) -rpath $(libdir) $(libfncs_la_OBJECTS) $(libfncs_la_LIBADD) $(LIBS)
-src/fncs_fapi.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/fncs_fapi_mod.lo: src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 libfncsf.la: $(libfncsf_la_OBJECTS) $(libfncsf_la_DEPENDENCIES) $(EXTRA_libfncsf_la_DEPENDENCIES) 
-	$(AM_V_FCLD)$(libfncsf_la_LINK) -rpath $(libdir) $(libfncsf_la_OBJECTS) $(libfncsf_la_LIBADD) $(LIBS)
+	$(AM_V_FCLD)$(FCLINK) $(am_libfncsf_la_rpath) $(libfncsf_la_OBJECTS) $(libfncsf_la_LIBADD) $(LIBS)
 contrib/yaml-cpp/src/$(am__dirstamp):
 	@$(MKDIR_P) contrib/yaml-cpp/src
 	@: > contrib/yaml-cpp/src/$(am__dirstamp)
@@ -966,7 +983,13 @@ tests/fcoverage.$(OBJEXT): tests/$(am__dirstamp) \
 
 tests/fcoverage$(EXEEXT): $(tests_fcoverage_OBJECTS) $(tests_fcoverage_DEPENDENCIES) $(EXTRA_tests_fcoverage_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/fcoverage$(EXEEXT)
-	$(AM_V_FCLD)$(FCLINK) $(tests_fcoverage_OBJECTS) $(tests_fcoverage_LDADD) $(LIBS)
+	$(AM_V_CXXLD)$(CXXLINK) $(tests_fcoverage_OBJECTS) $(tests_fcoverage_LDADD) $(LIBS)
+tests/fcoverage_mod.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+tests/fcoverage_mod$(EXEEXT): $(tests_fcoverage_mod_OBJECTS) $(tests_fcoverage_mod_DEPENDENCIES) $(EXTRA_tests_fcoverage_mod_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/fcoverage_mod$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(tests_fcoverage_mod_OBJECTS) $(tests_fcoverage_mod_LDADD) $(LIBS)
 tests/netdelay.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
@@ -995,6 +1018,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dummy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/aliasmanager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/binary.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@contrib/yaml-cpp/src/$(DEPDIR)/conversion.Plo@am__quote@
@@ -1032,6 +1056,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/echo.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_capi.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_fapi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_player_anon-player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tracer.Po@am__quote@
@@ -1169,6 +1194,39 @@ src/fncs_player_anon-player.obj: src/player.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/player.cpp' object='src/fncs_player_anon-player.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fncs_player_anon_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/fncs_player_anon-player.obj `if test -f 'src/player.cpp'; then $(CYGPATH_W) 'src/player.cpp'; else $(CYGPATH_W) '$(srcdir)/src/player.cpp'; fi`
+
+.cxx.o:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ $<
+
+.cxx.obj:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+.cxx.lo:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+@am__fastdepCXX_TRUE@	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
+
+.f90.o:
+	$(AM_V_FC)$(FCCOMPILE) -c -o $@ $(FCFLAGS_f90) $<
+
+.f90.obj:
+	$(AM_V_FC)$(FCCOMPILE) -c -o $@ $(FCFLAGS_f90) `$(CYGPATH_W) '$<'`
+
+.f90.lo:
+	$(AM_V_FC)$(LTFCCOMPILE) -c -o $@ $(FCFLAGS_f90) $<
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1502,7 +1560,7 @@ clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf contrib/yaml-cpp/src/$(DEPDIR) contrib/yaml-cpp/src/contrib/$(DEPDIR) contrib/yaml-cpp/test/$(DEPDIR) contrib/yaml-cpp/test/old-api/$(DEPDIR) src/$(DEPDIR) tests/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) contrib/yaml-cpp/src/$(DEPDIR) contrib/yaml-cpp/src/contrib/$(DEPDIR) contrib/yaml-cpp/test/$(DEPDIR) contrib/yaml-cpp/test/old-api/$(DEPDIR) src/$(DEPDIR) tests/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-tags
@@ -1550,7 +1608,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf contrib/yaml-cpp/src/$(DEPDIR) contrib/yaml-cpp/src/contrib/$(DEPDIR) contrib/yaml-cpp/test/$(DEPDIR) contrib/yaml-cpp/test/old-api/$(DEPDIR) src/$(DEPDIR) tests/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) contrib/yaml-cpp/src/$(DEPDIR) contrib/yaml-cpp/src/contrib/$(DEPDIR) contrib/yaml-cpp/test/$(DEPDIR) contrib/yaml-cpp/test/old-api/$(DEPDIR) src/$(DEPDIR) tests/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

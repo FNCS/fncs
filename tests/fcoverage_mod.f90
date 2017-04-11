@@ -1,6 +1,6 @@
 program main
+  use fncs
   implicit none
-#include "fncs.fh"
   integer ( 8 ) :: current_time
   integer ( 8 ) :: time_requested
   integer ( 8 ) :: event_size

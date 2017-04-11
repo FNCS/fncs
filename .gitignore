@@ -6,6 +6,7 @@
 .dirstamp
 .libs
 *.exe
+*.pyc
 Makefile
 autom4te.cache/
 config.h

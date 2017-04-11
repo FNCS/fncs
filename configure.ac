@@ -33,6 +33,12 @@ AS_IF([test "$FNCS_TOP_BUILDDIR" != "$FNCS_TOP_SRCDIR"],
 
 AC_CANONICAL_HOST
 
+AC_ARG_ENABLE([fortran],
+              [AS_HELP_STRING([--enable-fortran], [enable FORTRAN code])],
+              [],
+              [enable_fortran=no])
+AM_CONDITIONAL([ENABLE_FORTRAN], [test "x$enable_fortran" != xno])
+
 AC_LANG([C++])
 
 ###############################################################################
@@ -172,20 +178,41 @@ AC_LANG_POP([C])
 # Fortran compiler
 ###############################################################################
 AC_MSG_NOTICE
-AC_MSG_NOTICE([Fortran compiler])
-AC_MSG_NOTICE
+AS_IF([test "x$enable_fortran" = xno],
+    [AC_MSG_NOTICE([Fortran compiler (disabled, but some tests still required)])],
+    [AC_MSG_NOTICE([Fortran compiler])])
 AC_LANG_PUSH([Fortran])
 
 # Checks for programs.
 AC_PROG_FC
 
+# If FORTRAN compiler was not found, we disable support.
+AS_IF([test "x$FC" = x], [enable_fortran=no])
+
+# If FORTRAN compiler does not work, we disable support for it.
+AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM([],[])], [],
+    [AC_MSG_WARN([FORTRAN compiler does not work, disabling])
+     enable_fortran=no; FC=])
+
+# Perform FORTRAN tests only if enabled.
+if test "x$enable_fortran" = xyes
+then
+
 # Checks for libraries.
+AC_FC_LIBRARY_LDFLAGS
 
 # Checks for header files.
 
 # Checks for typedefs, structures, and compiler characteristics.
+AC_FC_PP_SRCEXT([F90])
+AC_FC_SRCEXT([f90])
+AC_FC_MODULE_EXTENSION
+AC_FC_MODULE_FLAG
 
 # Checks for library functions.
+
+fi
 
 AC_LANG_POP([Fortran])
 
