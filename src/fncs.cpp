@@ -590,7 +590,8 @@ fncs::time fncs::time_request(fncs::time time_next)
 
     LDEBUG1 << "sending TIME_REQUEST of " << time_next << " nanoseconds";
     zstr_sendm(client, fncs::TIME_REQUEST);
-    zstr_sendf(client, "%llu", time_next);
+    zstr_sendfm(client, "%llu", time_next);
+    zstr_sendf(client, "%llu", time_current);
 
     /* receive TIME_REQUEST and perhaps other message types */
     zmq_pollitem_t items[] = { { zsock_resolve(client), 0, ZMQ_POLLIN, 0 } };
@@ -829,7 +830,8 @@ void fncs::finalize()
     zmsg_t *msg = NULL;
     zframe_t *frame = NULL;
 
-    zstr_send(client, fncs::BYE);
+    zstr_sendm(client, fncs::BYE);
+    zstr_sendf(client, "%llu", time_current);
 
     /* receive BYE and perhaps other message types */
     zmq_pollitem_t items[] = { { zsock_resolve(client), 0, ZMQ_POLLIN, 0 } };

@@ -375,6 +375,7 @@ int main(int argc, char **argv)
                     || fncs::BYE == message_type) {
                 size_t index = 0; /* index of sim state */
                 fncs::time time_requested;
+                fncs::time time_last;
 
                 if (fncs::TIME_REQUEST == message_type) {
                     LDEBUG4 << "TIME_REQUEST received from " << sender;
@@ -393,6 +394,18 @@ int main(int argc, char **argv)
                 index = name_to_index[sender];
 
                 if (fncs::BYE == message_type) {
+                    /* next frame is time last processed */
+                    frame = zmsg_next(msg);
+                    if (!frame) {
+                        LERROR << "BYE message missing time last frame";
+                        broker_die(simulators, server);
+                    }
+                    /* convert time string */
+                    {
+                        istringstream iss(fncs::to_string(frame));
+                        iss >> time_last;
+                    }
+
                     /* soft error if muliple byes received */
                     if (byes.count(sender)) {
                         LWARNING << "duplicate BYE from '" << sender << "'";
@@ -418,16 +431,27 @@ int main(int argc, char **argv)
                     simulators[index].time_requested = ULLONG_MAX;
                 }
                 else if (fncs::TIME_REQUEST == message_type) {
-                    /* next frame is time */
+                    /* next frame is time requested */
                     frame = zmsg_next(msg);
                     if (!frame) {
-                        LERROR << "TIME_REQUEST message missing time frame";
+                        LERROR << "TIME_REQUEST message missing time request frame";
                         broker_die(simulators, server);
                     }
                     /* convert time string */
                     {
                         istringstream iss(fncs::to_string(frame));
                         iss >> time_requested;
+                    }
+                    /* next frame is time last processed */
+                    frame = zmsg_next(msg);
+                    if (!frame) {
+                        LERROR << "TIME_REQUEST message missing time last frame";
+                        broker_die(simulators, server);
+                    }
+                    /* convert time string */
+                    {
+                        istringstream iss(fncs::to_string(frame));
+                        iss >> time_last;
                     }
 
                     /* update sim state */
@@ -437,7 +461,7 @@ int main(int argc, char **argv)
                 }
 
                 /* update sim state */
-                simulators[index].time_last_processed = time_granted;
+                simulators[index].time_last_processed = time_last;
                 simulators[index].processing = false;
 
                 --n_processing;
