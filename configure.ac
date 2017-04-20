@@ -204,6 +204,7 @@ esac
 # FNCS versions 2.2.0: 2:0:1 (ABI version 2) - C added fncs_is_initialized()
 # FNCS versions 2.3.0: 2:1:1 (ABI version 2)
 # FNCS versions 2.3.1: 2:1:1 (ABI version 2) - C/C++ library unchanged
+# FNCS versions 2.3.2: 3:0:2 (ABI version 3) - fncs::get_version() was missing
 #
 # libfncs -version-info current:revision:age
 LTVER="2:1:1"
