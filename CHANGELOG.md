@@ -8,6 +8,14 @@ This project follows the [Gitflow Workflow model](https://www.atlassian.com/git/
 ## [Unreleased]
 The Unreleased section will be empty for tagged releases. Unreleased functionality appears in the develop branch.
 
+## [2.3.2] - 2017-04-20
+
+### Changed
+- FNCS version is exchanged between client(s) and broker during startup. A warning is issued if a mismatch occurs.
+
+### Fixed
+- Bug fixed where sims had differing time deltas and smaller delta could go backward in time.
+
 ## [2.3.1] - 2017-03-02
 
 ### Fixed
@@ -74,7 +82,8 @@ This is the first production-ready release of the new FNCS library and
 broker.  This is a complete rewrite of the previous FNCS implementation
 and thus it gets the backwards-incompatible version 2.0 designation.
 
-[Unreleased]: https://github.com/FNCS/fncs/compare/v2.3.1...develop
+[Unreleased]: https://github.com/FNCS/fncs/compare/v2.3.2...develop
+[2.3.1]: https://github.com/FNCS/fncs/compare/v2.3.1...v2.3.2
 [2.3.1]: https://github.com/FNCS/fncs/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/FNCS/fncs/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/FNCS/fncs/compare/v2.1.2...v2.2.0
