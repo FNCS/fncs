@@ -614,16 +614,12 @@ fncs::time fncs::time_request(fncs::time time_next)
     if (time_passed < time_window) {
         time_window -= time_passed;
         LDEBUG1 << "there are " << time_window << " nanoseconds left in the window";
-        /* peers may publish after a window expires, so we can't skip
-         * until after one delta after a sync point */
-        if (time_next % time_peer != time_delta) {
-            LDEBUG1 << "time_granted " << time_next << " nanoseonds";
-            time_current = time_next;
-            /* convert nanoseonds to sim's time unit */
-            time_granted = convert_broker_to_sim_time(time_next);
-            LDEBUG2 << "time_granted " << time_granted << " in sim units";
-            return time_granted;
-        }
+        LDEBUG1 << "time_granted " << time_next << " nanoseonds";
+        time_current = time_next;
+        /* convert nanoseonds to sim's time unit */
+        time_granted = convert_broker_to_sim_time(time_next);
+        LDEBUG2 << "time_granted " << time_granted << " in sim units";
+        return time_granted;
     }
     else {
         LDEBUG1 << "time_window expired";
@@ -632,7 +628,8 @@ fncs::time fncs::time_request(fncs::time time_next)
 
     LDEBUG1 << "sending TIME_REQUEST of " << time_next << " nanoseconds";
     zstr_sendm(client, fncs::TIME_REQUEST);
-    zstr_sendf(client, "%llu", time_next);
+    zstr_sendfm(client, "%llu", time_next);
+    zstr_sendf(client, "%llu", time_current);
 
     /* receive TIME_REQUEST and perhaps other message types */
     zmq_pollitem_t items[] = { { zsock_resolve(client), 0, ZMQ_POLLIN, 0 } };
@@ -764,9 +761,15 @@ fncs::time fncs::time_request(fncs::time time_next)
 
     /* the peers this sim interacts with have a larger 'tick' */
     if (time_peer > time_delta) {
-        /* how much time is left before reaching the peers' time? */
-        time_window = time_peer - (time_current % time_peer);
-        LDEBUG1 << "new time_window of " << time_window << " nanoseconds";
+        /* If we were granted a time that is evenly divisible by our
+         * peer time, we can't create a time window just yet -- if the
+         * peer published we wouldn't get the message until after the
+         * window expired which would be too late. */
+        if (time_current % time_peer != 0) {
+            /* how much time is left before reaching the peers' time? */
+            time_window = time_peer - (time_current % time_peer);
+            LDEBUG1 << "new time_window of " << time_window << " nanoseconds";
+        }
     }
 
     /* convert nanoseonds to sim's time unit */
@@ -888,7 +891,8 @@ void fncs::finalize()
     zmsg_t *msg = NULL;
     zframe_t *frame = NULL;
 
-    zstr_send(client, fncs::BYE);
+    zstr_sendm(client, fncs::BYE);
+    zstr_sendf(client, "%llu", time_current);
 
     /* receive BYE and perhaps other message types */
     zmq_pollitem_t items[] = { { zsock_resolve(client), 0, ZMQ_POLLIN, 0 } };
