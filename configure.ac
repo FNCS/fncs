@@ -4,7 +4,7 @@
 ###############################################################################
 # Init autoconf
 ###############################################################################
-AC_PREREQ([2.69])
+AC_PREREQ([2.68])
 AC_INIT([Framework for Network Co-Simulation],
         [m4_esyscmd([./version.sh])],
         [jeff.daily@pnnl.gov],
@@ -53,7 +53,7 @@ fncs_save_LIBS="$LIBS"
 CPPFLAGS="$CPPFLAGS $ZMQ_CPPFLAGS"
 LDFLAGS="$LDFLAGS $ZMQ_LDFLAGS"
 LIBS="$LIBS $ZMQ_LIBS"
-FNCS_CHECK_PACKAGE([czmq], [czmq.h], [czmq], [zctx_new])
+FNCS_CHECK_PACKAGE([czmq], [czmq.h], [czmq], [zmsg_new])
 CPPFLAGS="$fncs_save_CPPFLAGS"
 LDFLAGS="$fncs_save_LDFLAGS"
 LIBS="$fncs_save_LIBS"
@@ -201,10 +201,12 @@ esac
 # FNCS versions 2.1.0: 1:0:0 (ABI version 1)
 # FNCS versions 2.1.1: 1:0:0 (ABI version 1) - C/C++ library unchanged
 # FNCS versions 2.1.2: 1:1:0 (ABI version 1)
-# FNCS versions 2.2.0: 2:0:1 (ABI version 1) - C added fncs_is_initialized()
+# FNCS versions 2.2.0: 2:0:1 (ABI version 2) - C added fncs_is_initialized()
+# FNCS versions 2.3.0: 2:1:1 (ABI version 2)
+# FNCS versions 2.3.1: 2:1:1 (ABI version 2) - C/C++ library unchanged
 #
 # libfncs -version-info current:revision:age
-LTVER="2:0:1"
+LTVER="2:1:1"
 AC_SUBST(LTVER)
 
 LT_INIT([win32-dll])
