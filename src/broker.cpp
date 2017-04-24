@@ -234,6 +234,32 @@ int main(int argc, char **argv)
                 config_string = fncs::to_string(frame);
                 LDEBUG2 << "-- recv configuration as follows --" << endl << config_string;
 
+                /* next frame is FNCS library version */
+                frame = zmsg_next(msg);
+                if (!frame) {
+                    LWARNING << "HELLO message from '" << sender << "' missing FNCS library version";
+                }
+                else {
+                    string version_string = fncs::to_string(frame);
+                    int result[3];
+                    std::istringstream parser(version_string);
+                    parser >> result[0];
+                    for(int idx = 1; idx < 3; idx++) {
+                        parser.get(); //Skip period
+                        parser >> result[idx];
+                    }
+                    if (FNCS_VERSION_MAJOR != result[0]
+                            || FNCS_VERSION_MINOR != result[1]
+                            || FNCS_VERSION_PATCH != result[2]) {
+                        LWARNING << "FNCS library version mismatch, client="
+                            << version_string
+                            << " broker="
+                            << FNCS_VERSION_MAJOR << "."
+                            << FNCS_VERSION_MINOR << "."
+                            << FNCS_VERSION_PATCH;
+                    }
+                }
+
                 /* parse config chunk */
                 config = fncs::parse_config(config_string);
 
@@ -366,6 +392,7 @@ int main(int argc, char **argv)
                             LDEBUG4 << "time_delta= " << simulators[i].time_delta;
                             zstr_sendfm(server, "%llu", (unsigned long long)time_peer);
                         }
+                        zstr_sendfm(server, "%d.%d.%d", FNCS_VERSION_MAJOR, FNCS_VERSION_MINOR, FNCS_VERSION_PATCH);
                         zstr_send(server, fncs::ACK);
                         LDEBUG4 << "ACK sent to '" << simulators[i].name;
                     }

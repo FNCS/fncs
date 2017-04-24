@@ -463,6 +463,18 @@ void fncs::initialize(Config config)
         die();
         return;
     }
+    string version_string;
+    {
+        ostringstream oss;
+        oss << FNCS_VERSION_MAJOR << "." << FNCS_VERSION_MINOR << "." << FNCS_VERSION_PATCH;
+        version_string = oss.str();
+    }
+    rc = zmsg_addstr(msg, version_string.c_str());
+    if (rc) {
+        LERROR << "failed to append version to message";
+        die();
+        return;
+    }
     LDEBUG2 << "sending HELLO";
     rc = zmsg_send(&msg, client);
     if (rc) {
@@ -537,9 +549,35 @@ void fncs::initialize(Config config)
         die();
         return;
     }
-    long time_peer_long = atol(fncs::to_string(frame).c_str());
-    LDEBUG2 << "time_peer_long is " << time_peer_long;
+    fncs::time time_peer_long = strtoull(fncs::to_string(frame).c_str(), NULL, 0);
+    LDEBUG2 << "time_peer_long is " << time_peer_long << " parsed from " << fncs::to_string(frame);
     time_peer = time_peer_long;
+
+    /* next frame is FNCS library version */
+    frame = zmsg_next(msg);
+    if (!frame) {
+        LWARNING << "HELLO message from broker missing FNCS library version";
+    }
+    else {
+        string version_string = fncs::to_string(frame);
+        int result[3];
+        std::istringstream parser(version_string);
+        parser >> result[0];
+        for(int idx = 1; idx < 3; idx++) {
+            parser.get(); //Skip period
+            parser >> result[idx];
+        }
+        if (FNCS_VERSION_MAJOR != result[0]
+                || FNCS_VERSION_MINOR != result[1]
+                || FNCS_VERSION_PATCH != result[2]) {
+            LWARNING << "FNCS library version mismatch, client="
+                << FNCS_VERSION_MAJOR << "."
+                << FNCS_VERSION_MINOR << "."
+                << FNCS_VERSION_PATCH
+                << " broker="
+                << version_string;
+        }
+    }
 
     /* last frame is second ACK */
     frame = zmsg_next(msg);
@@ -1718,7 +1756,7 @@ double fncs::timer()
 }
 
 
-void get_version(int *major, int *minor, int *patch)
+void fncs::get_version(int *major, int *minor, int *patch)
 {
     *major = FNCS_VERSION_MAJOR;
     *minor = FNCS_VERSION_MINOR;
