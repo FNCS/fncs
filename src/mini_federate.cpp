@@ -59,7 +59,7 @@ Input arguments
             sent each time the mini_federates update.
 *******************************************************************************/
     
-    bool isRoot = FALSE;     // Setting a Boolean to make this frequent comparison operation faster
+    bool isRoot = false;     // Setting a Boolean to make this frequent comparison operation faster
     string param_federate_type = "";
     string param_stop_time = "";
     fncs::time param_update_interval = 0;
@@ -86,7 +86,7 @@ Input arguments
         param_federate_type = argv[1];
         param_stop_time = argv[2];
         if (param_federate_type.compare("root") == 0){
-            isRoot = TRUE;
+            isRoot = true;
             if (argc < 3) {
                 cerr << "Missing paramters" << endl;
                 cerr << "Usage: mini_federate root [simulation stop time]" << endl;
@@ -100,7 +100,7 @@ Input arguments
             else { //correct number of parameters
                 }
         } else if (param_federate_type.compare("leaf") == 0){
-            isRoot = FALSE;
+            isRoot = false;
             if (argc < 6) {
                 cerr << "Missing paramters" << endl;
                 cerr << "Usage: mini_federate leaf [simulation stop time]" <<\
@@ -195,7 +195,9 @@ Input arguments
             }
             else{
                 for(int idx = 1; idx <= param_num_messages; idx++ ){
-                    string key = "key" + to_string(idx);
+                    ostringstream oss;
+                    oss << idx;
+                    string key = "key" + oss.str();
                     fncs::publish(key, value);
                 }
             }
