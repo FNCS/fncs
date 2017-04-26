@@ -1533,7 +1533,7 @@ double fncs::timer()
 }
 
 
-void get_version(int *major, int *minor, int *patch)
+void fncs::get_version(int *major, int *minor, int *patch)
 {
     *major = FNCS_VERSION_MAJOR;
     *minor = FNCS_VERSION_MINOR;
