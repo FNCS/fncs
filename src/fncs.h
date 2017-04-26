@@ -60,25 +60,36 @@ extern "C" {
 
     /** Get the keys for all values that were updated during the last
      * time_request. */
-    FNCS_EXPORT char** fncs_get_events();
+    FNCS_EXPORT const char** fncs_get_events();
+
+    /** Get one key for the given event index that as updated during the
+     * last time_request. */
+    FNCS_EXPORT const char* fncs_get_event_at(size_t index);
 
     /** Get a value from the cache with the given key.
      * Will hard fault if key is not found. */
-    FNCS_EXPORT char* fncs_get_value(const char *key);
+    FNCS_EXPORT const char* fncs_get_value(const char *key);
 
     /** Get the number of values from the cache with the given key. */
     FNCS_EXPORT size_t fncs_get_values_size(const char *key);
 
     /** Get an array of values from the cache with the given key.
      * Will return an array of size 1 if only a single value exists. */
-    FNCS_EXPORT char** fncs_get_values(const char *key);
+    FNCS_EXPORT const char** fncs_get_values(const char *key);
+
+    /** Get a single value from the array of values for the given key. */
+    FNCS_EXPORT const char* fncs_get_value_at(const char *key, size_t index);
 
     /** Get the number of subscribed keys. */
     FNCS_EXPORT size_t fncs_get_keys_size();
 
     /** Get the subscribed keys.
      * Will return NULL if fncs_get_keys_size() returns 0. */
-    FNCS_EXPORT char** fncs_get_keys();
+    FNCS_EXPORT const char** fncs_get_keys();
+
+    /** Get the subscribed key at the given index.
+     * Will return NULL if fncs_get_keys_size() returns 0. */
+    FNCS_EXPORT const char* fncs_get_key_at(size_t index);
 
     /** Return the name of the simulator. */
     FNCS_EXPORT const char * fncs_get_name();
@@ -89,14 +100,11 @@ extern "C" {
     /** Return the number of simulators connected to the broker. */
     FNCS_EXPORT int fncs_get_simulator_count();
 
-    /** Helper, free allocated character buffer. */
-    FNCS_EXPORT void _fncs_free_char_p(char * ptr);
-
-    /** Helper, free allocated array of character buffers. */
-    FNCS_EXPORT void _fncs_free_char_pp(char ** ptr, size_t size);
-
-    /*  Run-time API version detection. */
+    /** Run-time API version detection. */
     FNCS_EXPORT void fncs_get_version(int *major, int *minor, int *patch);
+
+    /** Convenience wrapper around libc free. */
+    FNCS_EXPORT void _fncs_free(void * ptr);
 
 #ifdef __cplusplus
 }

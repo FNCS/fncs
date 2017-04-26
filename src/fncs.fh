@@ -1,0 +1,35 @@
+#ifndef _FNCS_FH_
+#define _FNCS_FH_
+ 
+      logical fncs_is_initialized
+      integer*8 fncs_time_request
+      integer*8 fncs_get_events_size
+      integer*8 fncs_get_values_size
+      integer*8 fncs_get_keys_size
+      integer fncs_get_id
+      integer fncs_get_simulator_count
+!
+      external fncs_initialize
+      external fncs_initialize_config
+      external fncs_is_initialized
+      external fncs_time_request
+      external fncs_publish
+      external fncs_publish_anon
+      external fncs_route
+      external fncs_die
+      external fncs_finalize
+      external fncs_update_time_delta
+      external fncs_get_events_size
+      external fncs_get_event_at
+      external fncs_get_value
+      external fncs_get_values_size
+      external fncs_get_value_at
+      external fncs_get_keys_size
+      external fncs_get_key_at
+      external fncs_get_name
+      external fncs_get_id
+      external fncs_get_simulator_count
+      external fncs_get_version
+
+#endif
+

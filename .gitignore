@@ -6,6 +6,8 @@
 .dirstamp
 .libs
 *.exe
+*.pyc
+*.class
 Makefile
 autom4te.cache/
 config.h
@@ -29,3 +31,10 @@ fncs_player_anon
 fncs_tracer
 libyamlcpp.la
 src/libfncs.pc
+contrib/yaml-cpp/test/test
+fncs.mod
+libfncsf.la
+tests/config
+tests/fncs_netdelay
+tests/test
+tests/fcoverage
