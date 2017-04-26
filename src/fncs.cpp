@@ -507,8 +507,8 @@ void fncs::initialize(Config config)
         die();
         return;
     }
-    long time_peer_long = atol(fncs::to_string(frame).c_str());
-    LDEBUG2 << "time_peer_long is " << time_peer_long;
+    fncs::time time_peer_long = strtoull(fncs::to_string(frame).c_str(), NULL, 0);
+    LDEBUG2 << "time_peer_long is " << time_peer_long << " parsed from " << fncs::to_string(frame);
     time_peer = time_peer_long;
 
     /* next frame is FNCS library version */
