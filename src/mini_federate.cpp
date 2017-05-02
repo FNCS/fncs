@@ -164,9 +164,9 @@ Input arguments
     }
 
     time_stop = fncs::parse_time(param_stop_time);
-    cout << "stops at " << time_stop << " nanoseconds" << endl;
+    //cout << "stops at " << time_stop << " nanoseconds" << endl;
     time_stop = fncs::convert_broker_to_sim_time(time_stop);
-    cout << "stops at " << time_stop << " in sim time" << endl;
+    //cout << "stops at " << time_stop << " in sim time" << endl;
 
 
     // Starting co-sim
@@ -194,10 +194,10 @@ Input arguments
         for (vector<string>::iterator it=events.begin(); it!=events.end(); ++it) {
             key = *it;
             value = fncs::get_value(*it);
-            out << time_granted
-                << "\t" << key
-                << "\t" << value
-                << endl;
+            //out << time_granted
+            //    << "\t" << key
+            //    << "\t" << value
+            //    << endl;
             size_t pos = key.find('/');
             real_key = key.substr(pos+1,string::npos);
             LDEBUG4 << "key: " << key;
@@ -230,15 +230,16 @@ Input arguments
         }
         
     } while (time_granted < time_stop);
-    cout << "time_granted was " << time_granted << endl;
-    cout << "time_stop was " << time_stop << endl;
+    //cout << "time_granted was " << time_granted << endl;
+    //cout << "time_stop was " << time_stop << endl;
 
-    cout << "done" << endl;
+    
 
     fout.close();
 
     fncs::finalize();
 
+    cout << fed_name << " is done." << endl;
     return EXIT_SUCCESS;
 }
 
