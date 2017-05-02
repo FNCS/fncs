@@ -74,12 +74,19 @@ Input arguments
     vector<string> events;
     ofstream fout;
     ostream out(cout.rdbuf()); /* share cout's stream buffer */
+    string zpl_line = "";
+    string zpl_param = "";
+    string zpl_equals = "";
+    string zpl_value = "";
+    string fed_name = "";
+    bool done = false;
 
     // Input parameter error-checking
     if (argc == 1){
         cerr << "First parameter must be 'leaf' or 'root'." << endl;
         exit(EXIT_FAILURE);
     }else if (argc == 2){
+        cerr << "First parameter must be 'leaf' or 'root'." << endl;
         cerr << "Second parameter must be simulation stop time." << endl;
         exit(EXIT_FAILURE);
     }else{
@@ -89,12 +96,12 @@ Input arguments
             isRoot = true;
             if (argc < 3) {
                 cerr << "Missing paramters" << endl;
-                cerr << "Usage: mini_federate root [simulation stop time]" << endl;
+                cerr << "Usage: mini_federate root [simulation stop time]ns" << endl;
                 exit(EXIT_FAILURE);
                 }
             else if (argc > 3) {
                 cerr << "Too many parameters." << endl;
-                cerr << "Usage: mini_federate root [simulation stop time]" << endl;
+                cerr << "Usage: mini_federate root [simulation stop time]ns" << endl;
                 exit(EXIT_FAILURE);
                 }
             else { //correct number of parameters
@@ -103,12 +110,12 @@ Input arguments
             isRoot = false;
             if (argc < 6) {
                 cerr << "Missing paramters" << endl;
-                cerr << "Usage: mini_federate leaf [simulation stop time]" <<\
+                cerr << "Usage: mini_federate leaf [simulation stop time]ns" <<\
                         "[update interval] [messages/update] [message size]" << endl;
                 exit(EXIT_FAILURE);
             }else if (argc > 6) {
                 cerr << "Too many parameters." << endl;
-                cerr << "Usage: mini_federate leaf [simulation stop time]" <<\
+                cerr << "Usage: mini_federate leaf [simulation stop time]ns" <<\
                         "[update interval] [messages/update] [message size]" << endl;
                 exit(EXIT_FAILURE);
             } else { //correct number of parameters
@@ -129,6 +136,24 @@ Input arguments
         value = value + "1";
     }
     LDEBUG4 << "Standard topic value:  " << value << endl;
+
+
+    // Rreading in fncs.zpl to figure out what my federate name is
+
+    ifstream readFile("fncs.zpl");
+    while(getline(readFile,zpl_line) && !done)   {
+        stringstream iss(zpl_line);
+        getline(iss, zpl_param, ' ');
+        getline(iss, zpl_equals, ' ');
+        getline(iss, zpl_value, ' ');
+        if (zpl_param.compare("name") == 0){
+            fed_name = zpl_value;
+            done = true;
+        }
+    }
+    readFile.close();
+    LDEBUG4 << "Federate name as read from .zpl:  " << fed_name << endl;
+    //
 
     // Connecting to FNCS broker
     fncs::initialize();
@@ -197,7 +222,7 @@ Input arguments
                 for(int idx = 1; idx <= param_num_messages; idx++ ){
                     ostringstream oss;
                     oss << idx;
-                    string key = "key" + oss.str();
+                    string key = fed_name + "_key" + oss.str();
                     fncs::publish(key, value);
                 }
             }
