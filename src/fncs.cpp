@@ -622,7 +622,7 @@ fncs::time fncs::time_request(fncs::time time_next)
 
     /* INSTRUMENTATION PART III BEGINS
     req_clock = clock()-start_clock; */
-    req_time = (timer_ft()-start_time);
+    req_time = (timer_ft()); /*-start_time); */
     num_req = num_req +1;
 
     vec_req_time.push_back(req_time);
@@ -765,7 +765,7 @@ fncs::time fncs::time_request(fncs::time time_next)
 
     /* INSTRUMENTATION PART IV BEGINS
     grant_clock = clock() - start_clock; */
-    grant_time = (timer_ft() - start_time);
+    grant_time = (timer_ft());	/* - start_time); */
     num_grant = num_grant +1;
 
     vec_grant_time.push_back(grant_time);
@@ -878,6 +878,9 @@ void fncs::finalize()
 /* INSTRUMENTATION PART V STARTS */
     ofstream myfile;
     myfile.open("req_grant.xls", ios::out | ios::app);
+    myfile << "Time of initialization" << "," << start_time << endl;
+
+    myfile << "Time of sending request" << "," << "Requested time" << "," << "Time of sending grant" << "," << "Granted time" << endl;
     int vsize = vec_req_time.size();
     for(int vn=0; vn<vsize; vn++)
     {
