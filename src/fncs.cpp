@@ -68,7 +68,7 @@ static clist_t cache_list;
 typedef map<string,fncs::Subscription> sub_string_t;
 static sub_string_t subs_string;
 
-
+#ifdef INSTRUMENTATION
 /* INSTRUMENTATION part I starts */
 /* NEW VARIABLES FOR INSTRUMENTATION */
 static fncs::time start_clock = 0;
@@ -85,7 +85,7 @@ static vector<int> vec_grant_time;
 static vector<int> vec_time_next;
 static vector<int> vec_time_granted;
 /* INSTRUMENTATION part I ends */
-
+#endif
 
 
 #if defined(_WIN32)
@@ -532,7 +532,7 @@ void fncs::initialize(Config config)
     time_window = 0;
     is_initialized_ = true;
 
-
+# ifdef INSTRUMENTATION
     /* INSTRUMENTATION PART II STARTS 
     start_clock = clock(); */
     start_time = (timer_ft());
@@ -540,7 +540,7 @@ void fncs::initialize(Config config)
     datafile.open("instrumentation.csv", ios::out | ios::app);
     datafile << simulation_name << "," << start_clock << "," << start_time << "\n";
     INSTRUMENTATION PART II ENDS */
-
+#endif
 }
 
 
@@ -619,7 +619,7 @@ fncs::time fncs::time_request(fncs::time time_next)
 
     LDEBUG1 << "sending TIME_REQUEST of " << time_next << " nanoseconds";
 
-
+#ifdef INSTRUMENTATION
     /* INSTRUMENTATION PART III BEGINS
     req_clock = clock()-start_clock; */
     req_time = (timer_ft()); /*-start_time); */
@@ -632,7 +632,7 @@ fncs::time fncs::time_request(fncs::time time_next)
     datafile.open("instrumentation.csv", ios::out | ios::app);
     datafile << "Request" << "," << simulation_name << "," << num_req << "," << req_time << "," << time_next << "\n";
     INSTRUMENTATION PART III ENDS */
-
+#endif
 
     zstr_sendm(client, fncs::TIME_REQUEST);
     zstr_sendf(client, "%llu", time_next);
@@ -763,6 +763,7 @@ fncs::time fncs::time_request(fncs::time time_next)
 
     LDEBUG1 << "time_granted " << time_granted << " nanoseonds";
 
+#ifdef INSTRUMENTATION
     /* INSTRUMENTATION PART IV BEGINS
     grant_clock = clock() - start_clock; */
     grant_time = (timer_ft());	/* - start_time); */
@@ -772,6 +773,7 @@ fncs::time fncs::time_request(fncs::time time_next)
     vec_time_granted.push_back(time_granted);
     /* datafile << "Grant" << "," << simulation_name << "," << num_grant << "," << grant_time << "," << time_granted << "\n";
     INSTRUMENTATION PART IV ENDS */
+#endif
 
     time_current = time_granted;
 
@@ -874,7 +876,7 @@ void fncs::die()
 
 void fncs::finalize()
 {
-
+#ifdef INSTRUMENTATION
 /* INSTRUMENTATION PART V STARTS */
     ofstream myfile;
     myfile.open("req_grant.csv", ios::out | ios::app);
@@ -886,8 +888,8 @@ void fncs::finalize()
     {
 	myfile << vec_req_time[vn] << "," << vec_time_next[vn] << "," << vec_grant_time[vn] << "," << vec_time_granted[vn] << endl;
     }
-
-/* INSTRUMENTATION PART V STARTS */
+#endif
+/* INSTRUMENTATION PART V end */
 
 
 	bool recBye = false;
