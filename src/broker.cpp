@@ -95,7 +95,10 @@ int main(int argc, char **argv)
     zsock_t *server = NULL;     /* the broker socket */
     bool do_trace = false;      /* whether to dump all received messages */
     fncs::time realtime_interval = 0;
-
+    static vector<int> vec_grant_time_calc;
+    static vector<int> vec_granted_time;
+    static vector<int> vec_granted_num;
+    
     fncs::start_logging();
     fncs::replicate_logging(FNCSLog::ReportingLevel(),
             Output2Tee::Stream1(), Output2Tee::Stream2());
@@ -443,6 +446,7 @@ int main(int argc, char **argv)
                 --n_processing;
 
                 /* if all sims are done, determine next time step */
+                double start_grant_calc = fncs::timer_ft();
                 if (0 == n_processing) {
                     vector<fncs::time> time_actionable(n_sims);
                     for (size_t i=0; i<n_sims; ++i) {
@@ -489,6 +493,10 @@ int main(int argc, char **argv)
                             simulators[i].time_last_processed += simulators[i].time_delta * jump;
                         }
                     }
+                    double stop_grant_calc = fncs::timer_ft();
+                    vec_grant_time_calc.push_back(stop_grant_calc - start_grant_calc);
+                    vec_granted_time.push_back(time_granted);
+                    vec_granted_num.push_back(n_processing);
                 }
             }
             else if (fncs::PUBLISH == message_type) {
@@ -641,6 +649,15 @@ int main(int argc, char **argv)
         trace.close();
     }
 
+    // Writing out broker-only instrumentation results
+    ofstream myfile;
+    myfile.open("broker_only_instrumentation.csv", ios::out | ios::app);
+    myfile << "Granted time" << "," << "Number of granted federates" << "," << "Calculation time for grant (ns)" << endl;
+    int vsize = vec_grant_time_calc.size();
+    for(int vn=0; vn<vsize; vn++)
+    {
+        myfile << vec_granted_time[vn] << "," << vec_granted_num[vn] << "," << vec_grant_time_calc[vn] << endl;
+    }
     return 0;
 }
 
