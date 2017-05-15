@@ -877,7 +877,7 @@ void fncs::finalize()
 
 /* INSTRUMENTATION PART V STARTS */
     ofstream myfile;
-    myfile.open("req_grant.xls", ios::out | ios::app);
+    myfile.open("req_grant.csv", ios::out | ios::app);
     myfile << "Time of initialization" << "," << start_time << endl;
 
     myfile << "Time of sending request" << "," << "Requested time" << "," << "Time of sending grant" << "," << "Granted time" << endl;
