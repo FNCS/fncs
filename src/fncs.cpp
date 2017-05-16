@@ -958,7 +958,7 @@ void fncs::finalize()
             	recBye = true;
             }
             else{
-            	LERROR << "Unknown message type received! Sending DIE.";
+            	LERROR << "Unknown message type received:  " << message_type << " Sending DIE.";
             	die();
             	return;
             }
