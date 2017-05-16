@@ -101,6 +101,7 @@ int main(int argc, char **argv)
     static vector<int> vec_grant_time_calc;
     static vector<int> vec_granted_time;
     static vector<int> vec_granted_num;
+    static int publication_count = 0;
 #endif
     
     fncs::start_logging();
@@ -512,7 +513,7 @@ int main(int argc, char **argv)
                 bool found_one = false;
 
                 LDEBUG4 << "PUBLISH received";
-
+                publication_count++;
                 /* did we receive message from a connected sim? */
                 if (name_to_index.count(sender) == 0) {
                     LERROR << "simulator '" << sender << "' not connected";
@@ -660,6 +661,7 @@ int main(int argc, char **argv)
     // Writing out broker-only instrumentation results
     ofstream myfile;
     myfile.open("broker_only_instrumentation.csv", ios::out | ios::app);
+    myfile << "Total publication count: " << publication_count << endl;
     myfile << "Granted time" << "," << "Number of granted federates" << "," << "Calculation time for grant (ns)" << endl;
     int vsize = vec_grant_time_calc.size();
     for(int vn=0; vn<vsize; vn++)
