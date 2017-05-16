@@ -204,6 +204,7 @@ int main(int argc, char **argv)
                 broker_die(simulators, server);
             }
             sender = fncs::to_string(frame);
+            LDEBUG4 << "message received from " << sender;
 
             /* next frame is message type identifier */
             frame = zmsg_next(msg);
