@@ -751,6 +751,11 @@ fncs::time fncs::time_request(fncs::time time_next)
                         << topic << "'";
                 }
             }
+            else if (fncs::DIE == message_type){
+                LDEBUG4 << "DIE received";
+                die();
+                return time_next;
+            }
             else {
                 LERROR << "unrecognized message type: " << message_type;
                 die();
