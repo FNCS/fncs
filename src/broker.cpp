@@ -518,7 +518,9 @@ int main(int argc, char **argv)
                 bool found_one = false;
 
                 LDEBUG4 << "PUBLISH received";
+#ifdef INSTRUMENTATION
                 publication_count++;
+#endif
                 /* did we receive message from a connected sim? */
                 if (name_to_index.count(sender) == 0) {
                     LERROR << "simulator '" << sender << "' not connected";
