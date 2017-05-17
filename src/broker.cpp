@@ -171,6 +171,10 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     LDEBUG4 << "broker socket bound to " << endpoint;
+    /* Allows ZMQ to use all the memory it needs to ensure ALL messages are delivered
+    Without this, CZMQ sets a "high-water mark" of 1000 (units?) and silently drops 
+    messages after that. */
+    zsock_set_unbounded(server)
 
     /* begin event loop */
     zmq_pollitem_t items[] = { { zsock_resolve(server), 0, ZMQ_POLLIN, 0 } };
