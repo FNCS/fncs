@@ -182,10 +182,15 @@ int main(int argc, char **argv)
         int rc = 0;
         
         LDEBUG4 << "entering blocking poll";
+        LDEBUG4 << "entering blocking poll"
+        fncs::time poll_start = fncs::timer();
+        fncs::time poll_wait = - 1;
         rc = zmq_poll(items, 1, -1);
         if (rc == -1) {
-            LERROR << "broker polling error: " << strerror(errno);
+            poll_wait = fncs::timer() - poll_start;
+            LERROR << "broker polling error " << poll_wait << " after entering blocking poll:" << strerror(errno);
             broker_die(simulators, server); /* interrupted */
+
         }
 
         if (items[0].revents & ZMQ_POLLIN) {

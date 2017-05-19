@@ -647,10 +647,12 @@ fncs::time fncs::time_request(fncs::time time_next)
     while (true) {
         int rc = 0;
 
-        LDEBUG4 << "entering blocking poll";
+        LDEBUG4 << "entering blocking poll" ;
+        fncs::time poll_start = timer();
         rc = zmq_poll(items, 1, -1);
         if (rc == -1) {
-            LERROR << "client polling error: " << strerror(errno);
+            fncs::time poll_wait = timer() - poll_start;
+            LERROR << "client polling error  " << poll_wait << " seconds after entering poll:"  << strerror(errno);
             die(); /* interrupted */
             return time_next;
         }
@@ -757,7 +759,8 @@ fncs::time fncs::time_request(fncs::time time_next)
                 }
             }
             else if (fncs::DIE == message_type){
-                LDEBUG4 << "DIE received";
+                poll_wait = fncs::timer() - poll_start;
+                LDEBUG4 << "DIE received " << poll_wait << " seconds after entering blocking poll";
                 die();
                 return time_next;
             }
@@ -920,13 +923,15 @@ void fncs::finalize()
     while(!recBye){
 		/* receive BYE back */
     	int rc = 0;
-
-		LDEBUG4 << "entering blocking poll";
-		rc = zmq_poll(items, 1, -1);
-		if (rc == -1) {
-			LERROR << "client polling error: " << strerror(errno);
-			die(); /* interrupted */
-			return;
+        fncs::time poll_start = timer();
+        LDEBUG4 << "entering blocking poll" ;
+        fncs::time poll_start = timer();
+        rc = zmq_poll(items, 1, -1);
+        if (rc == -1) {
+            fncs::time poll_wait = timer() - poll_start;
+            LERROR << "client polling error  " << poll_wait << " seconds after entering poll:"  << strerror(errno);
+            die(); /* interrupted */
+            return time_next;
 		}
         if (items[0].revents & ZMQ_POLLIN) {
             zmsg_t *msg = NULL;
