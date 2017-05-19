@@ -174,7 +174,12 @@ int main(int argc, char **argv)
     /* Allows ZMQ to use all the memory it needs to ensure ALL messages are delivered
     Without this, CZMQ sets a "high-water mark" of 1000 (units?) and silently drops 
     messages after that. */
-    zsock_set_unbounded(server)
+    zsock_set_unbounded(server);
+
+    /* Allows ZMQ to hang around and clear up sending and receiving any pending messages
+    "-1" means "hang around forever" which could obviously be problematic. */
+    zsock_set_linger(server, -1);
+
 
     /* begin event loop */
     zmq_pollitem_t items[] = { { zsock_resolve(server), 0, ZMQ_POLLIN, 0 } };

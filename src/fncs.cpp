@@ -405,7 +405,13 @@ void fncs::initialize(Config config)
     /* Allows ZMQ to use all the memory it needs to ensure ALL messages are delivered 
     Without this, CZMQ sets a "high-water mark" of 1000 (units?) and silently drops 
     messages after that. */
-    zsock_set_unbounded(client)
+    zsock_set_unbounded(client);
+    
+    /* Allows ZMQ to hang around and clear up sending and receiving any pending messages
+    "-1" means "hang around forever" which could obviously be problematic. */
+    zsock_set_linger(client, -1);
+    
+    
     
     /* reset the signal handler so it chains */
     signal_handler_reset();
