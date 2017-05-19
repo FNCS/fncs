@@ -402,17 +402,11 @@ void fncs::initialize(Config config)
         return;
     }
 
-    /* Allows ZMQ to use all the memory it needs to ensure ALL messages are delivered 
-    Without this, CZMQ sets a "high-water mark" of 1000 (units?) and silently drops 
-    messages after that. */
+
     zsock_set_unbounded(client);
-    
-    /* Allows ZMQ to hang around and clear up sending and receiving any pending messages
-    "-1" means "hang around forever" which could obviously be problematic. */
     zsock_set_linger(client, -1);
-    
-    
-    
+    //cout << "Message size: " << zsock_maxmsgsize(client);
+
     /* reset the signal handler so it chains */
     signal_handler_reset();
 
@@ -652,12 +646,12 @@ fncs::time fncs::time_request(fncs::time time_next)
     zmq_pollitem_t items[] = { { zsock_resolve(client), 0, ZMQ_POLLIN, 0 } };
     while (true) {
         int rc = 0;
-
         LDEBUG4 << "entering blocking poll" ;
-        fncs::time poll_start = timer();
+	fncs::time poll_start = timer();
+	fncs::time poll_wait = -1;
         rc = zmq_poll(items, 1, -1);
         if (rc == -1) {
-            fncs::time poll_wait = timer() - poll_start;
+	    poll_wait = timer() - poll_start;
             LERROR << "client polling error  " << poll_wait << " seconds after entering poll:"  << strerror(errno);
             die(); /* interrupted */
             return time_next;
@@ -755,8 +749,8 @@ fncs::time fncs::time_request(fncs::time time_next)
                         cache[subscription.key] = value;
                         LDEBUG4 << "updated cache "
                             << "key='" << subscription.key << "' "
-                            << "topic='" << topic << "' "
-                            << "value='" << value << "' ";
+                            << "topic='" << topic << "' ";
+                           // << "value='" << value << "' ";
                     }
                 }
                 else {
@@ -764,13 +758,13 @@ fncs::time fncs::time_request(fncs::time time_next)
                         << topic << "'";
                 }
             }
-            else if (fncs::DIE == message_type){
-                poll_wait = fncs::timer() - poll_start;
-                LDEBUG4 << "DIE received " << poll_wait << " seconds after entering blocking poll";
-                die();
-                return time_next;
-            }
-            else {
+          else if  (fncs::DIE == message_type){
+		poll_wait = timer() - poll_start;
+		LDEBUG4 << "DIE recieved " << poll_wait << " seconds after entering blocking poll";
+		die();
+		return time_next;
+	  }  
+	  else {
                 LERROR << "unrecognized message type: " << message_type;
                 die();
                 return time_next;
@@ -825,7 +819,7 @@ void fncs::publish(const string &key, const string &value)
         zstr_sendm(client, fncs::PUBLISH);
         zstr_sendm(client, new_key.c_str());
         zstr_send(client, value.c_str());
-        LDEBUG4 << "sent PUBLISH '" << new_key << "'='" << value << "'";
+        LDEBUG4 << "sent PUBLISH '" << new_key; // << "'='" << value << "'";
     }
     else {
         LDEBUG4 << "dropped " << key;
@@ -929,16 +923,15 @@ void fncs::finalize()
     while(!recBye){
 		/* receive BYE back */
     	int rc = 0;
-        fncs::time poll_start = timer();
-        LDEBUG4 << "entering blocking poll" ;
-        fncs::time poll_start = timer();
-        rc = zmq_poll(items, 1, -1);
-        if (rc == -1) {
-            fncs::time poll_wait = timer() - poll_start;
-            LERROR << "client polling error  " << poll_wait << " seconds after entering poll:"  << strerror(errno);
-            die(); /* interrupted */
-            return time_next;
-		}
+	fncs::time poll_start = timer();
+	LDEBUG4 << "entering blocking poll";
+	rc = zmq_poll(items, 1, -1);
+	if (rc == -1) {
+		fncs::time poll_wait = timer() - poll_start;
+		LERROR << "client polling error " << poll_wait << " seconds after entering blocking poll: " << strerror(errno);
+		die(); /* interrupted */
+		return;
+	}
         if (items[0].revents & ZMQ_POLLIN) {
             zmsg_t *msg = NULL;
             zframe_t *frame = NULL;
@@ -979,7 +972,7 @@ void fncs::finalize()
             	recBye = true;
             }
             else{
-            	LERROR << "Unknown message type received:  " << message_type << " Sending DIE.";
+            	LERROR << "Unknown message type received! Sending DIE.";
             	die();
             	return;
             }

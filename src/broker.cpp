@@ -171,15 +171,9 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     LDEBUG4 << "broker socket bound to " << endpoint;
-    /* Allows ZMQ to use all the memory it needs to ensure ALL messages are delivered
-    Without this, CZMQ sets a "high-water mark" of 1000 (units?) and silently drops 
-    messages after that. */
     zsock_set_unbounded(server);
 
-    /* Allows ZMQ to hang around and clear up sending and receiving any pending messages
-    "-1" means "hang around forever" which could obviously be problematic. */
     zsock_set_linger(server, -1);
-
 
     /* begin event loop */
     zmq_pollitem_t items[] = { { zsock_resolve(server), 0, ZMQ_POLLIN, 0 } };
@@ -187,15 +181,12 @@ int main(int argc, char **argv)
         int rc = 0;
         
         LDEBUG4 << "entering blocking poll";
-        LDEBUG4 << "entering blocking poll"
-        fncs::time poll_start = fncs::timer();
-        fncs::time poll_wait = - 1;
+	fncs::time poll_start = fncs::timer();
         rc = zmq_poll(items, 1, -1);
         if (rc == -1) {
-            poll_wait = fncs::timer() - poll_start;
+	    fncs::time poll_wait = fncs::timer() - poll_start;
             LERROR << "broker polling error " << poll_wait << " after entering blocking poll:" << strerror(errno);
             broker_die(simulators, server); /* interrupted */
-
         }
 
         if (items[0].revents & ZMQ_POLLIN) {
@@ -218,7 +209,7 @@ int main(int argc, char **argv)
                 broker_die(simulators, server);
             }
             sender = fncs::to_string(frame);
-            LDEBUG4 << "message received from " << sender;
+	    LDEBUG4 << "message received from " << sender;
 
             /* next frame is message type identifier */
             frame = zmsg_next(msg);
