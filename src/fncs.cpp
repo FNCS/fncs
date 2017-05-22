@@ -649,7 +649,13 @@ fncs::time fncs::time_request(fncs::time time_next)
         LDEBUG4 << "entering blocking poll" ;
 	fncs::time poll_start = timer();
 	fncs::time poll_wait = -1;
-        rc = zmq_poll(items, 1, -1);
+        rc = zmq_poll(items, 1, 10000 * ZMQ_POLL_MSEC); //Wait ten seconds
+        
+        // If the poll times out no items will be received.
+        if (rc == 0) {
+            // Returning zero is used to indicate to the mini_federate a timeout has occurred.
+            return 0;
+        }
         if (rc == -1) {
 	    poll_wait = timer() - poll_start;
             LERROR << "client polling error  " << poll_wait << " seconds after entering poll:"  << strerror(errno);

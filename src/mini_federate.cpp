@@ -29,6 +29,7 @@ Trevor Hardy
 #include <string>
 #include <utility>
 #include <vector>
+#include <numeric>
 
 /* 3rd party headers */
 #include "czmq.h"
@@ -51,12 +52,15 @@ Input arguments
         - 'leaf' - generates FNCS messages on a pre-defined interval
     2: Simulation stop time (ns) - Length of time being "simulated" (duration of
             co-sim). This value should be uniform across all mini_federates in test.
+            
+    If leaf:
     3: Update interval (ns) - Frequency at which time requests and data exchanges
             will be made.
     4: Number of messages per update (leaf federate only) - Number of FNCS
             messages generated each time the mini_federates update
     5: Size of messages (bytes, leaf federate only) - Size of each message
             sent each time the mini_federates update.
+ 
 *******************************************************************************/
     
     bool isRoot = false;     // Setting a Boolean to make this frequent comparison operation faster
@@ -80,6 +84,12 @@ Input arguments
     string zpl_value = "";
     string fed_name = "";
     bool done = false;
+    
+    // Message receipt tracking to aid in debugging
+    vector<int> message_receipt;
+    int message_ID = 0;
+    int leaf_num = 0;
+    int message_num = 0;
 
     // Input parameter error-checking
     if (argc == 1){
@@ -101,7 +111,7 @@ Input arguments
                 }
             else if (argc > 3) {
                 cerr << "Too many parameters." << endl;
-                cerr << "Usage: mini_federate root [simulation stop time]ns" << endl;
+            cerr << "Usage: mini_federate root [simulation stop time]ns" << endl;
                 exit(EXIT_FAILURE);
                 }
             else { //correct number of parameters
@@ -138,8 +148,7 @@ Input arguments
     LDEBUG4 << "Standard topic value:  " << value << endl;
 
 
-    // Rreading in fncs.zpl to figure out what my federate name is
-
+    // Reading in fncs.zpl to figure out what my federate name is
     ifstream readFile("fncs.zpl");
     while(getline(readFile,zpl_line) && !done)   {
         stringstream iss(zpl_line);
@@ -169,6 +178,15 @@ Input arguments
     //cout << "stops at " << time_stop << " in sim time" << endl;
 
 
+    // Initialializing message receipt vector based on the number
+    //  of subscriptions.
+    int num_keys = fncs::get_keys().size();
+    message_receipt.resize(num_keys + 1);
+    LDEBUG4 << "message_receipt size: " << message_receipt.size();
+    for(std::vector<int>::iterator it = message_receipt.begin(); it != message_receipt.end(); ++it){
+        *it = 0;
+    }
+
     // Starting co-sim
     LDEBUG2 << "Starting co-sim...";
     target_time = param_update_interval; // at start of co-sim
@@ -188,13 +206,84 @@ Input arguments
             LDEBUG4 << "Granted time: " << time_granted;
             }
         
+        // time_request returned a non-zero value which indicates a valid
+        //  time has been granted and the message_receipt should be updated
+        //  accordingly
+        if (time_granted > 0) {
+            LDEBUG4 << "Receipt of valid time grant logged.";
+            message_receipt.at(0) = 1;
+        }
+        
+        // time_granted == 0 when the zmq_poll times out.
+        //  This condition is assumed to only happend when the co-sim has hung for
+        //  unknown reasons. Because of this, the message_recipt vectors are used
+        //  to indicate which messages have not been received when the time-out happens
+        //  to aid in debugging.
+        //
+        // This debugging technique, though general, is most useful when used with the
+        //  mini_federate becuase the message exchange is so regimented that comprehensive
+        //  message accounting is reasonable.
+        
+        
+        if (time_granted == 0){
+            
+            // Saving a bit of time by checking to see if any messages are missing
+            //  before identifying which ones.
+            int receipt_sum = std::accumulate(message_receipt.begin(), message_receipt.end(), 0);
+            LDEBUG4 << "receipt_sum: " << receipt_sum << " of " << num_keys + 1 ;
+            
+            //num_keys doesn't track time_granted as a message
+            if (receipt_sum != (num_keys + 1)){
+                if (isRoot) {
+                    // When root have to figure this out for myself since parameters were not
+                    //  passed in.
+                    int num_leafs = fncs::get_simulator_count() - 1;
+                    //LDEBUG4 << "num_leafs: " << num_leafs;
+                    int num_messages = num_keys/num_leafs;
+                    //LDEBUG4 << "num_messages: " << num_messages;
+                    for(std::vector<int>::iterator it = message_receipt.begin(); it != message_receipt.end(); ++it){
+                        if (*it == 0) {
+                            int idx = it - message_receipt.begin();
+                            LDEBUG4 << "idx: " << idx;
+                            if (idx == 0) {
+                                LERROR << "Message missing: time grant";
+                            }
+                            else {
+                                leaf_num = int (idx/num_messages);
+                                LDEBUG4 << "leaf_num: " << leaf_num;
+                                message_num = idx % num_messages;
+                                LERROR << "Message missing: leaf" << leaf_num <<"_key" << message_num;
+                            }
+                        }
+                    }
+                }
+                else {
+                    for(std::vector<int>::iterator it = message_receipt.begin(); it != message_receipt.end(); ++it){
+                        if (*it == 0) {
+                            int idx = it - message_receipt.begin();
+                            LDEBUG4 << "idx: " << idx;
+                            if (idx == 0) {
+                                LERROR << "Message missing: time grant";
+                            }
+                            else {
+                                LERROR << "Message missing: root_key" << idx;
+                        }
+                        }
+                    }
+                }
+                fncs::die();
+            }
+        }
+
+        
+        
         // "Processing" received events at granted time
         events = fncs::get_events();
         LDEBUG3 << "Getting events...";
         for (vector<string>::iterator it=events.begin(); it!=events.end(); ++it) {
             key = *it;
             value = fncs::get_value(*it);
-            //out << time_granted
+            //cout << time_granted
             //    << "\t" << key
             //    << "\t" << value
             //    << endl;
@@ -203,11 +292,41 @@ Input arguments
             LDEBUG4 << "key: " << key;
             LDEBUG4 << "real_key: " << real_key;
             if (isRoot) {
+                // Recording receipt of message to support co-sim debugging if the
+                //  co-sim later hangs. Gotta parse the key so I know which message
+                //  to confirm receipt of.
+                // real_key is formatted as: leaf<leaf num>_key<message num>
+                size_t start_pos = real_key.find('f');
+                size_t end_pos = real_key.find('_');
+                size_t length = end_pos - start_pos - 1;
+                string leaf_str = real_key.substr(start_pos+1, length);
+                //LDEBUG4 << "leaf_str: " << leaf_str;
+                leaf_num = atoi(leaf_str.c_str());
+                LDEBUG4 << "leaf_num: " << leaf_num;
+                start_pos = real_key.find('y');
+                string message_str = real_key.substr(start_pos+1,string::npos);
+                //LDEBUG4 << "message_str: " << message_str;
+                message_num = atoi(message_str.c_str());
+                LDEBUG4 << "message_num: " << message_num;
+                int message_idx =(leaf_num - 1) * 10 + message_num;
+                LDEBUG4 << "message_idx: " << message_idx;
+                message_receipt.at(message_idx) = 1;
+                
                 // Echoing back received message
                 fncs::publish(real_key, value);
                 LDEBUG4 << "Publishing message with key, value: " << real_key << "," << value;
             }
             else{
+                // Recording receipt of message to support co-sim debugging if the
+                //  co-sim later hangs. Gotta parse the key so I know which message
+                //  to confirm receipt of.
+                // real_key is formatted as: leaf<leaf num>_key<message num>
+                size_t start_pos = real_key.find('y');
+                string message_str = real_key.substr(start_pos+1,string::npos);
+                message_num = atoi(message_str.c_str());
+                LDEBUG4 << "message_num: " << message_num;
+                message_receipt.at(message_num) = 1;
+                
                 // Leaf does nothing with received messages
             }
         }
@@ -226,6 +345,14 @@ Input arguments
                     fncs::publish(key, value);
                 }
             }
+        // Resetting receipt vector since we worked our way all the way
+        //  through the received message list. time_grant is always the
+        //  last message in the queue.
+        // Just copying-and-pasting code from earlier because I'm lazy.
+        for(std::vector<int>::iterator it = message_receipt.begin(); it != message_receipt.end(); ++it){
+            *it = 0;
+        }
+            
         target_time = target_time + param_update_interval;
         }
         
