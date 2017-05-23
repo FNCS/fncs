@@ -85,6 +85,11 @@ Input arguments
     string fed_name = "";
     bool done = false;
     
+    // Initializing logging
+    fncs::start_logging();
+    fncs::replicate_logging(FNCSLog::ReportingLevel(),
+            Output2Tee::Stream1(), Output2Tee::Stream2());
+    
     // Message receipt tracking to aid in debugging
     vector<int> message_receipt;
     int message_ID = 0;
