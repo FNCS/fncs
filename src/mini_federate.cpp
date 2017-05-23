@@ -228,14 +228,12 @@ Input arguments
         // This debugging technique, though general, is most useful when used with the
         //  mini_federate becuase the message exchange is so regimented that comprehensive
         //  message accounting is reasonable.
-        
-        
         if (time_granted == 0){
             
             // Saving a bit of time by checking to see if any messages are missing
             //  before identifying which ones.
             int receipt_sum = std::accumulate(message_receipt.begin(), message_receipt.end(), 0);
-            LDEBUG4 << "receipt_sum: " << receipt_sum << " of " << num_keys + 1 ;
+            LERROR << "receipt_sum: " << receipt_sum << " of " << num_keys + 1 ;
             
             //num_keys doesn't track time_granted as a message
             if (receipt_sum != (num_keys + 1)){
@@ -272,7 +270,7 @@ Input arguments
                             }
                             else {
                                 LERROR << "Message missing: root_key" << idx;
-                        }
+                            }
                         }
                     }
                 }
@@ -350,6 +348,13 @@ Input arguments
                     fncs::publish(key, value);
                 }
             }
+        // To evaulate the performance of FNCS (ZMQ/CZMQ), every time step output
+        //  the number of messages received. There may still be failures to transmit information
+        //  that may not result in catostrophic failure but prevent proper operation of the
+        //  federation.
+        int receipt_sum = std::accumulate(message_receipt.begin(), message_receipt.end(), 0);
+        LDEBUG1 << "time_granted:" << time_granted << "\treceipt_sum: " << receipt_sum << " of " << num_keys + 1;
+        
         // Resetting receipt vector since we worked our way all the way
         //  through the received message list. time_grant is always the
         //  last message in the queue.
