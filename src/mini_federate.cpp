@@ -95,6 +95,9 @@ Input arguments
     int message_ID = 0;
     int leaf_num = 0;
     int message_num = 0;
+    // Used by root to figure out message indices
+    int num_leafs = 0; //number of leafs
+    int num_messages = 0; //number of messages per leaf
 
     // Input parameter error-checking
     if (argc == 1){
@@ -191,6 +194,16 @@ Input arguments
     for(std::vector<int>::iterator it = message_receipt.begin(); it != message_receipt.end(); ++it){
         *it = 0;
     }
+    
+    // When mini_federate is root, some necessary parameters are not
+    //  passed in as calling parameters and thus must be calculated from
+    //  data provided form FNCS function calls.
+    if (isRoot) {
+        num_leafs = fncs::get_simulator_count() - 1;
+        //LDEBUG4 << "num_leafs: " << num_leafs;
+        num_messages = num_keys/num_leafs;
+        //LDEBUG4 << "num_messages: " << num_messages;
+    }
 
     // Starting co-sim
     LDEBUG2 << "Starting co-sim...";
@@ -233,17 +246,11 @@ Input arguments
             // Saving a bit of time by checking to see if any messages are missing
             //  before identifying which ones.
             int receipt_sum = std::accumulate(message_receipt.begin(), message_receipt.end(), 0);
-            LERROR << "receipt_sum: " << receipt_sum << " of " << num_keys + 1 ;
+            LDEBUG1 << "receipt_sum: " << receipt_sum << " of " << num_keys + 1 ;
             
             //num_keys doesn't track time_granted as a message
             if (receipt_sum != (num_keys + 1)){
                 if (isRoot) {
-                    // When root have to figure this out for myself since parameters were not
-                    //  passed in.
-                    int num_leafs = fncs::get_simulator_count() - 1;
-                    //LDEBUG4 << "num_leafs: " << num_leafs;
-                    int num_messages = num_keys/num_leafs;
-                    //LDEBUG4 << "num_messages: " << num_messages;
                     for(std::vector<int>::iterator it = message_receipt.begin(); it != message_receipt.end(); ++it){
                         if (*it == 0) {
                             int idx = it - message_receipt.begin();
@@ -311,7 +318,7 @@ Input arguments
                 //LDEBUG4 << "message_str: " << message_str;
                 message_num = atoi(message_str.c_str());
                 LDEBUG4 << "message_num: " << message_num;
-                int message_idx =(leaf_num - 1) * 10 + message_num;
+                int message_idx =(leaf_num - 1) * num_messages + message_num;
                 LDEBUG4 << "message_idx: " << message_idx;
                 message_receipt.at(message_idx) = 1;
                 
@@ -348,6 +355,9 @@ Input arguments
                     fncs::publish(key, value);
                 }
             }
+        target_time = target_time + param_update_interval;
+        }
+        
         // To evaulate the performance of FNCS (ZMQ/CZMQ), every time step output
         //  the number of messages received. There may still be failures to transmit information
         //  that may not result in catostrophic failure but prevent proper operation of the
@@ -361,9 +371,6 @@ Input arguments
         // Just copying-and-pasting code from earlier because I'm lazy.
         for(std::vector<int>::iterator it = message_receipt.begin(); it != message_receipt.end(); ++it){
             *it = 0;
-        }
-            
-        target_time = target_time + param_update_interval;
         }
         
     } while (time_granted < time_stop);
