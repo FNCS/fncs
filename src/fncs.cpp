@@ -901,7 +901,7 @@ void fncs::finalize()
 #ifdef INSTRUMENTATION
 /* INSTRUMENTATION PART V STARTS */
     ofstream myfile;
-    myfile.open("req_grant.csv", ios::out | ios::app);
+    myfile.open("time_request.csv", ios::out | ios::trunc);
     myfile << "Time of initialization" << "," << start_time << endl;
 
     myfile << "Requested time" << "," << "Granted time" "," <<  "fncs::time_request wait time" << endl;
