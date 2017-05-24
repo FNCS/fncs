@@ -80,10 +80,10 @@ unsigned int num_req = 0;
 static fncs::time req_time = 0;
 static fncs::time grant_time = 0;
 
-static vector<int> vec_req_time;
-static vector<int> vec_grant_time;
-static vector<int> vec_time_next;
-static vector<int> vec_time_granted;
+static vector<fncs::time> vec_req_time;
+static vector<fncs::time> vec_grant_time;
+static vector<fncs::time> vec_time_next;
+static vector<fncs::time> vec_time_granted;
 /* INSTRUMENTATION part I ends */
 #endif
 
@@ -908,9 +908,8 @@ void fncs::finalize()
 
     myfile << "Time of sending request" << "," << "Requested time" << "," << "Time of sending grant" << "," << "Granted time" << endl;
     int vsize = vec_req_time.size();
-    for(int vn=0; vn<vsize; vn++)
-    {
-	myfile << vec_req_time[vn] << "," << vec_time_next[vn] << "," << vec_grant_time[vn] << "," << vec_time_granted[vn] << endl;
+    for(int vn=0; vn<vsize; vn++){
+        myfile << vec_req_time[vn] << "," << vec_time_next[vn] << "," << vec_grant_time[vn] << "," << vec_time_granted[vn] << endl;
     }
 #endif
 /* INSTRUMENTATION PART V end */
