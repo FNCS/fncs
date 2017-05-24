@@ -160,6 +160,9 @@ int main(int argc, char **argv)
     if (!endpoint) {
         endpoint = "tcp://*:5570";
     }
+    
+    zsys_set_sndhwm(0);
+    zsys_set_rcvhwm(0);
 
     server = zsock_new_router(endpoint);
     if (!server) {
@@ -171,7 +174,6 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     LDEBUG4 << "broker socket bound to " << endpoint;
-    zsock_set_unbounded(server);
 
     zsock_set_linger(server, -1);
 

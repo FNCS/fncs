@@ -389,6 +389,10 @@ void fncs::initialize(Config config)
         }
     }
 
+    zsys_set_sndhwm(0);
+    zsys_set_rcvhwm(0);
+    
+    
     /* create zmq context and client socket */
     client = zsock_new(ZMQ_DEALER);
     if (!client) {
@@ -403,8 +407,9 @@ void fncs::initialize(Config config)
     }
 
 
-    zsock_set_unbounded(client);
     zsock_set_linger(client, -1);
+    
+    
     //cout << "Message size: " << zsock_maxmsgsize(client);
 
     /* reset the signal handler so it chains */
