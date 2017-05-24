@@ -80,8 +80,7 @@ unsigned int num_req = 0;
 static fncs::time req_time = 0;
 static fncs::time grant_time = 0;
 
-static vector<fncs::time> vec_req_time;
-static vector<fncs::time> vec_grant_time;
+static vector<fncs::time> vec_wait_time;
 static vector<fncs::time> vec_time_next;
 static vector<fncs::time> vec_time_granted;
 /* INSTRUMENTATION part I ends */
@@ -635,7 +634,6 @@ fncs::time fncs::time_request(fncs::time time_next)
     req_time = (timer_ft()); /*-start_time); */
     num_req = num_req +1;
 
-    vec_req_time.push_back(req_time);
     vec_time_next.push_back(time_next);
 
     /* ofstream datafile;
@@ -793,7 +791,7 @@ fncs::time fncs::time_request(fncs::time time_next)
     grant_time = (timer_ft());	/* - start_time); */
     num_grant = num_grant +1;
 
-    vec_grant_time.push_back(grant_time);
+    vec_wait_time.push_back(grant_time - req_time);
     vec_time_granted.push_back(time_granted);
     /* datafile << "Grant" << "," << simulation_name << "," << num_grant << "," << grant_time << "," << time_granted << "\n";
     INSTRUMENTATION PART IV ENDS */
@@ -906,10 +904,10 @@ void fncs::finalize()
     myfile.open("req_grant.csv", ios::out | ios::app);
     myfile << "Time of initialization" << "," << start_time << endl;
 
-    myfile << "Time of sending request" << "," << "Requested time" << "," << "Time of sending grant" << "," << "Granted time" << endl;
-    int vsize = vec_req_time.size();
+    myfile << "Requested time" << "," << "Granted time" "," <<  "fncs::time_request wait time" << endl;
+    int vsize = vec_wait_time.size();
     for(int vn=0; vn<vsize; vn++){
-        myfile << vec_req_time[vn] << "," << vec_time_next[vn] << "," << vec_grant_time[vn] << "," << vec_time_granted[vn] << endl;
+        myfile << vec_time_next[vn] << "," << vec_time_granted[vn] << "," << vec_wait_time[vn] << endl;
     }
 #endif
 /* INSTRUMENTATION PART V end */
