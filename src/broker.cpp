@@ -153,6 +153,13 @@ int main(int argc, char **argv)
         endpoint = "tcp://*:5570";
     }
 
+    // Setting the ZMQ sending and receving high-water mark (message buffer sizes)
+    //  to infinite to ensure that situations in which a large number of FNCS messages
+    //  are generated get completely processed by the broker.
+    zsys_set_sndhwm(0);
+    zsys_set_rcvhwm(0);
+
+
     server = zsock_new_router(endpoint);
     if (!server) {
         LERROR << "socket creation failed";
@@ -163,6 +170,15 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     LDEBUG4 << "broker socket bound to " << endpoint;
+    
+    
+    zsock_set_unbounded(server);
+    
+    // Allows ZMQ to hang around and clear up sending and receiving any pending messages
+    //  "-1" means "hang around forever" which could obviously be problematic but
+    //  currently solves the problem we have of the broker leaving the federation too
+    //  early (while messages are enroute).
+    zsock_set_linger(server, -1);
 
     /* begin event loop */
     zmq_pollitem_t items[] = { { zsock_resolve(server), 0, ZMQ_POLLIN, 0 } };
