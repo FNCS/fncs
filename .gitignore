@@ -7,6 +7,8 @@
 .dirstamp
 .libs
 *.exe
+*.pyc
+*.class
 Makefile
 autom4te.cache/
 config.h
@@ -31,4 +33,11 @@ fncs_tracer
 fncs_test_federate
 libyamlcpp.la
 src/libfncs.pc
+contrib/yaml-cpp/test/test
+fncs.mod
+libfncsf.la
+tests/config
+tests/fncs_netdelay
+tests/test
+tests/fcoverage
 build-aux/compile

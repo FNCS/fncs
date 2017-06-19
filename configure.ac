@@ -4,7 +4,7 @@
 ###############################################################################
 # Init autoconf
 ###############################################################################
-AC_PREREQ([2.68])
+AC_PREREQ([2.69])
 AC_INIT([Framework for Network Co-Simulation],
         [m4_esyscmd([./version.sh])],
         [jeff.daily@pnnl.gov],
@@ -32,6 +32,12 @@ AS_IF([test "$FNCS_TOP_BUILDDIR" != "$FNCS_TOP_SRCDIR"],
       [AC_MSG_NOTICE([Detected VPATH build])])
 
 AC_CANONICAL_HOST
+
+AC_ARG_ENABLE([fortran],
+              [AS_HELP_STRING([--enable-fortran], [enable FORTRAN code])],
+              [],
+              [enable_fortran=no])
+AM_CONDITIONAL([ENABLE_FORTRAN], [test "x$enable_fortran" != xno])
 
 AC_LANG([C++])
 
@@ -169,6 +175,48 @@ AC_PROG_CC
 AC_LANG_POP([C])
 
 ###############################################################################
+# Fortran compiler
+###############################################################################
+AC_MSG_NOTICE
+AS_IF([test "x$enable_fortran" = xno],
+    [AC_MSG_NOTICE([Fortran compiler (disabled, but some tests still required)])],
+    [AC_MSG_NOTICE([Fortran compiler])])
+AC_LANG_PUSH([Fortran])
+
+# Checks for programs.
+AC_PROG_FC
+
+# If FORTRAN compiler was not found, we disable support.
+AS_IF([test "x$FC" = x], [enable_fortran=no])
+
+# If FORTRAN compiler does not work, we disable support for it.
+AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM([],[])], [],
+    [AC_MSG_WARN([FORTRAN compiler does not work, disabling])
+     enable_fortran=no; FC=])
+
+# Perform FORTRAN tests only if enabled.
+if test "x$enable_fortran" = xyes
+then
+
+# Checks for libraries.
+AC_FC_LIBRARY_LDFLAGS
+
+# Checks for header files.
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_FC_PP_SRCEXT([F90])
+AC_FC_SRCEXT([f90])
+AC_FC_MODULE_EXTENSION
+AC_FC_MODULE_FLAG
+
+# Checks for library functions.
+
+fi
+
+AC_LANG_POP([Fortran])
+
+###############################################################################
 # Libtool setup -- no compiler/linker tests after this
 ###############################################################################
 AC_MSG_NOTICE
@@ -204,6 +252,7 @@ esac
 # FNCS versions 2.2.0: 2:0:1 (ABI version 2) - C added fncs_is_initialized()
 # FNCS versions 2.3.0: 2:1:1 (ABI version 2)
 # FNCS versions 2.3.1: 2:1:1 (ABI version 2) - C/C++ library unchanged
+# FNCS versions 2.3.2: 3:0:2 (ABI version 3) - fncs::get_version() was missing
 #
 # libfncs -version-info current:revision:age
 LTVER="2:1:1"

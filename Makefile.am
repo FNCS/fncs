@@ -13,6 +13,7 @@ LDADD =
 
 pkgconfig_DATA = src/libfncs.pc
 
+AM_CPPFLAGS += -I$(top_builddir)
 AM_CPPFLAGS += -I$(top_srcdir)/src
 AM_CPPFLAGS += -I$(top_srcdir)/contrib
 AM_CPPFLAGS += -I$(top_srcdir)/contrib/yaml-cpp/include
@@ -29,12 +30,24 @@ LDADD += $(ZMQ_LIBS)
 include_HEADERS += src/fncs.hpp
 include_HEADERS += src/fncs.h
 
+# If FORTRAN is enabled, build the mod file without creating a
+# dependency on FORTRAN libraries in the C/C++ libfncs.la library.
+if ENABLE_FORTRAN
+noinst_LTLIBRARIES += libfncsf.la
+libfncsf_la_SOURCES = src/fncs_fapi_mod.f90
+include_HEADERS += fncs.mod
+endif
+
+fclibs:
+	@echo $(FCLIBS)
+
 lib_LTLIBRARIES += libfncs.la
 libfncs_la_SOURCES =
 libfncs_la_SOURCES += src/echo.cpp
 libfncs_la_SOURCES += src/echo.hpp
 libfncs_la_SOURCES += src/fncs.cpp
 libfncs_la_SOURCES += src/fncs_capi.cpp
+libfncs_la_SOURCES += src/fncs_fapi.cpp
 libfncs_la_SOURCES += src/fncs_internal.hpp
 libfncs_la_LIBADD =
 libfncs_la_LIBADD += $(CZMQ_LIBS)
@@ -174,6 +187,19 @@ bin_PROGRAMS += fncs_player_anon
 fncs_player_anon_SOURCES = src/player.cpp
 fncs_player_anon_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_ANON
 
+if ENABLE_FORTRAN
+check_PROGRAMS += tests/fcoverage
+endif
+tests_fcoverage_SOURCES = tests/fcoverage.F90
+tests_fcoverage_LDADD = $(LDADD) $(FCLIBS)
+nodist_EXTRA_tests_fcoverage_SOURCES = dummy.cxx
+
+if ENABLE_FORTRAN
+check_PROGRAMS += tests/fcoverage_mod
+endif
+tests_fcoverage_mod_SOURCES = tests/fcoverage_mod.f90
+tests_fcoverage_mod_LDADD = $(LDADD) $(FCLIBS)
+nodist_EXTRA_tests_fcoverage_mod_SOURCES = dummy.cxx
 bin_PROGRAMS += fncs_test_federate
 fncs_test_federate_SOURCES = src/test_federate.cpp
 fncs_test_federate_LDADD =
