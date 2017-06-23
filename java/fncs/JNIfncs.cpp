@@ -27,6 +27,28 @@ JNIEXPORT void JNICALL Java_fncs_JNIfncs_initialize__Ljava_lang_String_2
     env->ReleaseStringUTFChars(j_configuration, c_configuration);
 }
 
+JNIEXPORT void JNICALL Java_fncs_JNIfncs_agentRegister__
+  (JNIEnv *, jclass)
+{
+	fncs::agentRegister();
+}
+
+JNIEXPORT void JNICALL Java_fncs_JNIfncs_agentRegister__Ljava_lang_String_2
+  (JNIEnv *env, jclass, jstring j_configuration)
+{
+	const char *c_configuration = NULL;
+	jsize configuration_size = 0;
+	std::string cpp_configuration;
+
+	c_configuration = env->GetStringUTFChars(j_configuration, NULL);
+	configuration_size = env->GetStringLength(j_configuration);
+	cpp_configuration.assign(c_configuration, configuration_size);
+
+	fncs::agentRegister(cpp_configuration);
+
+	env->ReleaseStringUTFChars(j_configuration, c_configuration);
+}
+
 JNIEXPORT jboolean JNICALL Java_fncs_JNIfncs_is_1initialized
   (JNIEnv *, jclass)
 {
@@ -94,6 +116,22 @@ JNIEXPORT void JNICALL Java_fncs_JNIfncs_publish_1anon
 
     env->ReleaseStringUTFChars(j_key, c_key);
     env->ReleaseStringUTFChars(j_value, c_value);
+}
+
+JNIEXPORT void JNICALL Java_fncs_JNIfncs_agentPublish
+  (JNIEnv *env, jclass, jstring j_value)
+{
+	const char *c_value = NULL;
+	jsize value_size = 0;
+	std::string cpp_value;
+
+	c_value = env->GetStringUTFChars(j_value, NULL);
+	value_size = env->GetStringLength(j_value);
+	cpp_value.assign(c_value, value_size);
+
+	fncs::agentPublish(cpp_value);
+
+	env->ReleaseStringUTFChars(j_value, c_value);
 }
 
 JNIEXPORT void JNICALL Java_fncs_JNIfncs_route
@@ -175,6 +213,18 @@ JNIEXPORT jobjectArray JNICALL Java_fncs_JNIfncs_get_1events
     }
 
     return ret;
+}
+
+JNIEXPORT jstring JNICALL Java_fncs_JNIfncs_agentGetEvents
+  (JNIEnv *env, jclass)
+{
+	jstring ret;
+	jsize size;
+	std::string events;
+
+	events = fncs::agentGetEvents();
+	ret = env->NewStringUTF(events.c_str());
+	return ret;
 }
 
 JNIEXPORT jstring JNICALL Java_fncs_JNIfncs_get_1value

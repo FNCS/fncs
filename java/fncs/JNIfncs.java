@@ -54,15 +54,19 @@ public class JNIfncs {
 
     public static native void initialize();
     public static native void initialize(String configuration);
+    public static native void agentRegister();
+    public static native void agentRegister(String configuration);
     public static native boolean is_initialized();
     public static native long time_request(long next);
     public static native void publish(String key, String value);
     public static native void publish_anon(String key, String value);
+    public static native void agentPublish(String value);
     public static native void route(String from, String to, String key, String value);
     public static native void die();
     public static native void end();
     public static native void update_time_delta(long delta);
     public static native String[] get_events();
+    public static native String agentGetEvents();
     public static native String get_value(String key);
     public static native String[] get_values(String key);
     public static native String[] get_keys();
