@@ -108,7 +108,7 @@ const char** fncs_get_events()
     return convert(fncs::get_events());
 }
 
-char* fncs_agentGetEvents()
+const char* fncs_agentGetEvents()
 {
     return convert(fncs::agentGetEvents());
 }

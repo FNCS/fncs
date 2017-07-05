@@ -28,10 +28,10 @@ extern "C" {
     FNCS_EXPORT void fncs_initialize_config(const char *configuration);
 
     /** Connect to broker and parse config file for Transactive agents. */
-	FNCS_EXPORT void fncs_agentRegister();
+    FNCS_EXPORT void fncs_agentRegister();
 
-	/** Connect to broker and parse inline configuration for transactive agents. */
-	FNCS_EXPORT void fncs_agentRegisterConfig(const char *configuration);
+	  /** Connect to broker and parse inline configuration for transactive agents. */
+    FNCS_EXPORT void fncs_agentRegisterConfig(const char *configuration);
 
     /** Check whether simulator is configured and connected to broker. */
     FNCS_EXPORT int fncs_is_initialized();
@@ -78,8 +78,8 @@ extern "C" {
     FNCS_EXPORT const char* fncs_get_event_at(size_t index);
 
     /** Get the agent events for all values that were updated during the last
-	 * time_request. */
-	FNCS_EXPORT char* fncs_agentGetEvents();
+	   * time_request. */
+    FNCS_EXPORT const char* fncs_agentGetEvents();
 
     /** Get a value from the cache with the given key.
      * Will hard fault if key is not found. */
