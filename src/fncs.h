@@ -79,7 +79,7 @@ extern "C" {
 
     /** Get the agent events for all values that were updated during the last
 	 * time_request. */
-	FNCS_EXPORT char* fncs_agentGetEvents();
+    FNCS_EXPORT const char* fncs_agentGetEvents();
 
     /** Get a value from the cache with the given key.
      * Will hard fault if key is not found. */
