@@ -79,7 +79,11 @@ void fncs_update_time_delta(fncs_time delta)
 
 static const char* convert(const string & the_string)
 {
-    return the_string.c_str();
+    char *str = NULL;
+    str = (char*) malloc (sizeof (char)*(the_string.size()+1));
+    strcpy(str, the_string.c_str());
+    return str; 
+//    return the_string.c_str();
 }
 
 static const char** convert(const vector<string> & the_values)
