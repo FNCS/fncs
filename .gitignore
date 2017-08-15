@@ -41,3 +41,6 @@ tests/fncs_netdelay
 tests/test
 tests/fcoverage
 build-aux/compile
+*.log
+*.out
+java/build
