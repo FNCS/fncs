@@ -1387,7 +1387,7 @@ fncs::Subscription fncs::parse_value(const YAML::Node &node)
 
     if (const YAML::Node *child = node.FindValue("default")) {
         if (child->Type() != YAML::NodeType::Scalar) {
-            cerr << "YAML 'default' must be a Scalar for " << sub.topic << endl;
+	  //            cerr << "YAML 'default' must be a Scalar for " << sub.topic << endl;
         }
         else {
             *child >> sub.def;
