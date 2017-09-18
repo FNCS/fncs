@@ -95,7 +95,15 @@ int main(int argc, char **argv)
     zsock_t *server = NULL;     /* the broker socket */
     bool do_trace = false;      /* whether to dump all received messages */
     fncs::time realtime_interval = 0;
-
+    
+#ifdef INSTRUMENTATION
+    //Instrumentation variables
+    static vector<int> vec_grant_time_calc;
+    static vector<int> vec_granted_time;
+    static vector<int> vec_granted_num;
+    static int publication_count = 0;
+#endif
+    
     fncs::start_logging();
     fncs::replicate_logging(FNCSLog::ReportingLevel(),
             Output2Tee::Stream1(), Output2Tee::Stream2());
@@ -152,6 +160,9 @@ int main(int argc, char **argv)
     if (!endpoint) {
         endpoint = "tcp://*:5570";
     }
+    
+    zsys_set_sndhwm(0);
+    zsys_set_rcvhwm(0);
 
     // Setting the ZMQ sending and receving high-water mark (message buffer sizes)
     //  to infinite to ensure that situations in which a large number of FNCS messages
@@ -180,15 +191,19 @@ int main(int argc, char **argv)
     //  early (while messages are enroute).
     zsock_set_linger(server, -1);
 
+    zsock_set_linger(server, -1);
+
     /* begin event loop */
     zmq_pollitem_t items[] = { { zsock_resolve(server), 0, ZMQ_POLLIN, 0 } };
     while (true) {
         int rc = 0;
         
         LDEBUG4 << "entering blocking poll";
+	fncs::time poll_start = fncs::timer();
         rc = zmq_poll(items, 1, -1);
         if (rc == -1) {
-            LERROR << "broker polling error: " << strerror(errno);
+	    fncs::time poll_wait = fncs::timer() - poll_start;
+            LERROR << "broker polling error " << poll_wait << " after entering blocking poll:" << strerror(errno);
             broker_die(simulators, server); /* interrupted */
         }
 
@@ -212,6 +227,7 @@ int main(int argc, char **argv)
                 broker_die(simulators, server);
             }
             sender = fncs::to_string(frame);
+	    LDEBUG4 << "message received from " << sender;
 
             /* next frame is message type identifier */
             frame = zmsg_next(msg);
@@ -236,6 +252,14 @@ int main(int argc, char **argv)
                     LERROR << "simulator '" << sender << "' already connected";
                     broker_die(simulators, server);
                 }
+                
+                /* if all sims have connected, this is an error to get
+                an extra HELLO */
+                if (simulators.size() == n_sims) {
+                    LERROR << "max number of simulators already connected";
+                    broker_die(simulators, server);
+                }
+                
                 index = simulators.size();
                 LDEBUG4 << "registering client '" << sender << "'";
 
@@ -510,6 +534,9 @@ int main(int argc, char **argv)
                 --n_processing;
 
                 /* if all sims are done, determine next time step */
+#ifdef INSTRUMENTATION
+                double start_grant_calc = fncs::timer_ft();
+#endif
                 if (0 == n_processing) {
                     vector<fncs::time> time_actionable(n_sims);
                     for (size_t i=0; i<n_sims; ++i) {
@@ -556,6 +583,12 @@ int main(int argc, char **argv)
                             simulators[i].time_last_processed += simulators[i].time_delta * jump;
                         }
                     }
+#ifdef INSTRUMENTATION
+                    double stop_grant_calc = fncs::timer_ft();
+                    vec_grant_time_calc.push_back(stop_grant_calc - start_grant_calc);
+                    vec_granted_time.push_back(time_granted);
+                    vec_granted_num.push_back(n_processing);
+#endif
                 }
             }
             else if (fncs::PUBLISH == message_type) {
@@ -563,7 +596,9 @@ int main(int argc, char **argv)
                 bool found_one = false;
 
                 LDEBUG4 << "PUBLISH received";
-
+#ifdef INSTRUMENTATION
+                publication_count++;
+#endif
                 /* did we receive message from a connected sim? */
                 if (name_to_index.count(sender) == 0) {
                     LERROR << "simulator '" << sender << "' not connected";
@@ -707,6 +742,18 @@ int main(int argc, char **argv)
     if (trace.is_open()) {
         trace.close();
     }
+#ifdef INSTRUMENTATION
+    // Writing out broker-only instrumentation results
+    ofstream myfile;
+    myfile.open("broker_only_instrumentation.csv", ios::out | ios::app);
+    myfile << "Total publication count: " << publication_count << endl;
+    myfile << "Granted time" << "," << "Number of granted federates" << "," << "Calculation time for grant (ns)" << endl;
+    int vsize = vec_grant_time_calc.size();
+    for(int vn=0; vn<vsize; vn++)
+    {
+        myfile << vec_granted_time[vn] << "," << vec_granted_num[vn] << "," << vec_grant_time_calc[vn] << endl;
+    }
+#endif
 
     return 0;
 }

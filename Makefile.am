@@ -200,8 +200,10 @@ endif
 tests_fcoverage_mod_SOURCES = tests/fcoverage_mod.f90
 tests_fcoverage_mod_LDADD = $(LDADD) $(FCLIBS)
 nodist_EXTRA_tests_fcoverage_mod_SOURCES = dummy.cxx
+
 bin_PROGRAMS += fncs_test_federate
 fncs_test_federate_SOURCES = src/test_federate.cpp
-fncs_test_federate_LDADD =
-fncs_test_federate_LDADD += libjsoncpp.la
-fncs_test_federate_LDADD += libfncs.la
+fncs_test_federate_LDADD = $(LDADD) libjsoncpp.la
+
+bin_PROGRAMS += mini_federate
+mini_federate_SOURCES = src/mini_federate.cpp

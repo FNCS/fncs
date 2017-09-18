@@ -93,7 +93,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = fncs_broker$(EXEEXT) fncs_tracer$(EXEEXT) \
 	fncs_player$(EXEEXT) fncs_player_anon$(EXEEXT) \
-	fncs_test_federate$(EXEEXT)
+	fncs_test_federate$(EXEEXT) mini_federate$(EXEEXT)
 check_PROGRAMS = contrib/yaml-cpp/test/test$(EXEEXT) \
 	tests/config$(EXEEXT) tests/test$(EXEEXT) \
 	tests/fncs_netdelay$(EXEEXT) $(am__EXEEXT_1)
@@ -105,18 +105,6 @@ check_PROGRAMS = contrib/yaml-cpp/test/test$(EXEEXT) \
 @ENABLE_FORTRAN_TRUE@am__append_3 = tests/fcoverage \
 @ENABLE_FORTRAN_TRUE@	tests/fcoverage_mod
 subdir = .
-DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(top_srcdir)/configure $(am__configure_deps) \
-	$(srcdir)/config.h.in $(top_srcdir)/src/libfncs.pc.in \
-	$(top_srcdir)/build-aux/depcomp $(am__include_HEADERS_DIST) \
-	build-aux/ar-lib build-aux/config.guess build-aux/config.sub \
-	build-aux/depcomp build-aux/install-sh build-aux/missing \
-	build-aux/ltmain.sh $(top_srcdir)/build-aux/ar-lib \
-	$(top_srcdir)/build-aux/config.guess \
-	$(top_srcdir)/build-aux/config.sub \
-	$(top_srcdir)/build-aux/install-sh \
-	$(top_srcdir)/build-aux/ltmain.sh \
-	$(top_srcdir)/build-aux/missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/fncs_arg_parse.m4 \
 	$(top_srcdir)/m4/fncs_check_func.m4 \
@@ -129,7 +117,8 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/fncs_arg_parse.m4 \
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
-	$(am__configure_deps) $(include_HEADERS) $(am__DIST_COMMON)
+	$(am__configure_deps) $(am__include_HEADERS_DIST) \
+	$(am__DIST_COMMON)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
@@ -242,11 +231,18 @@ fncs_player_anon_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 am_fncs_test_federate_OBJECTS = src/test_federate.$(OBJEXT)
 fncs_test_federate_OBJECTS = $(am_fncs_test_federate_OBJECTS)
-fncs_test_federate_DEPENDENCIES = libjsoncpp.la libfncs.la
+am__DEPENDENCIES_2 = libfncs.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+fncs_test_federate_DEPENDENCIES = $(am__DEPENDENCIES_2) libjsoncpp.la
 am_fncs_tracer_OBJECTS = src/tracer.$(OBJEXT)
 fncs_tracer_OBJECTS = $(am_fncs_tracer_OBJECTS)
 fncs_tracer_LDADD = $(LDADD)
 fncs_tracer_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+am_mini_federate_OBJECTS = src/mini_federate.$(OBJEXT)
+mini_federate_OBJECTS = $(am_mini_federate_OBJECTS)
+mini_federate_LDADD = $(LDADD)
+mini_federate_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 am_tests_config_OBJECTS = tests/config.$(OBJEXT)
 tests_config_OBJECTS = $(am_tests_config_OBJECTS)
@@ -255,8 +251,6 @@ tests_config_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 am_tests_fcoverage_OBJECTS = tests/fcoverage.$(OBJEXT)
 tests_fcoverage_OBJECTS = $(am_tests_fcoverage_OBJECTS)
-am__DEPENDENCIES_2 = libfncs.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
 tests_fcoverage_DEPENDENCIES = $(am__DEPENDENCIES_2) \
 	$(am__DEPENDENCIES_1)
 am_tests_fcoverage_mod_OBJECTS = tests/fcoverage_mod.$(OBJEXT)
@@ -351,23 +345,24 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libfncs_la_SOURCES) $(libfncsf_la_SOURCES) \
-	$(libyamlcpp_la_SOURCES) $(contrib_yaml_cpp_test_test_SOURCES) \
-	$(fncs_broker_SOURCES) $(fncs_player_SOURCES) \
-	$(fncs_player_anon_SOURCES) $(fncs_tracer_SOURCES) \
-	$(tests_config_SOURCES) $(tests_fcoverage_SOURCES) \
+	$(libjsoncpp_la_SOURCES) $(libyamlcpp_la_SOURCES) \
+	$(contrib_yaml_cpp_test_test_SOURCES) $(fncs_broker_SOURCES) \
+	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
+	$(fncs_test_federate_SOURCES) $(fncs_tracer_SOURCES) \
+	$(mini_federate_SOURCES) $(tests_config_SOURCES) \
+	$(tests_fcoverage_SOURCES) \
 	$(nodist_EXTRA_tests_fcoverage_SOURCES) \
 	$(tests_fcoverage_mod_SOURCES) \
 	$(nodist_EXTRA_tests_fcoverage_mod_SOURCES) \
-	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES) \
-	$(libjsoncpp_la_SOURCES)  $(fncs_test_federate_SOURCES)
+	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES)
 DIST_SOURCES = $(libfncs_la_SOURCES) $(am__libfncsf_la_SOURCES_DIST) \
-	$(libyamlcpp_la_SOURCES) $(contrib_yaml_cpp_test_test_SOURCES) \
-	$(fncs_broker_SOURCES) $(fncs_player_SOURCES) \
-	$(fncs_player_anon_SOURCES) $(fncs_tracer_SOURCES) \
-	$(tests_config_SOURCES) $(tests_fcoverage_SOURCES) \
-	$(tests_fcoverage_mod_SOURCES) $(tests_fncs_netdelay_SOURCES) \
-	$(tests_test_SOURCES) $(libjsoncpp_la_SOURCES) \
-	$(fncs_test_federate_SOURCES)
+	$(libjsoncpp_la_SOURCES) $(libyamlcpp_la_SOURCES) \
+	$(contrib_yaml_cpp_test_test_SOURCES) $(fncs_broker_SOURCES) \
+	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
+	$(fncs_test_federate_SOURCES) $(fncs_tracer_SOURCES) \
+	$(mini_federate_SOURCES) $(tests_config_SOURCES) \
+	$(tests_fcoverage_SOURCES) $(tests_fcoverage_mod_SOURCES) \
+	$(tests_fncs_netdelay_SOURCES) $(tests_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -685,7 +680,8 @@ tests_fcoverage_mod_SOURCES = tests/fcoverage_mod.f90
 tests_fcoverage_mod_LDADD = $(LDADD) $(FCLIBS)
 nodist_EXTRA_tests_fcoverage_mod_SOURCES = dummy.cxx
 fncs_test_federate_SOURCES = src/test_federate.cpp
-fncs_test_federate_LDADD = libjsoncpp.la libfncs.la
+fncs_test_federate_LDADD = $(LDADD) libjsoncpp.la
+mini_federate_SOURCES = src/mini_federate.cpp
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -1022,6 +1018,12 @@ src/tracer.$(OBJEXT): src/$(am__dirstamp) \
 fncs_tracer$(EXEEXT): $(fncs_tracer_OBJECTS) $(fncs_tracer_DEPENDENCIES) $(EXTRA_fncs_tracer_DEPENDENCIES) 
 	@rm -f fncs_tracer$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(fncs_tracer_OBJECTS) $(fncs_tracer_LDADD) $(LIBS)
+src/mini_federate.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+
+mini_federate$(EXEEXT): $(mini_federate_OBJECTS) $(mini_federate_DEPENDENCIES) $(EXTRA_mini_federate_DEPENDENCIES) 
+	@rm -f mini_federate$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(mini_federate_OBJECTS) $(mini_federate_LDADD) $(LIBS)
 tests/$(am__dirstamp):
 	@$(MKDIR_P) tests
 	@: > tests/$(am__dirstamp)
@@ -1117,6 +1119,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_capi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_fapi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_player_anon-player.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/mini_federate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/test_federate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tracer.Po@am__quote@
@@ -1723,6 +1726,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS \
 	uninstall-pkgconfigDATA
 
 .PRECIOUS: Makefile
+
 
 fclibs:
 	@echo $(FCLIBS)

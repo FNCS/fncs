@@ -70,6 +70,24 @@ static clist_t cache_list;
 typedef map<string,fncs::Subscription> sub_string_t;
 static sub_string_t subs_string;
 
+#ifdef INSTRUMENTATION
+/* INSTRUMENTATION part I starts */
+/* NEW VARIABLES FOR INSTRUMENTATION */
+static fncs::time start_clock = 0;
+static fncs::time start_time = 0;
+/* float req_clock = 0;
+float grant_clock = 0; */
+unsigned int num_grant = 0;
+unsigned int num_req = 0;
+static fncs::time req_time = 0;
+static fncs::time grant_time = 0;
+
+static vector<fncs::time> vec_wait_time;
+static vector<fncs::time> vec_time_next;
+static vector<fncs::time> vec_time_granted;
+/* INSTRUMENTATION part I ends */
+#endif
+
 
 #if defined(_WIN32)
 static BOOL WINAPI
@@ -273,40 +291,40 @@ void fncs::initialize(const string &configuration)
  * configuration. */
 void fncs::agentRegister()
 {
-	const char *fncs_config_file = NULL;
-	fncs::Config config;
-	/* name for fncs config file from environment */
-	fncs_config_file = getenv("FNCS_CONFIG_FILE");
-	if (!fncs_config_file) {
-		fncs_config_file = "fncs.json";
-	}
-	if (EndsWith(fncs_config_file, "json")) {
-		ifstream fin(fncs_config_file);
-		Json::Value json_config;
-		try {
-			fin >> json_config;
-		} catch (Json::Exception &) {
-			cerr << "could not open " << fncs_config_file << endl;
-		}
-		config = parse_config(json_config);
-	}
-	initialize(config);
+    const char *fncs_config_file = NULL;
+    fncs::Config config;
+    /* name for fncs config file from environment */
+    fncs_config_file = getenv("FNCS_CONFIG_FILE");
+    if (!fncs_config_file) {
+        fncs_config_file = "fncs.json";
+    }
+    if (EndsWith(fncs_config_file, "json")) {
+        ifstream fin(fncs_config_file);
+        Json::Value json_config;
+        try {
+            fin >> json_config;
+        } catch (Json::Exception &) {
+            cerr << "could not open " << fncs_config_file << endl;
+        }
+        config = parse_config(json_config);
+    }
+    initialize(config);
 }
 
 
 void fncs::agentRegister(const string &configuration)
 {
-	fncs::Config config;
-	Json::Value json_config;
-	Json::Reader json_reader;
-	try {
-		json_reader.parse(configuration, json_config);
-	} catch (Json::Exception &) {
-		cerr << "could not recognize the configuration as a json string. " << configuration << endl;
-	}
-	config = parse_config(json_config);
+    fncs::Config config;
+    Json::Value json_config;
+    Json::Reader json_reader;
+    try {
+        json_reader.parse(configuration, json_config);
+    } catch (Json::Exception &) {
+        cerr << "could not recognize the configuration as a json string. " << configuration << endl;
+    }
+    config = parse_config(json_config);
 
-	initialize(config);
+    initialize(config);
 }
 
 
@@ -412,6 +430,10 @@ void fncs::initialize(Config config)
         }
     }
 
+    zsys_set_sndhwm(0);
+    zsys_set_rcvhwm(0);
+    
+    
     /* create zmq context and client socket */
     client = zsock_new(ZMQ_DEALER);
     if (!client) {
@@ -424,6 +446,12 @@ void fncs::initialize(Config config)
         die();
         return;
     }
+
+
+    zsock_set_linger(client, -1);
+    
+    
+    //cout << "Message size: " << zsock_maxmsgsize(client);
 
     /* reset the signal handler so it chains */
     signal_handler_reset();
@@ -592,6 +620,16 @@ void fncs::initialize(Config config)
     time_current = 0;
     time_window = 0;
     is_initialized_ = true;
+
+# ifdef INSTRUMENTATION
+    /* INSTRUMENTATION PART II STARTS 
+    start_clock = clock(); */
+    start_time = (timer_ft());
+    /* ofstream datafile;
+    datafile.open("instrumentation.csv", ios::out | ios::app);
+    datafile << simulation_name << "," << start_clock << "," << start_time << "\n";
+    INSTRUMENTATION PART II ENDS */
+#endif
 }
 
 
@@ -665,6 +703,21 @@ fncs::time fncs::time_request(fncs::time time_next)
     }
 
     LDEBUG1 << "sending TIME_REQUEST of " << time_next << " nanoseconds";
+
+#ifdef INSTRUMENTATION
+    /* INSTRUMENTATION PART III BEGINS
+    req_clock = clock()-start_clock; */
+    req_time = (timer_ft()); /*-start_time); */
+    num_req = num_req +1;
+
+    vec_time_next.push_back(time_next);
+
+    /* ofstream datafile;
+    datafile.open("instrumentation.csv", ios::out | ios::app);
+    datafile << "Request" << "," << simulation_name << "," << num_req << "," << req_time << "," << time_next << "\n";
+    INSTRUMENTATION PART III ENDS */
+#endif
+
     zstr_sendm(client, fncs::TIME_REQUEST);
     zstr_sendfm(client, "%llu", time_next);
     zstr_sendf(client, "%llu", time_current);
@@ -673,11 +726,19 @@ fncs::time fncs::time_request(fncs::time time_next)
     zmq_pollitem_t items[] = { { zsock_resolve(client), 0, ZMQ_POLLIN, 0 } };
     while (true) {
         int rc = 0;
-
-        LDEBUG4 << "entering blocking poll";
-        rc = zmq_poll(items, 1, -1);
+        LDEBUG4 << "entering blocking poll" ;
+        fncs::time poll_start = timer();
+        fncs::time poll_wait = -1;
+        rc = zmq_poll(items, 1, 10000 * ZMQ_POLL_MSEC); //Wait ten seconds
+        
+        // If the poll times out no items will be received.
+        if (rc == 0) {
+            // Returning zero is used to indicate to the mini_federate a timeout has occurred.
+            return 0;
+        }
         if (rc == -1) {
-            LERROR << "client polling error: " << strerror(errno);
+            poll_wait = timer() - poll_start;
+            LERROR << "client polling error  " << poll_wait << " seconds after entering poll:"  << strerror(errno);
             die(); /* interrupted */
             return time_next;
         }
@@ -774,8 +835,8 @@ fncs::time fncs::time_request(fncs::time time_next)
                         cache[subscription.key] = value;
                         LDEBUG4 << "updated cache "
                             << "key='" << subscription.key << "' "
-                            << "topic='" << topic << "' "
-                            << "value='" << value << "' ";
+                            << "topic='" << topic << "' ";
+                           // << "value='" << value << "' ";
                     }
                 }
                 else {
@@ -783,8 +844,14 @@ fncs::time fncs::time_request(fncs::time time_next)
                         << topic << "'";
                 }
             }
+            else if  (fncs::DIE == message_type){
+                poll_wait = timer() - poll_start;
+                LDEBUG4 << "DIE recieved " << poll_wait << " seconds after entering blocking poll";
+                die();
+                return time_next;
+            }  
             else {
-                LERROR << "unrecognized message type:" << message_type;
+                LERROR << "unrecognized message type: " << message_type;
                 die();
                 return time_next;
             }
@@ -794,6 +861,18 @@ fncs::time fncs::time_request(fncs::time time_next)
     }
 
     LDEBUG1 << "time_granted " << time_granted << " nanoseonds";
+
+#ifdef INSTRUMENTATION
+    /* INSTRUMENTATION PART IV BEGINS
+    grant_clock = clock() - start_clock; */
+    grant_time = (timer_ft()); /* - start_time); */
+    num_grant = num_grant +1;
+
+    vec_wait_time.push_back(grant_time - req_time);
+    vec_time_granted.push_back(time_granted);
+    /* datafile << "Grant" << "," << simulation_name << "," << num_grant << "," << grant_time << "," << time_granted << "\n";
+    INSTRUMENTATION PART IV ENDS */
+#endif
 
     time_current = time_granted;
 
@@ -832,7 +911,7 @@ void fncs::publish(const string &key, const string &value)
         zstr_sendm(client, fncs::PUBLISH);
         zstr_sendm(client, new_key.c_str());
         zstr_send(client, value.c_str());
-        LDEBUG4 << "sent PUBLISH '" << new_key << "'='" << value << "'";
+        LDEBUG4 << "sent PUBLISH '" << new_key; // << "'='" << value << "'";
     }
     else {
         LDEBUG4 << "dropped " << key;
@@ -858,18 +937,18 @@ void fncs::publish_anon(const string &key, const string &value)
 
 void fncs::agentPublish(const string &value)
 {
-	string agent_key = simulation_name + "/TransactiveAgentOutput";
-	LDEBUG4 << "fncs::agentPublish(string)";
+    string agent_key = simulation_name + "/TransactiveAgentOutput";
+    LDEBUG4 << "fncs::agentPublish(string)";
 
-	if (!is_initialized_) {
-		LWARNING << "fncs is not initialized";
-		return;
-	}
+    if (!is_initialized_) {
+        LWARNING << "fncs is not initialized";
+        return;
+    }
 
-	zstr_sendm(client, fncs::PUBLISH);
-	zstr_sendm(client, agent_key.c_str());
-	zstr_send(client, value.c_str());
-	LDEBUG4 << "sent PUBLISH anon '" << agent_key << "'='" << value << "'";
+    zstr_sendm(client, fncs::PUBLISH);
+    zstr_sendm(client, agent_key.c_str());
+    zstr_send(client, value.c_str());
+    LDEBUG4 << "sent PUBLISH anon '" << agent_key << "'='" << value << "'";
 }
 
 
@@ -902,6 +981,7 @@ void fncs::die()
         LWARNING << "fncs is not initialized";
     }
 
+
     if (client) {
         zstr_send(client, fncs::DIE);
         zsock_destroy(&client);
@@ -918,7 +998,22 @@ void fncs::die()
 
 void fncs::finalize()
 {
-	bool recBye = false;
+#ifdef INSTRUMENTATION
+/* INSTRUMENTATION PART V STARTS */
+    ofstream myfile;
+    myfile.open("time_request.csv", ios::out | ios::trunc);
+    myfile << "Time of initialization" << "," << start_time << endl;
+
+    myfile << "Requested time" << "," << "Granted time" "," <<  "fncs::time_request wait time" << endl;
+    int vsize = vec_wait_time.size();
+    for(int vn=0; vn<vsize; vn++){
+        myfile << vec_time_next[vn] << "," << vec_time_granted[vn] << "," << vec_wait_time[vn] << endl;
+    }
+#endif
+/* INSTRUMENTATION PART V end */
+
+
+    bool recBye = false;
     LDEBUG4 << "fncs::finalize()";
 
     if (!is_initialized_) {
@@ -935,16 +1030,17 @@ void fncs::finalize()
     /* receive BYE and perhaps other message types */
     zmq_pollitem_t items[] = { { zsock_resolve(client), 0, ZMQ_POLLIN, 0 } };
     while(!recBye){
-		/* receive BYE back */
-    	int rc = 0;
-
-		LDEBUG4 << "entering blocking poll";
-		rc = zmq_poll(items, 1, -1);
-		if (rc == -1) {
-			LERROR << "client polling error: " << strerror(errno);
-			die(); /* interrupted */
-			return;
-		}
+        /* receive BYE back */
+        int rc = 0;
+        fncs::time poll_start = timer();
+        LDEBUG4 << "entering blocking poll";
+        rc = zmq_poll(items, 1, -1);
+        if (rc == -1) {
+            fncs::time poll_wait = timer() - poll_start;
+            LERROR << "client polling error " << poll_wait << " seconds after entering blocking poll: " << strerror(errno);
+            die(); /* interrupted */
+            return;
+        }
         if (items[0].revents & ZMQ_POLLIN) {
             zmsg_t *msg = NULL;
             zframe_t *frame = NULL;
@@ -981,13 +1077,13 @@ void fncs::finalize()
                 return;
             }
             else if(fncs::BYE == message_type){
-            	LDEBUG4 << "BYE received.";
-            	recBye = true;
+                LDEBUG4 << "BYE received.";
+                recBye = true;
             }
             else{
-            	LERROR << "Unknown message type received! Sending DIE.";
-            	die();
-            	return;
+                LERROR << "Unknown message type received! Sending DIE.";
+                die();
+                return;
             }
 
             zmsg_destroy(&msg);
@@ -1279,86 +1375,86 @@ fncs::Config fncs::parse_config(zconfig_t *zconfig)
 
 fncs::Config fncs::parse_config(const Json::Value &json_config)
 {
-	fncs::Config config;
-	string agentType = "";
-	string agentName = "";
-	Json::Value publications;
-	Json::Value subscriptions;
-	Json::Value values;
-	vector<string> configurationKeys;
-	Json::FastWriter json_writer;
-	configurationKeys.push_back("agentType");
-	configurationKeys.push_back("agentName");
-	configurationKeys.push_back("timeDelta");
-	configurationKeys.push_back("broker");
-	configurationKeys.push_back("publications");
-	configurationKeys.push_back("subscriptions");
+    fncs::Config config;
+    string agentType = "";
+    string agentName = "";
+    Json::Value publications;
+    Json::Value subscriptions;
+    Json::Value values;
+    vector<string> configurationKeys;
+    Json::FastWriter json_writer;
+    configurationKeys.push_back("agentType");
+    configurationKeys.push_back("agentName");
+    configurationKeys.push_back("timeDelta");
+    configurationKeys.push_back("broker");
+    configurationKeys.push_back("publications");
+    configurationKeys.push_back("subscriptions");
 
-	for(vector<string>::iterator i = configurationKeys.begin();
-			i != configurationKeys.end(); ++i) {
-		if(!json_config.isMember(*i))
-			cerr << *i << "is not found in the json configuration" << endl;
-	}
-	agentType = json_config["agentType"].asString();
-	agentName = json_config["agentName"].asString();
-	if ((agentType.empty() | agentName.empty())) {
-		cerr << "agentType and/or agentName are not defined. Please set both." << endl;
-	} else {
-		config.name = agentType + "_" + agentName;
-	}
-	config.time_delta = json_config["time_delta"].asString();
-	config.broker = json_config["broker"].asString();
-	publications = json_config["publications"];
-	subscriptions = json_config["subscriptions"];
-	vector<fncs::Subscription> subs;
-	for (Json::ValueIterator it = subscriptions.begin(); it != subscriptions.end(); it++) {
-		const string subAgentType = it.name();
-		for(Json::ValueIterator it1 = subscriptions[it.name()].begin(); it1 != subscriptions[it.name()].end(); it1++) {
-			const string subAgentName = it1.name();
-			fncs::Subscription newSub;
-			Json::Value defaultValue;
-			newSub.key = subAgentType + "_" + subAgentName;
-			newSub.topic = subAgentType + "_" + subAgentName + "/TransactiveAgentOutput";
-			defaultValue[it.name()];
-			defaultValue[it.name()][it1.name()] = subscriptions[it.name()][it1.name()];
-			const string subDefault = json_writer.write(defaultValue);
-			newSub.def = subDefault;
-			/* TODO: find a way to specify transactive agent subscriptions as lists */
-			newSub.list = "false";
-			newSub.type = "JSON";
-			subs.push_back(newSub);
-		}
-	}
+    for(vector<string>::iterator i = configurationKeys.begin();
+            i != configurationKeys.end(); ++i) {
+        if(!json_config.isMember(*i))
+            cerr << *i << "is not found in the json configuration" << endl;
+    }
+    agentType = json_config["agentType"].asString();
+    agentName = json_config["agentName"].asString();
+    if ((agentType.empty() | agentName.empty())) {
+        cerr << "agentType and/or agentName are not defined. Please set both." << endl;
+    } else {
+        config.name = agentType + "_" + agentName;
+    }
+    config.time_delta = json_config["time_delta"].asString();
+    config.broker = json_config["broker"].asString();
+    publications = json_config["publications"];
+    subscriptions = json_config["subscriptions"];
+    vector<fncs::Subscription> subs;
+    for (Json::ValueIterator it = subscriptions.begin(); it != subscriptions.end(); it++) {
+        const string subAgentType = it.name();
+        for(Json::ValueIterator it1 = subscriptions[it.name()].begin(); it1 != subscriptions[it.name()].end(); it1++) {
+            const string subAgentName = it1.name();
+            fncs::Subscription newSub;
+            Json::Value defaultValue;
+            newSub.key = subAgentType + "_" + subAgentName;
+            newSub.topic = subAgentType + "_" + subAgentName + "/TransactiveAgentOutput";
+            defaultValue[it.name()];
+            defaultValue[it.name()][it1.name()] = subscriptions[it.name()][it1.name()];
+            const string subDefault = json_writer.write(defaultValue);
+            newSub.def = subDefault;
+            /* TODO: find a way to specify transactive agent subscriptions as lists */
+            newSub.list = "false";
+            newSub.type = "JSON";
+            subs.push_back(newSub);
+        }
+    }
 
-	if (json_config.isMember("values")) {
-		for (Json::ValueConstIterator itr = json_config["values"].begin(); itr != json_config["values"].end(); itr++) {
-			fncs::Subscription valSub;
-			valSub.key = itr.name();
-			if (json_config["values"][itr.name()].isMember("topic")) {
-				valSub.topic = json_config["values"][itr.name()]["topic"].asString();
-			} else {
-				cerr << "\"topic\" couldn't be found in the json configuration!" << endl;
-			}
-			if (json_config["values"][itr.name()].isMember("default")) {
-				valSub.def = json_config["values"][itr.name()]["default"].asString();
-			} else {
-				cerr << "\"default\" couldn't be found in the json configuration!" << endl;
-			}
-			if (json_config["values"][itr.name()].isMember("type")) {
-				valSub.type = json_config["values"][itr.name()]["type"].asString();
-			} else {
-				cerr << "\"type\" couldn't be found in the json configuration!" << endl;
-			}
-			if (json_config["values"][itr.name()].isMember("list")) {
-				valSub.list = json_config["values"][itr.name()]["list"].asString();
-			} else {
-				cerr << "\"list\" couldn't be found in the json configuration!" << endl;
-			}
-			subs.push_back(valSub);
-		}
-	}
-	config.values = subs;
-	return config;
+    if (json_config.isMember("values")) {
+        for (Json::ValueConstIterator itr = json_config["values"].begin(); itr != json_config["values"].end(); itr++) {
+            fncs::Subscription valSub;
+            valSub.key = itr.name();
+            if (json_config["values"][itr.name()].isMember("topic")) {
+                valSub.topic = json_config["values"][itr.name()]["topic"].asString();
+            } else {
+                cerr << "\"topic\" couldn't be found in the json configuration!" << endl;
+            }
+            if (json_config["values"][itr.name()].isMember("default")) {
+                valSub.def = json_config["values"][itr.name()]["default"].asString();
+            } else {
+                cerr << "\"default\" couldn't be found in the json configuration!" << endl;
+            }
+            if (json_config["values"][itr.name()].isMember("type")) {
+                valSub.type = json_config["values"][itr.name()]["type"].asString();
+            } else {
+                cerr << "\"type\" couldn't be found in the json configuration!" << endl;
+            }
+            if (json_config["values"][itr.name()].isMember("list")) {
+                valSub.list = json_config["values"][itr.name()]["list"].asString();
+            } else {
+                cerr << "\"list\" couldn't be found in the json configuration!" << endl;
+            }
+            subs.push_back(valSub);
+        }
+    }
+    config.values = subs;
+    return config;
 }
 
 
@@ -1585,45 +1681,45 @@ string fncs::agentGetEvents()
     Json::Value default_payload = "";
     vector<string> unique_keys;
     for (vector<string>::iterator keys = events.begin(); keys != events.end(); ++keys) {
-    	key = *keys;
-    	bool is_key_unique = true;
-    	if (unique_keys.size() > 0) {
-    		for (vector<string>::iterator uk_itr = unique_keys.begin(); uk_itr != unique_keys.end(); ++uk_itr) {
-    			if (key == *uk_itr) {
-    				is_key_unique = false;
-    				break;
-    			}
-    		}
-    	}
-    	if (is_key_unique) {
-			message = get_value(key);
-			unique_keys.push_back(key);
-			json_reader.parse(message, json_message);
-			if(json_message.isConvertibleTo(Json::objectValue)){
-				bool is_json = false;
-				for (Json::ValueIterator itr1 = json_message.begin(); itr1 != json_message.end(); itr1++) {//iterating through agentType
-					is_json = true;
-					if (!agent_messages.isMember(itr1.name())) {
-						agent_messages[itr1.name()];
-					}
-					for (Json::ValueIterator itr2 = json_message[itr1.name()].begin(); itr2 != json_message[itr1.name()].end(); itr2++) {//iterating through agentName
-//						if (agent_messages[itr1.name()].isMember(itr2.name())) {
-//							cerr << "You have recieved more than one message from the same transactive agent during the last time step. This shouldn't have happened." << endl;
-//							die();
-//						}
-						agent_messages[itr1.name()][itr2.name()] = (json_message[itr1.name()][itr2.name()]);
-					}
-				}
-				if(!is_json) {
-					agent_messages[key] = message;
-				}
-			} else {
-				agent_messages[key] = message;
-			}
-    	}
+        key = *keys;
+        bool is_key_unique = true;
+        if (unique_keys.size() > 0) {
+            for (vector<string>::iterator uk_itr = unique_keys.begin(); uk_itr != unique_keys.end(); ++uk_itr) {
+                if (key == *uk_itr) {
+                    is_key_unique = false;
+                    break;
+                }
+            }
+        }
+        if (is_key_unique) {
+            message = get_value(key);
+            unique_keys.push_back(key);
+            json_reader.parse(message, json_message);
+            if(json_message.isConvertibleTo(Json::objectValue)){
+                bool is_json = false;
+                for (Json::ValueIterator itr1 = json_message.begin(); itr1 != json_message.end(); itr1++) {//iterating through agentType
+                    is_json = true;
+                    if (!agent_messages.isMember(itr1.name())) {
+                        agent_messages[itr1.name()];
+                    }
+                    for (Json::ValueIterator itr2 = json_message[itr1.name()].begin(); itr2 != json_message[itr1.name()].end(); itr2++) {//iterating through agentName
+//                        if (agent_messages[itr1.name()].isMember(itr2.name())) {
+//                            cerr << "You have recieved more than one message from the same transactive agent during the last time step. This shouldn't have happened." << endl;
+//                            die();
+//                        }
+                        agent_messages[itr1.name()][itr2.name()] = (json_message[itr1.name()][itr2.name()]);
+                    }
+                }
+                if(!is_json) {
+                    agent_messages[key] = message;
+                }
+            } else {
+                agent_messages[key] = message;
+            }
+        }
     }
     if(agent_messages.size() > 0) {
-    	payload = json_writer.write(agent_messages);
+        payload = json_writer.write(agent_messages);
     }
     return payload;
 }
