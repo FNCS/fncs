@@ -78,10 +78,10 @@ Input arguments
     vector<string> events;
     ofstream fout;
     ostream out(cout.rdbuf()); /* share cout's stream buffer */
-    string zpl_line = "";
-    string zpl_param = "";
-    string zpl_equals = "";
-    string zpl_value = "";
+    string config_line = "";
+    string config_param = "";
+    string config_equals = "";
+    string config_value = "";
     string fed_name = "";
     bool done = false;
     
@@ -157,15 +157,50 @@ Input arguments
 
 
     // Reading in fncs.zpl to figure out what my federate name is
-    ifstream readFile("fncs.zpl");
-    while(getline(readFile,zpl_line) && !done)   {
-        stringstream iss(zpl_line);
-        getline(iss, zpl_param, ' ');
-        getline(iss, zpl_equals, ' ');
-        getline(iss, zpl_value, ' ');
-        if (zpl_param.compare("name") == 0){
-            fed_name = zpl_value;
-            done = true;
+    // Have to check to see if a non-default (fncs.zpl) FNCS config
+    //  file is being used.
+    char* fncs_config_file;
+    fncs_config_file = getenv("FNCS_CONFIG_FILE");
+    std::string config_string(fncs_config_file);
+    
+    // Determining by file extension if this is a .zpl or .yaml file
+    std::string extension;
+    int idx = config_string.rfind('.');
+    if(idx != std::string::npos){
+        extension = config_string.substr(idx+1);
+    }
+    else{
+        // No extension in file name (or FNCS_CONFIG_FILE not set)
+        //  Assume this is a .zpl.
+        extension = "zpl";
+    }
+    LDEBUG4 << "FNCS_CONFIG_FILE extension (given or default):  " << extension << endl;
+    
+    // Parsing the file slightly differently based on whether its a .zpl or .yaml
+    ifstream readFile(fncs_config_file);
+    if (extension.compare("zpl")==0){
+        while(getline(readFile,config_line) && !done)   {
+            stringstream iss(config_line);
+            getline(iss, config_param, ' ');
+            getline(iss, config_equals, ' ');
+            getline(iss, config_value, ' ');
+            if (config_param.compare("name") == 0){
+                fed_name = config_value;
+                done = true;
+            }
+        }
+    }
+    else{
+        // If not a .zpl, assume a .yaml
+        while(getline(readFile,config_line) && !done)   {
+            stringstream iss(config_line);
+            getline(iss, config_param, ':');
+            getline(iss, config_equals, ' ');
+            getline(iss, config_value, ' ');
+            if (config_param.compare("name") == 0){
+                fed_name = config_value;
+                done = true;
+            }
         }
     }
     readFile.close();
