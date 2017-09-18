@@ -236,6 +236,14 @@ int main(int argc, char **argv)
                     LERROR << "simulator '" << sender << "' already connected";
                     broker_die(simulators, server);
                 }
+                
+                /* if all sims have connected, this is an error to get
+                an extra HELLO */
+                if (simulators.size() == n_sims) {
+                    LERROR << "max number of simulators already connected";
+                    broker_die(simulators, server);
+                }
+                
                 index = simulators.size();
                 LDEBUG4 << "registering client '" << sender << "'";
 
