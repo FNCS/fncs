@@ -742,7 +742,7 @@ fncs::time fncs::time_request(fncs::time time_next)
                 }
             }
             else {
-                LERROR << "unrecognized message type";
+                LERROR << "unrecognized message type: " << message_type;
                 die();
                 return time_next;
             }
