@@ -38,3 +38,5 @@ tests/config
 tests/fncs_netdelay
 tests/test
 tests/fcoverage
+fncs_test_federate
+libjsoncpp.la
