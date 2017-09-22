@@ -26,6 +26,8 @@ AM_LDFLAGS += $(ZMQ_LDFLAGS)
 LDADD += libfncs.la
 LDADD += $(CZMQ_LIBS)
 LDADD += $(ZMQ_LIBS)
+LDADD += libyamlcpp.la
+LDADD += libjsoncpp.la
 
 include_HEADERS += src/fncs.hpp
 include_HEADERS += src/fncs.h

@@ -218,37 +218,37 @@ am_fncs_broker_OBJECTS = src/broker.$(OBJEXT)
 fncs_broker_OBJECTS = $(am_fncs_broker_OBJECTS)
 fncs_broker_LDADD = $(LDADD)
 fncs_broker_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) libyamlcpp.la libjsoncpp.la
 am_fncs_player_OBJECTS = src/player.$(OBJEXT)
 fncs_player_OBJECTS = $(am_fncs_player_OBJECTS)
 fncs_player_LDADD = $(LDADD)
 fncs_player_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) libyamlcpp.la libjsoncpp.la
 am_fncs_player_anon_OBJECTS = src/fncs_player_anon-player.$(OBJEXT)
 fncs_player_anon_OBJECTS = $(am_fncs_player_anon_OBJECTS)
 fncs_player_anon_LDADD = $(LDADD)
 fncs_player_anon_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) libyamlcpp.la libjsoncpp.la
 am_fncs_test_federate_OBJECTS = src/test_federate.$(OBJEXT)
 fncs_test_federate_OBJECTS = $(am_fncs_test_federate_OBJECTS)
 am__DEPENDENCIES_2 = libfncs.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) libyamlcpp.la libjsoncpp.la
 fncs_test_federate_DEPENDENCIES = $(am__DEPENDENCIES_2) libjsoncpp.la
 am_fncs_tracer_OBJECTS = src/tracer.$(OBJEXT)
 fncs_tracer_OBJECTS = $(am_fncs_tracer_OBJECTS)
 fncs_tracer_LDADD = $(LDADD)
 fncs_tracer_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) libyamlcpp.la libjsoncpp.la
 am_mini_federate_OBJECTS = src/mini_federate.$(OBJEXT)
 mini_federate_OBJECTS = $(am_mini_federate_OBJECTS)
 mini_federate_LDADD = $(LDADD)
 mini_federate_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) libyamlcpp.la libjsoncpp.la
 am_tests_config_OBJECTS = tests/config.$(OBJEXT)
 tests_config_OBJECTS = $(am_tests_config_OBJECTS)
 tests_config_LDADD = $(LDADD)
 tests_config_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) libyamlcpp.la libjsoncpp.la
 am_tests_fcoverage_OBJECTS = tests/fcoverage.$(OBJEXT)
 tests_fcoverage_OBJECTS = $(am_tests_fcoverage_OBJECTS)
 tests_fcoverage_DEPENDENCIES = $(am__DEPENDENCIES_2) \
@@ -261,12 +261,12 @@ am_tests_fncs_netdelay_OBJECTS = tests/netdelay.$(OBJEXT)
 tests_fncs_netdelay_OBJECTS = $(am_tests_fncs_netdelay_OBJECTS)
 tests_fncs_netdelay_LDADD = $(LDADD)
 tests_fncs_netdelay_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) libyamlcpp.la libjsoncpp.la
 am_tests_test_OBJECTS = tests/test.$(OBJEXT)
 tests_test_OBJECTS = $(am_tests_test_OBJECTS)
 tests_test_LDADD = $(LDADD)
 tests_test_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) libyamlcpp.la libjsoncpp.la
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -572,7 +572,8 @@ AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir)/src \
 	-I$(top_srcdir)/contrib/yaml-cpp/include $(CZMQ_CPPFLAGS) \
 	$(ZMQ_CPPFLAGS)
 AM_LDFLAGS = $(CZMQ_LDFLAGS) $(ZMQ_LDFLAGS)
-LDADD = libfncs.la $(CZMQ_LIBS) $(ZMQ_LIBS)
+LDADD = libfncs.la $(CZMQ_LIBS) $(ZMQ_LIBS) libyamlcpp.la \
+	libjsoncpp.la
 pkgconfig_DATA = src/libfncs.pc
 @ENABLE_FORTRAN_TRUE@libfncsf_la_SOURCES = src/fncs_fapi_mod.f90
 libfncs_la_SOURCES = src/echo.cpp src/echo.hpp src/fncs.cpp \

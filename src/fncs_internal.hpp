@@ -72,6 +72,7 @@ namespace fncs {
                 , name("")
                 , time_delta("")
                 , fatal("")
+                , aggregate("")
                 , values()
             {}
 
@@ -79,6 +80,7 @@ namespace fncs {
             string name;
             string time_delta;
             string fatal;
+            string aggregate;
             vector<Subscription> values;
 
             string to_string() {
@@ -95,6 +97,9 @@ namespace fncs {
                 if (!fatal.empty()) {
                     os << "fatal: " << fatal << endl;
                 }
+                if (!aggregate.empty()) {
+                    os << "aggregate: " << aggregate << endl;
+                }
                 if (values.size()) {
                     os << "values:" << endl;
                     for (size_t i=0; i<values.size(); ++i) {
@@ -109,6 +114,7 @@ namespace fncs {
     const char * const ACK = "ack";
     const char * const TIME_REQUEST = "time_request";
     const char * const PUBLISH = "publish";
+    const char * const PUBLISH_AGGREGATE = "publish_aggregate";
     const char * const DIE = "die";
     const char * const BYE = "bye";
     const char * const TIME_DELTA = "time_delta";

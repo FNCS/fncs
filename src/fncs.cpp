@@ -45,6 +45,7 @@ using namespace ::std;
 
 static bool is_initialized_ = false;
 static bool die_is_fatal = false;
+static bool aggregate = false;
 static string simulation_name = "";
 static string agent_subtopic = "Output";
 static int simulation_id = 0;
@@ -63,6 +64,7 @@ static vector<string> mykeys; /* keys from the fncs config file */
 static const string default_broker = "tcp://localhost:5570";
 static const string default_time_delta = "1s";
 static const string default_fatal = "yes";
+static const string default_aggregate = "no";
 
 typedef map<string,vector<string> > clist_t;
 static clist_t cache_list;
@@ -374,6 +376,24 @@ void fncs::initialize(Config config)
         else {
             die_is_fatal = true;
             LINFO << "fncs::die() will call exit(EXIT_FAILURE)";
+        }
+    }
+
+    /* whether we want aggregate publications */
+    if (config.aggregate.empty()) {
+        LINFO << "fncs config does not contain 'aggregate'";
+        LINFO << "defaulting to " << default_aggregate;
+        config.aggregate = default_aggregate;
+    }
+    {
+        char fc = config.aggregate[0];
+        if (fc == 'N' || fc == 'n' || fc == 'F' || fc == 'f') {
+            LINFO << "one-shot messages";
+            aggregate = false;
+        }
+        else {
+            LINFO << "aggregate messages";
+            aggregate = true;
         }
     }
 
@@ -842,6 +862,64 @@ fncs::time fncs::time_request(fncs::time time_next)
                 else {
                     LDEBUG4 << "dropping PUBLISH message topic='"
                         << topic << "'";
+                }
+            }
+            else if (fncs::PUBLISH_AGGREGATE == message_type) {
+                LDEBUG4 << "PUBLISH_AGGREGATE received";
+                /* next frame is YAML chunk */
+                frame = zmsg_next(msg);
+                if (!frame) {
+                    LERROR << "message missing YAML";
+                    die();
+                    return time_next;
+                }
+                /* copy frame into chunk */
+                string yaml_str = fncs::to_string(frame);
+                /* parse YAML into Doc */
+                istringstream sin(yaml_str);
+                YAML::Parser parser(sin);
+                YAML::Node doc;
+                parser.GetNextDocument(doc);
+                /* iterate over each key/value pair */
+                for (YAML::Iterator it=doc.begin(); it!=doc.end(); ++it) {
+                    string topic;
+                    string value;
+                    sub_string_t::const_iterator sub_str_itr;
+                    fncs::Subscription subscription;
+                    bool found = false;
+
+                    it.first() >> topic;
+                    it.second() >> value;
+
+                    /* find cache short key */
+                    sub_str_itr = subs_string.find(topic);
+                    if (sub_str_itr != subs_string.end()) {
+                        found = true;
+                        subscription = sub_str_itr->second;
+                    }
+
+                    /* if found then store in cache */
+                    if (found) {
+                        events.push_back(subscription.key);
+                        if (subscription.is_list()) {
+                            cache_list[subscription.key].push_back(value);
+                            LDEBUG4 << "updated cache_list "
+                                << "key='" << subscription.key << "' "
+                                << "topic='" << topic << "' "
+                                << "value='" << value << "' "
+                                << "count=" << cache_list[subscription.key].size();
+                        } else {
+                            cache[subscription.key] = value;
+                            LDEBUG4 << "updated cache "
+                                << "key='" << subscription.key << "' "
+                                << "topic='" << topic << "' ";
+                            // << "value='" << value << "' ";
+                        }
+                    }
+                    else {
+                        LDEBUG4 << "dropping PUBLISH_AGGREGATE message topic='"
+                            << topic << "'";
+                    }
                 }
             }
             else if  (fncs::DIE == message_type){
@@ -1336,6 +1414,15 @@ fncs::Config fncs::parse_config(const YAML::Node &doc)
         }
     }
 
+    if (const YAML::Node *node = doc.FindValue("aggregate")) {
+        if (node->Type() != YAML::NodeType::Scalar) {
+            cerr << "YAML 'aggregate' must be a Scalar" << endl;
+        }
+        else {
+            *node >> config.aggregate;
+        }
+    }
+
     /* parse subscriptions */
     if (const YAML::Node *node = doc.FindValue("values")) {
         config.values = parse_values(*node);
@@ -1363,6 +1450,9 @@ fncs::Config fncs::parse_config(zconfig_t *zconfig)
 
     /* read whether die() is fatal from zconfig */
     config.fatal = zconfig_resolve(zconfig, "/fatal", "");
+
+    /* read whether published messages are aggregated from zconfig */
+    config.aggregate = zconfig_resolve(zconfig, "/aggregate", "");
 
     /* parse subscriptions */
     config_values = zconfig_locate(zconfig, "/values");

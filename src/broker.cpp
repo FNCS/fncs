@@ -17,6 +17,9 @@
 /* 3rd party headers */
 #include "czmq.h"
 
+/* 3rd party contrib */
+#include "yaml-cpp/yaml.h"
+
 /* fncs headers */
 #include "log.hpp"
 #include "fncs.hpp"
@@ -33,6 +36,7 @@ class SimulatorState {
             , time_last_processed(0)
             , processing(true)
             , messages_pending(false)
+            , aggregate(false)
         {}
 
         string name;
@@ -41,7 +45,9 @@ class SimulatorState {
         fncs::time time_last_processed;
         bool processing;
         bool messages_pending;
+        bool aggregate;
         set<string> subscription_values;
+        map<string,string> messages;
 };
 
 typedef map<string,size_t> SimIndex;
@@ -51,6 +57,7 @@ typedef vector<fncs::time> TimeVec;
 typedef map<string,IndexVec> TopicMap;
 typedef map<string,set<string> > SimKeyMap;
 typedef map<string,TimeVec> SimTimeMap;
+typedef map<string,map<string,string> > SimPubMap;
 
 static fncs::time time_real_start;
 static fncs::time time_real;
@@ -90,6 +97,7 @@ int main(int argc, char **argv)
     TopicMap topic_to_indexes;  /* quickly lookup subscribed sims */
     SimKeyMap name_to_keys;     /* summary of topics per sim name */
     SimKeyMap name_to_peers;    /* summary of peers per sim name */
+    SimPubMap name_to_pubs;     /* summary of a sim's pending messages */
     SimTimeMap name_to_peertimes; /* summary of peer deltas */
     fncs::time time_granted = 0;/* global clock */
     zsock_t *server = NULL;     /* the broker socket */
@@ -243,6 +251,7 @@ int main(int argc, char **argv)
                 string config_string;
                 fncs::Config config;
                 string time_delta;
+                string aggregate;
                 size_t index = 0;
 
                 LDEBUG4 << "HELLO received";
@@ -312,6 +321,23 @@ int main(int argc, char **argv)
                 }
                 state.time_delta = fncs::parse_time(time_delta);
 
+                /* get aggregate from config */
+                aggregate = config.aggregate;
+                if (aggregate.empty()) {
+                    LWARNING << sender << " config does not contain 'aggregate'";
+                    LWARNING << sender << " aggregate defaulting to false";
+                    aggregate = "false";
+                }
+				{
+					char fc = aggregate[0];
+					if (fc == 'N' || fc == 'n' || fc == 'F' || fc == 'f') {
+						state.aggregate = false;
+					}
+					else {
+						state.aggregate = true;
+					}
+				}
+
                 /* parse subscription values */
                 set<string> subscription_values;
                 if (!config.values.empty()) {
@@ -364,6 +390,7 @@ int main(int argc, char **argv)
                 state.processing = false;
                 state.messages_pending = false;
                 state.subscription_values = subscription_values;
+                state.messages.clear();
                 name_to_index[sender] = index;
                 simulators.push_back(state);
 
@@ -568,6 +595,16 @@ int main(int argc, char **argv)
                     }
                     for (size_t i=0; i<n_sims; ++i) {
                         if (time_granted == time_actionable[i]) {
+                            if (simulators[i].aggregate && !simulators[i].messages.empty()) {
+                                LDEBUG4 << "sending aggregate message to "
+                                    << simulators[i].name;
+                                YAML::Emitter out;
+                                out << simulators[i].messages;
+                                zstr_sendm(server, simulators[i].name.c_str());
+                                zstr_sendm(server, fncs::PUBLISH_AGGREGATE);
+                                zstr_send(server, out.c_str());
+                                simulators[i].messages.clear();
+                            }
                             LDEBUG4 << "granting " << time_granted
                                 << " to " << simulators[i].name;
                             ++n_processing;
@@ -593,6 +630,7 @@ int main(int argc, char **argv)
             }
             else if (fncs::PUBLISH == message_type) {
                 string topic = "";
+                string value = ""; /* will lazy construct */
                 bool found_one = false;
 
                 LDEBUG4 << "PUBLISH received";
@@ -622,7 +660,7 @@ int main(int argc, char **argv)
                         LERROR << "PUBLISH message missing value";
                         broker_die(simulators, server);
                     }
-                    string value = fncs::to_string(frame);
+                    value = fncs::to_string(frame);
                     trace << time_granted
                         << "\t" << topic
                         << "\t" << value
@@ -662,20 +700,39 @@ int main(int argc, char **argv)
                         for (index=iv.begin(); index!=iv.end(); index++) {
                             size_t i = *index;
                             if (0 == byes.count(simulators[i].name)) {
-                                zmsg_t *msg_copy = zmsg_dup(msg);
-                                if (!msg_copy) {
-                                    LERROR << "failed to copy pub message";
-                                    broker_die(simulators, server);
+                                if (simulators[i].aggregate) {
+                                    /* if we haven't gotten the value
+                                     * yet, do it now */
+                                    if (value.empty()) {
+                                        /* next frame is value payload */
+                                        frame = zmsg_next(msg);
+                                        if (!frame) {
+                                            LERROR << "PUBLISH message missing value";
+                                            broker_die(simulators, server);
+                                        }
+                                        value = fncs::to_string(frame);
+                                    }
+                                    simulators[i].messages[topic] = value;
+                                    found_one = true;
+                                    simulators[i].messages_pending = true;
+                                    LDEBUG4 << "agg pub to " << simulators[i].name;
                                 }
-                                /* swap out original sender with new destiation */
-                                zframe_reset(zmsg_first(msg_copy),
-                                        simulators[i].name.c_str(),
-                                        simulators[i].name.size());
-                                /* send it on */
-                                zmsg_send(&msg_copy, server);
-                                found_one = true;
-                                simulators[i].messages_pending = true;
-                                LDEBUG4 << "pub to " << simulators[i].name;
+                                else {
+                                    zmsg_t *msg_copy = zmsg_dup(msg);
+                                    if (!msg_copy) {
+                                        LERROR << "failed to copy pub message";
+                                        broker_die(simulators, server);
+                                    }
+                                    /* swap out original sender with new destiation */
+                                    zframe_reset(zmsg_first(msg_copy),
+                                            simulators[i].name.c_str(),
+                                            simulators[i].name.size());
+                                    /* send it on */
+                                    zmsg_send(&msg_copy, server);
+                                    found_one = true;
+                                    simulators[i].messages_pending = true;
+                                    LDEBUG4 << "pub to " << simulators[i].name;
+                                }
                             }
                         }
                     }
