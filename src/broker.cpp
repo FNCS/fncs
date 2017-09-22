@@ -101,7 +101,7 @@ int main(int argc, char **argv)
     static vector<int> vec_grant_time_calc;
     static vector<int> vec_granted_time;
     static vector<int> vec_granted_num;
-    static int publication_count = 0;
+    static long publication_count = 0;
 #endif
     
     fncs::start_logging();
