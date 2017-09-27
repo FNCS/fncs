@@ -598,11 +598,25 @@ int main(int argc, char **argv)
                             if (simulators[i].aggregate && !simulators[i].messages.empty()) {
                                 LDEBUG4 << "sending aggregate message to "
                                     << simulators[i].name;
+#ifdef YAML_AGG
                                 YAML::Emitter out;
                                 out << simulators[i].messages;
                                 zstr_sendm(server, simulators[i].name.c_str());
                                 zstr_sendm(server, fncs::PUBLISH_AGGREGATE);
                                 zstr_send(server, out.c_str());
+#else
+                                zstr_sendm(server, simulators[i].name.c_str());
+                                zstr_sendm(server, fncs::PUBLISH_AGGREGATE);
+                                zstr_sendfm(server, "%llu", (unsigned long long)simulators[i].messages.size());
+                                for (map<string,string>::const_iterator it=
+                                        simulators[i].messages.begin();
+                                        it!=simulators[i].messages.end();
+                                        ++it) {
+                                    zstr_sendm(server, it->first.c_str());
+                                    zstr_sendm(server, it->second.c_str());
+                                }
+                                zstr_send(server, "END");
+#endif
                                 simulators[i].messages.clear();
                             }
                             LDEBUG4 << "granting " << time_granted

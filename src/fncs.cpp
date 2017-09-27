@@ -866,6 +866,7 @@ fncs::time fncs::time_request(fncs::time time_next)
             }
             else if (fncs::PUBLISH_AGGREGATE == message_type) {
                 LDEBUG4 << "PUBLISH_AGGREGATE received";
+#ifdef YAML_AGG
                 /* next frame is YAML chunk */
                 frame = zmsg_next(msg);
                 if (!frame) {
@@ -921,6 +922,73 @@ fncs::time fncs::time_request(fncs::time time_next)
                             << topic << "'";
                     }
                 }
+#else
+                /* next frame is topic/value count */
+                frame = zmsg_next(msg);
+                if (!frame) {
+                    LERROR << "message missing topic/value count";
+                    die();
+                    return time_next;
+                }
+                int n_topics = atoi(fncs::to_string(frame).c_str());
+                /* iterate over each topic/value pair */
+                for (int i=0; i<n_topics; ++i) {
+                    string topic;
+                    string value;
+
+                    /* next frame is topic */
+                    frame = zmsg_next(msg);
+                    if (!frame) {
+                        LERROR << "message missing topic";
+                        die();
+                        return time_next;
+                    }
+                    topic = fncs::to_string(frame);
+
+                    /* next frame is value */
+                    frame = zmsg_next(msg);
+                    if (!frame) {
+                        LERROR << "message missing value";
+                        die();
+                        return time_next;
+                    }
+                    value = fncs::to_string(frame);
+
+                    sub_string_t::const_iterator sub_str_itr;
+                    fncs::Subscription subscription;
+                    bool found = false;
+
+                    /* find cache short key */
+                    sub_str_itr = subs_string.find(topic);
+                    if (sub_str_itr != subs_string.end()) {
+                        found = true;
+                        subscription = sub_str_itr->second;
+                    }
+
+                    /* if found then store in cache */
+                    if (found) {
+                        events.push_back(subscription.key);
+                        if (subscription.is_list()) {
+                            cache_list[subscription.key].push_back(value);
+                            LDEBUG4 << "updated cache_list "
+                                << "key='" << subscription.key << "' "
+                                << "topic='" << topic << "' "
+                                << "value='" << value << "' "
+                                << "count=" << cache_list[subscription.key].size();
+                        } else {
+                            cache[subscription.key] = value;
+                            LDEBUG4 << "updated cache "
+                                << "key='" << subscription.key << "' "
+                                << "topic='" << topic << "' ";
+                            // << "value='" << value << "' ";
+                        }
+                    }
+                    else {
+                        LDEBUG4 << "dropping PUBLISH_AGGREGATE message topic='"
+                            << topic << "'";
+                    }
+                }
+#endif
             }
             else if  (fncs::DIE == message_type){
                 poll_wait = timer() - poll_start;
