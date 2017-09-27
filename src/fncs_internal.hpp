@@ -72,7 +72,8 @@ namespace fncs {
                 , name("")
                 , time_delta("")
                 , fatal("")
-                , aggregate("")
+                , aggregate_sub("")
+                , aggregate_pub("")
                 , values()
             {}
 
@@ -80,7 +81,8 @@ namespace fncs {
             string name;
             string time_delta;
             string fatal;
-            string aggregate;
+            string aggregate_sub;
+            string aggregate_pub;
             vector<Subscription> values;
 
             string to_string() {
@@ -97,8 +99,11 @@ namespace fncs {
                 if (!fatal.empty()) {
                     os << "fatal: " << fatal << endl;
                 }
-                if (!aggregate.empty()) {
-                    os << "aggregate: " << aggregate << endl;
+                if (!aggregate_sub.empty()) {
+                    os << "aggregate_sub: " << aggregate_sub << endl;
+                }
+                if (!aggregate_pub.empty()) {
+                    os << "aggregate_pub: " << aggregate_pub << endl;
                 }
                 if (values.size()) {
                     os << "values:" << endl;
