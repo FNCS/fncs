@@ -6,6 +6,8 @@ services:
     image: fncs/fncs
     ports:
       - 5570:5570
+    env_file:
+      - env.fncs
     volumes:
       - /var/data:/fncs/log
     command: ["fncs_broker", "5"]
