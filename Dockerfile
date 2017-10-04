@@ -8,6 +8,11 @@ ENV FNCS_LOG_LEVEL=DEBUG4
 ENV FNCS_CONFIG_FILE=""
 ENV FNCS_NAME=""
 ENV FNCS_BROKER=tcp://*:${FNCS_PORT}
+ENV FNCS_LOG_DIR=/fncs/log
+ENV FNCS_LOGGING_FILE=${FNCS_LOG_DIR}/fncs.log
+
+RUN mkdir -p ${FNCS_LOG_DIR}
+RUN touch ${FNCS_LOGGING_FILE} 
 
 COPY . ${TEMP_DIR}/fncs_src
 
@@ -19,9 +24,10 @@ RUN make install
 
 WORKDIR /fncs
 
-COPY run_broker.sh /fncs
+COPY runit.sh /fncs
+RUN chmod +x runit.sh
 
 EXPOSE ${FNCS_PORT}
 
-RUN printenv
-ENTRYPOINT ["./run_broker.sh &>fncs.log"]
+RUN ls -la
+ENTRYPOINT ["./runit.sh"]

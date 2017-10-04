@@ -1,0 +1,15 @@
+---
+version: '3'
+
+services:
+  broker:
+    image: fncs/fncs
+    ports:
+      - 5570:5570
+    volumes:
+      - /var/data:/fncs/log
+    command: ["fncs_broker", "5"]
+
+  # Add other services that need to be started
+  # after this.  Can use the volume /var/data
+  # mount for this.
