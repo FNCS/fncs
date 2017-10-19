@@ -1,0 +1,8 @@
+name: fpc_tracer
+time_delta: 1s
+broker: tcp://localhost:5570
+values:
+    some_key:
+        topic: fpc_test/some_key
+        default: 0
+

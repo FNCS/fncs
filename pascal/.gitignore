@@ -1,0 +1,5 @@
+lib/*
+backup/*
+*.lps
+fpc_test
+fpc_tracer
