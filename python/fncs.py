@@ -99,12 +99,12 @@ get_events_size.restype = ctypes.c_size_t
 
 _get_events = _lib.fncs_get_events
 _get_events.argtypes = []
-_get_events.restype = ctypes.POINTER(ctypes.c_char_p)
+_get_events.restype = ctypes.POINTER(ctypes.c_void_p)
 
 def get_events():
     _events = _get_events()
     size = get_events_size()
-    events = [_events[i] for i in range(size)]
+    events = [ctypes.cast(_events[i], ctypes.c_char_p).value for i in range(size)]
     for i in range(size):
         _free(_events[i])
     _free(_events)
@@ -112,31 +112,31 @@ def get_events():
 
 _get_event_at = _lib.fncs_get_event_at
 _get_event_at.argtypes = [ctypes.c_size_t]
-_get_event_at.restype = ctypes.c_char_p
+_get_event_at.restype = ctypes.c_void_p
 
 def get_event_at(i):
     _event = _get_event_at(i)
-    event = ctypes.string_at(_event)
+    event = ctypes.string_at(ctypes.cast(_event, ctypes.c_char_p).value)
     _free(_event)
     return event
 
 _agentGetEvents = _lib.fncs_agentGetEvents
 _agentGetEvents.argtypes = []
-_agentGetEvents.restype = ctypes.c_char_p
+_agentGetEvents.restype = ctypes.c_void_p
 
 def agentGetEvents():
     _event = _agentGetEvents()
-    event = ctypes.string_at(_event)
+    event = ctypes.string_at(ctypes.cast(_event, ctypes.c_char_p).value)
     _free(_event)
     return event
 
 _get_value = _lib.fncs_get_value
 _get_value.argtypes = [ctypes.c_char_p]
-_get_value.restype = ctypes.c_char_p
+_get_value.restype = ctypes.c_void_p
 
 def get_value(key):
     _value = _get_value(str(key).encode('utf-8'))
-    value = ctypes.string_at(_value)
+    value = ctypes.string_at(ctypes.cast(_value, ctypes.c_char_p).value)
     _free(_value)
     return value
 
@@ -149,13 +149,13 @@ def get_values_size(key):
 
 _get_values = _lib.fncs_get_values
 _get_values.argtypes = [ctypes.c_char_p]
-_get_values.restype = ctypes.POINTER(ctypes.c_char_p)
+_get_values.restype = ctypes.POINTER(ctypes.c_void_p)
 
 def get_values(key):
     _key = str(key).encode('utf-8')
     _values = _get_values(_key)
     size = get_values_size(_key)
-    values = [_values[i] for i in range(size)]
+    values = [ctypes.cast(_values[i], ctypes.c_char_p).value for i in range(size)]
     for i in range(i):
         _free(_values[i])
     _free(_values)
@@ -163,11 +163,11 @@ def get_values(key):
 
 _get_value_at = _lib.fncs_get_value_at
 _get_value_at.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
-_get_value_at.restype = ctypes.c_char_p
+_get_value_at.restype = ctypes.c_void_p
 
 def get_value_at(key, i):
     _value = _get_value_at(str(key).encode('utf-8'), i)
-    value = ctypes.string_at(_value)
+    value = ctypes.string_at(ctypes.cast(_value, ctypes.c_char_p).value)
     _free(_value)
     return value
 
@@ -177,12 +177,12 @@ get_keys_size.restype = ctypes.c_size_t
 
 _get_keys = _lib.fncs_get_keys
 _get_keys.argtypes = []
-_get_keys.restype = ctypes.POINTER(ctypes.c_char_p)
+_get_keys.restype = ctypes.POINTER(ctypes.c_void_p)
 
 def get_keys():
     _keys = _get_keys()
     size = get_keys_size()
-    keys = [_keys[i] for i in range(size)]
+    keys = [ctypes.cast(_keys[i], ctypes.c_char_p).value for i in range(size)]
     for i in range(size):
         _free(_keys[i])
     _free(_keys)
@@ -190,21 +190,21 @@ def get_keys():
 
 _get_key_at = _lib.fncs_get_key_at
 _get_key_at.argtypes = [ctypes.c_size_t]
-_get_key_at.restype = ctypes.c_char_p
+_get_key_at.restype = ctypes.c_void_p
 
 def get_key_at(i):
     _key = _get_key_at(i)
-    key = ctypes.string_at(_key)
+    key = ctypes.string_at(ctypes.cast(_key, ctypes.c_char_p).value)
     _free(_key)
     return key
 
 _get_name = _lib.fncs_get_name
 _get_name.argtypes = []
-_get_name.restype = ctypes.c_char_p
+_get_name.restype = ctypes.c_void_p
 
 def get_name():
     _name = _get_name()
-    name = ctypes.string_at(_name)
+    name = ctypes.string_at(ctypes.cast(_name, ctypes.c_char_p).value)
     _free(_name)
     return name
 
