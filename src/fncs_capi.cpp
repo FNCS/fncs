@@ -79,7 +79,13 @@ void fncs_update_time_delta(fncs_time delta)
 
 static const char* convert(const string & the_string)
 {
-    return the_string.c_str();
+    char * c = NULL;
+
+    c = (char*)malloc(sizeof(char*)*the_string.size()+1);
+    std::copy(the_string.begin(), the_string.end(), c);
+    c[the_string.size()] = '\0';
+
+    return c;
 }
 
 static const char** convert(const vector<string> & the_values)
@@ -155,7 +161,7 @@ const char* fncs_get_key_at(size_t index)
 
 const char* fncs_get_name()
 {
-    return fncs::get_name().c_str();
+    return convert(fncs::get_name());
 }
 
 int fncs_get_id()
