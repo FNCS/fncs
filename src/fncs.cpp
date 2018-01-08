@@ -185,7 +185,7 @@ void fncs::start_logging()
     /* whether to enable logging at all from environment */
     fncs_log_level = getenv("FNCS_LOG_LEVEL");
     if (!fncs_log_level) {
-        fncs_log_level = "WARNING";
+        fncs_log_level = "INFO";
     }
 
     /* start our logger */
