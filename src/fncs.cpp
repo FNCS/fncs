@@ -440,11 +440,11 @@ void fncs::initialize(Config config)
         LINFO << "defaulting to " << default_time_delta;
         config.time_delta = default_time_delta;
     }
-    LDEBUG << "time_delta string = " << config.time_delta;
+    LINFO << "time_delta string = " << config.time_delta;
     time_delta = parse_time(config.time_delta);
-    LDEBUG << "time_delta = " << time_delta;
+    LINFO << "time_delta = " << time_delta;
     time_delta_multiplier = time_unit_to_multiplier(config.time_delta);
-    LDEBUG << "time_delta_multiplier = " << time_delta_multiplier;
+    LINFO << "time_delta_multiplier = " << time_delta_multiplier;
 
     /* parse subscriptions */
     {
@@ -619,7 +619,7 @@ void fncs::initialize(Config config)
         return;
     }
     fncs::time time_peer_long = strtoull(fncs::to_string(frame).c_str(), NULL, 0);
-    LDEBUG2 << "time_peer_long is " << time_peer_long << " parsed from " << fncs::to_string(frame);
+    LINFO << "time_peer_long is " << time_peer_long << " parsed from " << fncs::to_string(frame);
     time_peer = time_peer_long;
 
     /* next frame is FNCS library version */
@@ -706,7 +706,7 @@ fncs::time fncs::time_request(fncs::time time_next)
     fncs::time time_passed;
 
     /* send TIME_REQUEST */
-    LDEBUG2 << "sending TIME_REQUEST of " << time_next << " in sim units";
+    LINFO << "sending TIME_REQUEST of " << time_next << " in sim units";
     time_next *= time_delta_multiplier;
 
     if (time_next % time_delta != 0) {
@@ -729,8 +729,10 @@ fncs::time fncs::time_request(fncs::time time_next)
         return time_next;
     }
 
+    LINFO << "ns time next " << time_next;
+    LINFO << "time current " << time_current;
     time_passed = time_next - time_current;
-    LDEBUG2 << "time advanced " << time_passed << " ns since last request";
+    LINFO << "time advanced " << time_passed << " ns since last request";
 
     /* sending of the time request implies we are done with the cache
      * list, but the other cache remains as a last value cache */
@@ -743,20 +745,20 @@ fncs::time fncs::time_request(fncs::time time_next)
 
     if (time_passed < time_window) {
         time_window -= time_passed;
-        LDEBUG1 << "there are " << time_window << " nanoseconds left in the window";
-        LDEBUG1 << "time_granted " << time_next << " nanoseonds";
+        LINFO << "there are " << time_window << " nanoseconds left in the window";
+        LINFO << "time_granted " << time_next << " nanoseonds";
         time_current = time_next;
         /* convert nanoseonds to sim's time unit */
         time_granted = convert_broker_to_sim_time(time_next);
-        LDEBUG2 << "time_granted " << time_granted << " in sim units";
+        LINFO << "time_granted " << time_granted << " in sim units";
         return time_granted;
     }
     else {
-        LDEBUG1 << "time_window expired";
+        LINFO << "time_window expired";
         time_window = 0;
     }
 
-    LDEBUG1 << "sending TIME_REQUEST of " << time_next << " nanoseconds";
+    LINFO << "sending TIME_REQUEST of " << time_next << " nanoseconds";
 
 #ifdef INSTRUMENTATION
     /* INSTRUMENTATION PART III BEGINS
@@ -968,7 +970,7 @@ fncs::time fncs::time_request(fncs::time time_next)
             }
             else if  (fncs::DIE == message_type){
                 poll_wait = timer() - poll_start;
-                LDEBUG4 << "DIE recieved " << poll_wait << " seconds after entering blocking poll";
+                LERROR << "DIE recieved " << poll_wait << " seconds after entering blocking poll";
                 die();
                 return time_next;
             }  
@@ -982,7 +984,7 @@ fncs::time fncs::time_request(fncs::time time_next)
         }
     }
 
-    LDEBUG1 << "time_granted " << time_granted << " nanoseonds";
+    LINFO << "time_granted " << time_granted << " nanoseonds";
 
 #ifdef INSTRUMENTATION
     /* INSTRUMENTATION PART IV BEGINS
@@ -1007,13 +1009,13 @@ fncs::time fncs::time_request(fncs::time time_next)
         if (time_current % time_peer != 0) {
             /* how much time is left before reaching the peers' time? */
             time_window = time_peer - (time_current % time_peer);
-            LDEBUG1 << "new time_window of " << time_window << " nanoseconds";
+            LINFO << "new time_window of " << time_window << " nanoseconds";
         }
     }
 
     /* convert nanoseonds to sim's time unit */
     time_granted = convert_broker_to_sim_time(time_granted);
-    LDEBUG2 << "time_granted " << time_granted << " in sim units";
+    LINFO << "time_granted " << time_granted << " in sim units";
 
     return time_granted;
 }
@@ -1248,9 +1250,9 @@ void fncs::update_time_delta(fncs::time delta)
     }
 
     /* send TIME_DELTA */
-    LDEBUG4 << "sending TIME_DELTA of " << delta << " in sim units";
+    LINFO << "sending TIME_DELTA of " << delta << " in sim units";
     delta *= time_delta_multiplier;
-    LDEBUG4 << "sending TIME_DELTA of " << delta << " nanoseconds";
+    LINFO << "sending TIME_DELTA of " << delta << " nanoseconds";
     zstr_sendm(client, fncs::TIME_DELTA);
     zstr_sendf(client, "%llu", delta);
 }

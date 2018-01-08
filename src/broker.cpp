@@ -475,8 +475,8 @@ int main(int argc, char **argv)
                                         peertimes.begin(),
                                         peertimes.end());
                             }
-                            LDEBUG4 << "time_peer = " << time_peer;
-                            LDEBUG4 << "time_delta= " << simulators[i].time_delta;
+                            LINFO << "time_peer = " << time_peer;
+                            LINFO << "time_delta= " << simulators[i].time_delta;
                             zstr_sendfm(server, "%llu", (unsigned long long)time_peer);
                         }
                         zstr_sendfm(server, "%d.%d.%d", FNCS_VERSION_MAJOR, FNCS_VERSION_MINOR, FNCS_VERSION_PATCH);
@@ -492,7 +492,7 @@ int main(int argc, char **argv)
                 fncs::time time_last;
 
                 if (fncs::TIME_REQUEST == message_type) {
-                    LDEBUG4 << "TIME_REQUEST received from " << sender;
+                    LINFO << "TIME_REQUEST received from " << sender;
                 }
                 else if (fncs::BYE == message_type) {
                     LDEBUG4 << "BYE received";
@@ -571,7 +571,8 @@ int main(int argc, char **argv)
                     /* update sim state */
                     simulators[index].time_requested = time_requested;
 
-                    LDEBUG4 << "TIME_REQUEST " << sender << " requested " << time_requested;
+                    LINFO << "TIME_REQUEST " << sender << " requested " << time_requested;
+                    LINFO << "TIME_REQUEST " << sender << " time_last " << time_last;
                 }
 
                 /* update sim state */
@@ -591,14 +592,16 @@ int main(int argc, char **argv)
                             time_actionable[i] = 
                                   simulators[i].time_last_processed
                                 + simulators[i].time_delta;
+                            LINFO << "time_actionable[" << i << "]=" << time_actionable[i] << " (pending messages)";
                         }
                         else {
                             time_actionable[i] = simulators[i].time_requested;
+                            LINFO << "time_actionable[" << i << "]=" << time_actionable[i];
                         }
                     }
                     time_granted = *min_element(time_actionable.begin(),
                                                 time_actionable.end());
-                    LDEBUG4 << "time_granted = " << time_granted;
+                    LINFO << "time_granted = " << time_granted;
                     if (realtime_interval) {
 #ifdef _WIN32
                         cerr << "realtime clock not yet supported on WIN32" << endl;
@@ -631,8 +634,7 @@ int main(int argc, char **argv)
                                 zstr_send(server, "END");
                                 simulators[i].messages.clear();
                             }
-                            LDEBUG4 << "granting " << time_granted
-                                << " to " << simulators[i].name;
+                            LINFO << "granting " << time_granted << " to " << simulators[i].name;
                             ++n_processing;
                             simulators[i].processing = true;
                             simulators[i].messages_pending = false;
@@ -644,6 +646,7 @@ int main(int argc, char **argv)
                             /* fast forward time last processed */
                             fncs::time jump = (time_granted - simulators[i].time_last_processed) / simulators[i].time_delta;
                             simulators[i].time_last_processed += simulators[i].time_delta * jump;
+                            LINFO << "fast-forwarding " << simulators[i].name << " to " << simulators[i].time_last_processed;
                         }
                     }
 #ifdef INSTRUMENTATION
@@ -846,7 +849,7 @@ int main(int argc, char **argv)
                 size_t index = 0; /* index of sim state */
                 fncs::time time_delta;
 
-                LDEBUG4 << "TIME_DELTA received";
+                LINFO << "TIME_DELTA received";
 
                 /* did we receive message from a connected sim? */
                 if (name_to_index.count(sender) == 0) {
@@ -871,6 +874,7 @@ int main(int argc, char **argv)
 
                 /* update sim state */
                 simulators[index].time_delta = time_delta;
+                LINFO << "changed " << simulators[index].name << " time_delta to " << time_delta;
             }
             else {
                 LERROR << "received unknown message type '"
