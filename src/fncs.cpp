@@ -62,12 +62,14 @@ static map<string,string> cache;
 static vector<string> events;
 static set<string> keys; /* keys that other sims subscribed to */
 static vector<string> mykeys; /* keys from the fncs config file */
+static long poll_timeout = -1;
 
 static const string default_broker = "tcp://localhost:5570";
 static const string default_time_delta = "1s";
 static const string default_fatal = "yes";
 static const string default_aggregate_sub = "no";
 static const string default_aggregate_pub = "no";
+static const long   default_poll_timeout = -1;
 
 typedef map<string,vector<string> > clist_t;
 static clist_t cache_list;
@@ -339,6 +341,7 @@ void fncs::initialize(Config config)
     const char *env_name = NULL;
     const char *env_broker = NULL;
     const char *env_time_delta = NULL;
+    const char *env_poll_timeout = NULL;
     int rc;
     zmsg_t *msg = NULL;
     zchunk_t *zchunk = NULL;
@@ -424,7 +427,7 @@ void fncs::initialize(Config config)
         LINFO << "FNCS_BROKER env var sets the broker endpoint location";
         config.broker = env_broker;
     } else if (config.broker.empty()) {
-        LINFO << "FNCS_BROKER env var not set and fncs config does not contain 'broker'" << endl;
+        LINFO << "FNCS_BROKER env var not set and fncs config does not contain 'broker'";
         LINFO << "defaulting to " << default_broker;
         config.broker = default_broker;
     }
@@ -436,7 +439,7 @@ void fncs::initialize(Config config)
         LINFO << "FNCS_TIME_DELTA env var sets the time_delta";
         config.time_delta = env_time_delta;
     } else if (config.time_delta.empty()) {
-        LINFO << "FNCS_TIME_DELTA env var not set and fncs config does not contain 'time_delta'" << endl;
+        LINFO << "FNCS_TIME_DELTA env var not set and fncs config does not contain 'time_delta'";
         LINFO << "defaulting to " << default_time_delta;
         config.time_delta = default_time_delta;
     }
@@ -445,6 +448,26 @@ void fncs::initialize(Config config)
     LDEBUG << "time_delta = " << time_delta;
     time_delta_multiplier = time_unit_to_multiplier(config.time_delta);
     LDEBUG << "time_delta_multiplier = " << time_delta_multiplier;
+
+    env_poll_timeout = getenv("FNCS_POLL_TIMEOUT");
+    if (env_poll_timeout) {
+        LINFO << "FNCS_POLL_TIMEOUT env var sets the poll_timeout";
+        istringstream iss(env_poll_timeout);
+        iss >> poll_timeout;
+        if (!iss) {
+            LERROR << "could not parse poll_timeout";
+            die();
+            return;
+        }
+    } else {
+        poll_timeout = default_poll_timeout;
+    }
+    LDEBUG << "poll_timeout = " << poll_timeout;
+    if (poll_timeout < -1) {
+        LERROR << "poll timeout must be >= -1";
+        die();
+        return;
+    }
 
     /* parse subscriptions */
     {
@@ -783,7 +806,7 @@ fncs::time fncs::time_request(fncs::time time_next)
         LDEBUG4 << "entering blocking poll" ;
         fncs::time poll_start = timer();
         fncs::time poll_wait = -1;
-        rc = zmq_poll(items, 1, 10000 * ZMQ_POLL_MSEC); //Wait ten seconds
+        rc = zmq_poll(items, 1, poll_timeout);
         
         // If the poll times out no items will be received.
         if (rc == 0) {
