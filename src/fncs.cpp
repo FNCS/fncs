@@ -1270,6 +1270,9 @@ void fncs::update_time_delta(fncs::time delta)
         return;
     }
 
+    /* update our client-side value */
+    time_delta = delta;
+
     /* send TIME_DELTA */
     LDEBUG4 << "sending TIME_DELTA of " << delta << " in sim units";
     delta *= time_delta_multiplier;
