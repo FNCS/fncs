@@ -20,7 +20,7 @@ _initialize_config.restype = None
 
 def initialize(config=None):
     if config:
-        _initialize_config(config)
+        _initialize_config(str(config).encode('utf-8'))
     else:
         _initialize()
 
@@ -34,7 +34,7 @@ _agentRegisterConfig.restype = None
 
 def agentRegister(config=None):
     if config:
-        _agentRegisterConfig(config)
+        _agentRegisterConfig(str(config).encode('utf-8'))
     else:
         _agentRegister()
 
