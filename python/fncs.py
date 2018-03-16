@@ -104,7 +104,8 @@ _get_events.restype = ctypes.POINTER(ctypes.c_void_p)
 def get_events():
     _events = _get_events()
     size = get_events_size()
-    events = [ctypes.cast(_events[i], ctypes.c_char_p).value for i in range(size)]
+    events_tmp = [ctypes.cast(_events[i], ctypes.c_char_p).value for i in range(size)]
+    events = [x.decode('utf-8') for x in events_tmp]
     for i in range(size):
         _free(_events[i])
     _free(_events)
@@ -116,7 +117,8 @@ _get_event_at.restype = ctypes.c_void_p
 
 def get_event_at(i):
     _event = _get_event_at(i)
-    event = ctypes.string_at(ctypes.cast(_event, ctypes.c_char_p).value)
+    event_tmp = ctypes.string_at(ctypes.cast(_event, ctypes.c_char_p).value)
+    event = event_tmp.decode('utf-8')
     _free(_event)
     return event
 
@@ -126,7 +128,8 @@ _agentGetEvents.restype = ctypes.c_void_p
 
 def agentGetEvents():
     _event = _agentGetEvents()
-    event = ctypes.string_at(ctypes.cast(_event, ctypes.c_char_p).value)
+    event_tmp = ctypes.string_at(ctypes.cast(_event, ctypes.c_char_p).value)
+    event = event_tmp.decode('utf-8')
     _free(_event)
     return event
 
@@ -136,7 +139,8 @@ _get_value.restype = ctypes.c_void_p
 
 def get_value(key):
     _value = _get_value(str(key).encode('utf-8'))
-    value = ctypes.string_at(ctypes.cast(_value, ctypes.c_char_p).value)
+    value_tmp = ctypes.string_at(ctypes.cast(_value, ctypes.c_char_p).value)
+    value = value_tmp.decode('utf-8')
     _free(_value)
     return value
 
@@ -155,7 +159,8 @@ def get_values(key):
     _key = str(key).encode('utf-8')
     _values = _get_values(_key)
     size = get_values_size(_key)
-    values = [ctypes.cast(_values[i], ctypes.c_char_p).value for i in range(size)]
+    values_tmp = [ctypes.cast(_values[i], ctypes.c_char_p).value for i in range(size)]
+    values = [x.decode('utf-8') for x in values_tmp]
     for i in range(i):
         _free(_values[i])
     _free(_values)
@@ -167,7 +172,8 @@ _get_value_at.restype = ctypes.c_void_p
 
 def get_value_at(key, i):
     _value = _get_value_at(str(key).encode('utf-8'), i)
-    value = ctypes.string_at(ctypes.cast(_value, ctypes.c_char_p).value)
+    value_tmp = ctypes.string_at(ctypes.cast(_value, ctypes.c_char_p).value)
+    value = value_tmp.decode('utf-8')
     _free(_value)
     return value
 
@@ -182,7 +188,8 @@ _get_keys.restype = ctypes.POINTER(ctypes.c_void_p)
 def get_keys():
     _keys = _get_keys()
     size = get_keys_size()
-    keys = [ctypes.cast(_keys[i], ctypes.c_char_p).value for i in range(size)]
+    keys_tmp = [ctypes.cast(_keys[i], ctypes.c_char_p).value for i in range(size)]
+    keys = [x.decode('utf-8') for x in keys_tmp]
     for i in range(size):
         _free(_keys[i])
     _free(_keys)
@@ -194,7 +201,8 @@ _get_key_at.restype = ctypes.c_void_p
 
 def get_key_at(i):
     _key = _get_key_at(i)
-    key = ctypes.string_at(ctypes.cast(_key, ctypes.c_char_p).value)
+    key_tmp = ctypes.string_at(ctypes.cast(_key, ctypes.c_char_p).value)
+    key = key_tmp.decode('utf-8')
     _free(_key)
     return key
 
@@ -204,7 +212,8 @@ _get_name.restype = ctypes.c_void_p
 
 def get_name():
     _name = _get_name()
-    name = ctypes.string_at(ctypes.cast(_name, ctypes.c_char_p).value)
+    name_tmp = ctypes.string_at(ctypes.cast(_name, ctypes.c_char_p).value)
+    name = name_tmp.decode('utf-8')
     _free(_name)
     return name
 

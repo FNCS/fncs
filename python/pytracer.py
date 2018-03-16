@@ -5,7 +5,6 @@ import sys
 
 import fncs
 import yaml
-from __builtin__ import str
 
 class PyTracer(object):
 	def __init__(self,config_file,run_time,output_file):
@@ -33,6 +32,7 @@ class PyTracer(object):
 	def runFederate(self):
 		time_granted = 0
 		is_simulation_complete = False
+		value = 0
 		while time_granted <= self.run_time:
 			if fncs.is_initialized():
 				events = fncs.get_events()
@@ -40,7 +40,8 @@ class PyTracer(object):
 				self.output_data[time_granted] = {}
 				for key in events:
 					if fncs.is_initialized():
-						self.output_data[time_granted][key.decode()] = fncs.get_value(key).decode()
+						self.output_data[time_granted][key] = fncs.get_value(key)
+				value += 1 
 				if time_granted < self.run_time and fncs.is_initialized:
 					print("pytracer - calling fncs.time_request(%s)" % self.run_time)
 					time_granted = fncs.time_request(self.run_time)
@@ -48,6 +49,7 @@ class PyTracer(object):
 						fncs.die()
 				elif time_granted >= self.run_time:
 					break
+				
 					
 			if not fncs.is_initialized():
 				break
@@ -69,11 +71,11 @@ class PyTracer(object):
 		print([topic_start, topic_len_max, value_start])
 		op.write("Time(s)")
 		num_spaces = topic_start - 7
-		for sp in xrange(num_spaces):
+		for sp in range(num_spaces):
 			op.write(" ")
 		op.write("Topic")
 		num_spaces  = value_start - 5 - topic_start
-		for sp in xrange(num_spaces):
+		for sp in range(num_spaces):
 			op.write(" ")
 		op.write("Value\n")
 		for t in sorted(self.output_data.keys()):
@@ -81,11 +83,11 @@ class PyTracer(object):
 				len_written = 0
 				op.write("%s" % str(t))
 				num_spaces = topic_start - len(str(t))
-				for sp in xrange(num_spaces):
+				for sp in range(num_spaces):
 					op.write(" ")
 				op.write("%s" % topic)
 				num_spaces = value_start - len(topic) - topic_start
-				for sp in xrange(num_spaces):
+				for sp in range(num_spaces):
 					op.write(" ")
 				op.write("%s\n" % self.output_data[t][topic])
 		op.close()
