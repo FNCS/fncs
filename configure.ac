@@ -51,6 +51,21 @@ AC_MSG_NOTICE
 # Checks for programs.
 AC_PROG_CXX
 
+AC_PATH_PROGS([MPICXX], [mpicxx mpic++ mpiCC sxmpic++ mpxlC_r mpxlC mpixlcxx_r mpixlcxx], [no])
+AM_CONDITIONAL([HAVE_MPICXX], [test "x$MPICXX" != xno])
+AC_ARG_VAR([MPICXX])
+AS_IF([test "x$MPICXX" != xno], [
+      rm -f mpicxx_show.out
+      AS_IF([$MPICXX -show > mpicxx_show.out], [
+            MPICXX_SHOW=`cat mpicxx_show.out`
+            FNCS_ARG_PARSE([MPICXX_SHOW],
+                           [MPICXX_LIBS],
+                           [MPICXX_LDFLAGS],
+                           [MPICXX_CPPFLAGS])
+      ])
+])
+AC_SUBST([MPICXX_CPPFLAGS])
+
 # Checks for libraries.
 FNCS_CHECK_PACKAGE([zmq], [zmq.h], [zmq], [zmq_ctx_new])
 fncs_save_CPPFLAGS="$CPPFLAGS"
@@ -272,12 +287,13 @@ AC_MSG_NOTICE([**************************************************************])
 AC_MSG_NOTICE([ $PACKAGE_NAME configured as follows:])
 AC_MSG_NOTICE([**************************************************************])
 AC_MSG_NOTICE([])
-AC_MSG_NOTICE([          CXX=$CXX])
-AC_MSG_NOTICE([     CXXFLAGS=$CXXFLAGS])
-AC_MSG_NOTICE([          CPP=$CPP])
-AC_MSG_NOTICE([     CPPFLAGS=$CPPFLAGS])
-AC_MSG_NOTICE([      LDFLAGS=$LDFLAGS])
-AC_MSG_NOTICE([         LIBS=$LIBS])
-AC_MSG_NOTICE([      MPIEXEC=$MPIEXEC])
+AC_MSG_NOTICE([            CXX=$CXX])
+AC_MSG_NOTICE([       CXXFLAGS=$CXXFLAGS])
+AC_MSG_NOTICE([            CPP=$CPP])
+AC_MSG_NOTICE([       CPPFLAGS=$CPPFLAGS])
+AC_MSG_NOTICE([        LDFLAGS=$LDFLAGS])
+AC_MSG_NOTICE([           LIBS=$LIBS])
+AC_MSG_NOTICE([         MPICXX=$MPICXX])
+AC_MSG_NOTICE([MPICXX_CPPFLAGS=$MPICXX_CPPFLAGS])
 AC_MSG_NOTICE([])
 

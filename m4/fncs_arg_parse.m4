@@ -12,6 +12,7 @@
 AC_DEFUN([FNCS_ARG_PARSE],
 [AC_COMPUTE_INT([fncs_arg_parse_sizeof_voidp], [(long int) (sizeof (void*))])
 for arg in $$1 ; do
+    fncs_arg_parse_ok=yes
     AS_CASE([$arg],
         [yes],          [],
         [no],           [],
