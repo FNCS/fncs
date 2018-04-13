@@ -220,3 +220,10 @@ fncs_launcher_CPPFLAGS =
 fncs_launcher_CPPFLAGS += $(AM_CPPFLAGS)
 fncs_launcher_CPPFLAGS += $(MPICXX_CPPFLAGS)
 endif
+
+bin_PROGRAMS += fncs_echo_argv
+fncs_echo_argv_SOURCES = src/fncs_echo_argv.cpp
+
+bin_PROGRAMS += fncs_test_init
+fncs_test_init_SOURCES = src/fncs_echo_argv.cpp
+fncs_test_init_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_INIT
