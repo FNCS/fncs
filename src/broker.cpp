@@ -38,6 +38,7 @@ class SimulatorState {
             , messages_pending(false)
             , aggregate_sub(false)
             , aggregate_pub(false)
+            , time_fixed(false)
         {}
 
         string name;
@@ -48,6 +49,7 @@ class SimulatorState {
         bool messages_pending;
         bool aggregate_sub;
         bool aggregate_pub;
+        bool time_fixed;
         set<string> subscription_values;
         map<string,string> messages;
 };
@@ -255,6 +257,7 @@ int main(int argc, char **argv)
                 string time_delta;
                 string aggregate_sub;
                 string aggregate_pub;
+                string time_fixed;
                 size_t index = 0;
 
                 LDEBUG4 << "HELLO received";
@@ -331,15 +334,15 @@ int main(int argc, char **argv)
                     LWARNING << sender << " aggregate_sub defaulting to false";
                     aggregate_sub = "false";
                 }
-				{
-					char fc = aggregate_sub[0];
-					if (fc == 'N' || fc == 'n' || fc == 'F' || fc == 'f') {
-						state.aggregate_sub = false;
-					}
-					else {
-						state.aggregate_sub = true;
-					}
-				}
+                {
+                    char fc = aggregate_sub[0];
+                    if (fc == 'N' || fc == 'n' || fc == 'F' || fc == 'f') {
+                        state.aggregate_sub = false;
+                    }
+                    else {
+                        state.aggregate_sub = true;
+                    }
+                }
 
                 /* get aggregate_pub from config */
                 aggregate_pub = config.aggregate_pub;
@@ -348,15 +351,32 @@ int main(int argc, char **argv)
                     LWARNING << sender << " aggregate_pub defaulting to false";
                     aggregate_pub = "false";
                 }
-				{
-					char fc = aggregate_pub[0];
-					if (fc == 'N' || fc == 'n' || fc == 'F' || fc == 'f') {
-						state.aggregate_pub = false;
-					}
-					else {
-						state.aggregate_pub = true;
-					}
-				}
+                {
+                    char fc = aggregate_pub[0];
+                    if (fc == 'N' || fc == 'n' || fc == 'F' || fc == 'f') {
+                        state.aggregate_pub = false;
+                    }
+                    else {
+                        state.aggregate_pub = true;
+                    }
+                }
+
+                /* get time_fixed from config */
+                time_fixed = config.time_fixed;
+                if (time_fixed.empty()) {
+                    LWARNING << sender << " config does not contain 'time_fixed'";
+                    LWARNING << sender << " time_fixed defaulting to false";
+                    time_fixed = "false";
+                }
+                {
+                    char fc = time_fixed[0];
+                    if (fc == 'N' || fc == 'n' || fc == 'F' || fc == 'f') {
+                        state.time_fixed = false;
+                    }
+                    else {
+                        state.time_fixed = true;
+                    }
+                }
 
                 /* parse subscription values */
                 set<string> subscription_values;
@@ -587,7 +607,7 @@ int main(int argc, char **argv)
                 if (0 == n_processing) {
                     vector<fncs::time> time_actionable(n_sims);
                     for (size_t i=0; i<n_sims; ++i) {
-                        if (simulators[i].messages_pending) {
+                        if (simulators[i].messages_pending && !simulators[i].time_fixed) {
                             time_actionable[i] = 
                                   simulators[i].time_last_processed
                                 + simulators[i].time_delta;

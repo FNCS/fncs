@@ -74,6 +74,7 @@ namespace fncs {
                 , fatal("")
                 , aggregate_sub("")
                 , aggregate_pub("")
+                , time_fixed("")
                 , values()
             {}
 
@@ -83,6 +84,7 @@ namespace fncs {
             string fatal;
             string aggregate_sub;
             string aggregate_pub;
+            string time_fixed;
             vector<Subscription> values;
 
             string to_string() {
@@ -104,6 +106,9 @@ namespace fncs {
                 }
                 if (!aggregate_pub.empty()) {
                     os << "aggregate_pub: " << aggregate_pub << endl;
+                }
+                if (!time_fixed.empty()) {
+                    os << "time_fixed: " << time_fixed << endl;
                 }
                 if (values.size()) {
                     os << "values:" << endl;

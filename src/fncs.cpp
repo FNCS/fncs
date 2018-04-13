@@ -47,6 +47,7 @@ static bool is_initialized_ = false;
 static bool die_is_fatal = false;
 static bool aggregate_sub = false;
 static bool aggregate_pub = false;
+static bool time_fixed = false;
 static string simulation_name = "";
 static string agent_subtopic = "Output";
 static int simulation_id = 0;
@@ -69,6 +70,7 @@ static const string default_time_delta = "1s";
 static const string default_fatal = "yes";
 static const string default_aggregate_sub = "no";
 static const string default_aggregate_pub = "no";
+static const string default_time_fixed = "no";
 static const long   default_poll_timeout = -1;
 
 typedef map<string,vector<string> > clist_t;
@@ -418,6 +420,24 @@ void fncs::initialize(Config config)
         else {
             LINFO << "aggregate publication messages";
             aggregate_pub = true;
+        }
+    }
+
+    /* whether we want time requests to be absolutely fixed */
+    if (config.time_fixed.empty()) {
+        LINFO << "fncs config does not contain 'time_fixed'";
+        LINFO << "defaulting to " << default_time_fixed;
+        config.time_fixed = default_time_fixed;
+    }
+    {
+        char fc = config.time_fixed[0];
+        if (fc == 'N' || fc == 'n' || fc == 'F' || fc == 'f') {
+            LINFO << "time requests are the normal default";
+            time_fixed = false;
+        }
+        else {
+            LINFO << "fixed/absolute time requests (non-interruptible)";
+            time_fixed = true;
         }
     }
 
@@ -1006,6 +1026,11 @@ fncs::time fncs::time_request(fncs::time time_next)
     }
 
     LDEBUG1 << "time_granted " << time_granted << " nanoseonds";
+    if (time_fixed && time_granted != time_next) {
+        LERROR << "fixed time setting was active, but time granted was not time requested";
+        die();
+        return time_next;
+    }
 
 #ifdef INSTRUMENTATION
     /* INSTRUMENTATION PART IV BEGINS
@@ -1521,6 +1546,15 @@ fncs::Config fncs::parse_config(const YAML::Node &doc)
         }
     }
 
+    if (const YAML::Node *node = doc.FindValue("time_fixed")) {
+        if (node->Type() != YAML::NodeType::Scalar) {
+            cerr << "YAML 'time_fixed' must be a Scalar" << endl;
+        }
+        else {
+            *node >> config.time_fixed;
+        }
+    }
+
     /* parse subscriptions */
     if (const YAML::Node *node = doc.FindValue("values")) {
         config.values = parse_values(*node);
@@ -1554,6 +1588,8 @@ fncs::Config fncs::parse_config(zconfig_t *zconfig)
 
     /* read whether published messages are aggregated from zconfig */
     config.aggregate_pub = zconfig_resolve(zconfig, "/aggregate_pub", "");
+
+    config.time_fixed = zconfig_resolve(zconfig, "/time_fixed", "");
 
     /* parse subscriptions */
     config_values = zconfig_locate(zconfig, "/values");
