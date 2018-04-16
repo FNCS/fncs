@@ -8,6 +8,7 @@
 #include <vector>
 
 /* C headers */
+#include <errno.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/types.h>
