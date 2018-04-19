@@ -211,6 +211,7 @@ bin_PROGRAMS += mini_federate
 mini_federate_SOURCES = src/mini_federate.cpp
 
 if HAVE_MPICXX
+
 bin_PROGRAMS += fncs_launcher
 fncs_launcher_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
     $(LIBTOOLFLAGS) --mode=link $(MPICXX) $(AM_CXXFLAGS) \
@@ -219,6 +220,16 @@ fncs_launcher_SOURCES = src/fncs_launcher.cpp
 fncs_launcher_CPPFLAGS =
 fncs_launcher_CPPFLAGS += $(AM_CPPFLAGS)
 fncs_launcher_CPPFLAGS += $(MPICXX_CPPFLAGS)
+
+bin_PROGRAMS += fncs_run_once_per_host
+fncs_run_once_per_host_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+    $(LIBTOOLFLAGS) --mode=link $(MPICXX) $(AM_CXXFLAGS) \
+    $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+fncs_run_once_per_host_SOURCES = src/fncs_run_once_per_host.cpp
+fncs_run_once_per_host_CPPFLAGS =
+fncs_run_once_per_host_CPPFLAGS += $(AM_CPPFLAGS)
+fncs_run_once_per_host_CPPFLAGS += $(MPICXX_CPPFLAGS)
+
 endif
 
 bin_PROGRAMS += fncs_echo_argv

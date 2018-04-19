@@ -555,7 +555,7 @@ bool check_program(const char *progpath)
 
     std::vector<std::string> path = split(PATH,':');
     for (size_t i=0; i<path.size(); ++i) {
-        std::string program = path[0] + "/" + progpath;
+        std::string program = path[i] + "/" + progpath;
         if (0 == access(program.c_str(), X_OK)) {
             return true;
         }

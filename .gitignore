@@ -33,6 +33,7 @@ fncs_tracer
 fncs_test_federate
 fncs_echo_argv
 fncs_launcher
+fncs_run_once_per_host
 fncs_test_init
 mini_federate
 libyamlcpp.la

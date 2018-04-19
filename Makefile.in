@@ -106,7 +106,7 @@ check_PROGRAMS = contrib/yaml-cpp/test/test$(EXEEXT) \
 @ENABLE_FORTRAN_TRUE@am__append_2 = fncs.mod
 @ENABLE_FORTRAN_TRUE@am__append_3 = tests/fcoverage \
 @ENABLE_FORTRAN_TRUE@	tests/fcoverage_mod
-@HAVE_MPICXX_TRUE@am__append_4 = fncs_launcher
+@HAVE_MPICXX_TRUE@am__append_4 = fncs_launcher fncs_run_once_per_host
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/fncs_arg_parse.m4 \
@@ -205,7 +205,8 @@ am_libyamlcpp_la_OBJECTS = contrib/yaml-cpp/src/aliasmanager.lo \
 	contrib/yaml-cpp/src/singledocparser.lo \
 	contrib/yaml-cpp/src/stream.lo contrib/yaml-cpp/src/tag.lo
 libyamlcpp_la_OBJECTS = $(am_libyamlcpp_la_OBJECTS)
-@HAVE_MPICXX_TRUE@am__EXEEXT_1 = fncs_launcher$(EXEEXT)
+@HAVE_MPICXX_TRUE@am__EXEEXT_1 = fncs_launcher$(EXEEXT) \
+@HAVE_MPICXX_TRUE@	fncs_run_once_per_host$(EXEEXT)
 @ENABLE_FORTRAN_TRUE@am__EXEEXT_2 = tests/fcoverage$(EXEEXT) \
 @ENABLE_FORTRAN_TRUE@	tests/fcoverage_mod$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
@@ -244,6 +245,13 @@ am_fncs_player_anon_OBJECTS = src/fncs_player_anon-player.$(OBJEXT)
 fncs_player_anon_OBJECTS = $(am_fncs_player_anon_OBJECTS)
 fncs_player_anon_LDADD = $(LDADD)
 fncs_player_anon_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) libyamlcpp.la libjsoncpp.la
+am__fncs_run_once_per_host_SOURCES_DIST =  \
+	src/fncs_run_once_per_host.cpp
+@HAVE_MPICXX_TRUE@am_fncs_run_once_per_host_OBJECTS = src/fncs_run_once_per_host-fncs_run_once_per_host.$(OBJEXT)
+fncs_run_once_per_host_OBJECTS = $(am_fncs_run_once_per_host_OBJECTS)
+fncs_run_once_per_host_LDADD = $(LDADD)
+fncs_run_once_per_host_DEPENDENCIES = libfncs.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) libyamlcpp.la libjsoncpp.la
 am_fncs_test_federate_OBJECTS = src/test_federate.$(OBJEXT)
 fncs_test_federate_OBJECTS = $(am_fncs_test_federate_OBJECTS)
@@ -371,6 +379,7 @@ SOURCES = $(libfncs_la_SOURCES) $(libfncsf_la_SOURCES) \
 	$(contrib_yaml_cpp_test_test_SOURCES) $(fncs_broker_SOURCES) \
 	$(fncs_echo_argv_SOURCES) $(fncs_launcher_SOURCES) \
 	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
+	$(fncs_run_once_per_host_SOURCES) \
 	$(fncs_test_federate_SOURCES) $(fncs_test_init_SOURCES) \
 	$(fncs_tracer_SOURCES) $(mini_federate_SOURCES) \
 	$(tests_config_SOURCES) $(tests_fcoverage_SOURCES) \
@@ -383,6 +392,7 @@ DIST_SOURCES = $(libfncs_la_SOURCES) $(am__libfncsf_la_SOURCES_DIST) \
 	$(contrib_yaml_cpp_test_test_SOURCES) $(fncs_broker_SOURCES) \
 	$(fncs_echo_argv_SOURCES) $(am__fncs_launcher_SOURCES_DIST) \
 	$(fncs_player_SOURCES) $(fncs_player_anon_SOURCES) \
+	$(am__fncs_run_once_per_host_SOURCES_DIST) \
 	$(fncs_test_federate_SOURCES) $(fncs_test_init_SOURCES) \
 	$(fncs_tracer_SOURCES) $(mini_federate_SOURCES) \
 	$(tests_config_SOURCES) $(tests_fcoverage_SOURCES) \
@@ -718,6 +728,13 @@ mini_federate_SOURCES = src/mini_federate.cpp
 
 @HAVE_MPICXX_TRUE@fncs_launcher_SOURCES = src/fncs_launcher.cpp
 @HAVE_MPICXX_TRUE@fncs_launcher_CPPFLAGS = $(AM_CPPFLAGS) \
+@HAVE_MPICXX_TRUE@	$(MPICXX_CPPFLAGS)
+@HAVE_MPICXX_TRUE@fncs_run_once_per_host_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+@HAVE_MPICXX_TRUE@    $(LIBTOOLFLAGS) --mode=link $(MPICXX) $(AM_CXXFLAGS) \
+@HAVE_MPICXX_TRUE@    $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+
+@HAVE_MPICXX_TRUE@fncs_run_once_per_host_SOURCES = src/fncs_run_once_per_host.cpp
+@HAVE_MPICXX_TRUE@fncs_run_once_per_host_CPPFLAGS = $(AM_CPPFLAGS) \
 @HAVE_MPICXX_TRUE@	$(MPICXX_CPPFLAGS)
 fncs_echo_argv_SOURCES = src/fncs_echo_argv.cpp
 fncs_test_init_SOURCES = src/fncs_echo_argv.cpp
@@ -1058,6 +1075,12 @@ src/fncs_player_anon-player.$(OBJEXT): src/$(am__dirstamp) \
 fncs_player_anon$(EXEEXT): $(fncs_player_anon_OBJECTS) $(fncs_player_anon_DEPENDENCIES) $(EXTRA_fncs_player_anon_DEPENDENCIES) 
 	@rm -f fncs_player_anon$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(fncs_player_anon_OBJECTS) $(fncs_player_anon_LDADD) $(LIBS)
+src/fncs_run_once_per_host-fncs_run_once_per_host.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+
+fncs_run_once_per_host$(EXEEXT): $(fncs_run_once_per_host_OBJECTS) $(fncs_run_once_per_host_DEPENDENCIES) $(EXTRA_fncs_run_once_per_host_DEPENDENCIES) 
+	@rm -f fncs_run_once_per_host$(EXEEXT)
+	$(AM_V_GEN)$(fncs_run_once_per_host_LINK) $(fncs_run_once_per_host_OBJECTS) $(fncs_run_once_per_host_LDADD) $(LIBS)
 src/test_federate.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 
@@ -1179,6 +1202,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_fapi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_launcher-fncs_launcher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_player_anon-player.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_run_once_per_host-fncs_run_once_per_host.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/fncs_test_init-fncs_echo_argv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/mini_federate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/player.Po@am__quote@
@@ -1332,6 +1356,20 @@ src/fncs_player_anon-player.obj: src/player.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/player.cpp' object='src/fncs_player_anon-player.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fncs_player_anon_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/fncs_player_anon-player.obj `if test -f 'src/player.cpp'; then $(CYGPATH_W) 'src/player.cpp'; else $(CYGPATH_W) '$(srcdir)/src/player.cpp'; fi`
+
+src/fncs_run_once_per_host-fncs_run_once_per_host.o: src/fncs_run_once_per_host.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fncs_run_once_per_host_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/fncs_run_once_per_host-fncs_run_once_per_host.o -MD -MP -MF src/$(DEPDIR)/fncs_run_once_per_host-fncs_run_once_per_host.Tpo -c -o src/fncs_run_once_per_host-fncs_run_once_per_host.o `test -f 'src/fncs_run_once_per_host.cpp' || echo '$(srcdir)/'`src/fncs_run_once_per_host.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/fncs_run_once_per_host-fncs_run_once_per_host.Tpo src/$(DEPDIR)/fncs_run_once_per_host-fncs_run_once_per_host.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/fncs_run_once_per_host.cpp' object='src/fncs_run_once_per_host-fncs_run_once_per_host.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fncs_run_once_per_host_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/fncs_run_once_per_host-fncs_run_once_per_host.o `test -f 'src/fncs_run_once_per_host.cpp' || echo '$(srcdir)/'`src/fncs_run_once_per_host.cpp
+
+src/fncs_run_once_per_host-fncs_run_once_per_host.obj: src/fncs_run_once_per_host.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fncs_run_once_per_host_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/fncs_run_once_per_host-fncs_run_once_per_host.obj -MD -MP -MF src/$(DEPDIR)/fncs_run_once_per_host-fncs_run_once_per_host.Tpo -c -o src/fncs_run_once_per_host-fncs_run_once_per_host.obj `if test -f 'src/fncs_run_once_per_host.cpp'; then $(CYGPATH_W) 'src/fncs_run_once_per_host.cpp'; else $(CYGPATH_W) '$(srcdir)/src/fncs_run_once_per_host.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/fncs_run_once_per_host-fncs_run_once_per_host.Tpo src/$(DEPDIR)/fncs_run_once_per_host-fncs_run_once_per_host.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/fncs_run_once_per_host.cpp' object='src/fncs_run_once_per_host-fncs_run_once_per_host.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fncs_run_once_per_host_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/fncs_run_once_per_host-fncs_run_once_per_host.obj `if test -f 'src/fncs_run_once_per_host.cpp'; then $(CYGPATH_W) 'src/fncs_run_once_per_host.cpp'; else $(CYGPATH_W) '$(srcdir)/src/fncs_run_once_per_host.cpp'; fi`
 
 src/fncs_test_init-fncs_echo_argv.o: src/fncs_echo_argv.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fncs_test_init_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/fncs_test_init-fncs_echo_argv.o -MD -MP -MF src/$(DEPDIR)/fncs_test_init-fncs_echo_argv.Tpo -c -o src/fncs_test_init-fncs_echo_argv.o `test -f 'src/fncs_echo_argv.cpp' || echo '$(srcdir)/'`src/fncs_echo_argv.cpp
