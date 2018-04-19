@@ -113,11 +113,29 @@ int main(int argc, char **argv)
     /* parse the command so we can call fork exec */
     /* command is parsed based on whitespace */
     /* exec command requires NULL terminated array of char* */
+    /* preserved quoted arguments */
     std::vector<std::string> tokens;
     std::istringstream iss(command);
-    std::copy(std::istream_iterator<std::string>(iss),
-            std::istream_iterator<std::string>(),
-            std::back_inserter(tokens));
+    std::istream_iterator<std::string> it(iss);
+    std::istream_iterator<std::string> eos;
+    bool has_quote = false;
+    while (it!=eos) {
+        std::string token = *it;
+        if (has_quote) {
+            if (*token.rbegin() == '"') {
+                has_quote = false;
+            }
+            tokens.back() += " " + token;
+        }
+        else {
+            if (token[0] == '"') {
+                has_quote = true;
+            }
+            tokens.push_back(token);
+        }
+        ++it;
+    }
+
     /* there must be at least 2 tokens,
      * 1) working directory,
      * 2) program name */
