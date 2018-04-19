@@ -21,9 +21,11 @@ int main(int argc, char **argv)
     std::cout << "============ argv ============" << std::endl;
     for (int i=0; i<argc; ++i) {
         std::cout << argv[i] << std::endl;
-        if (strncmp(argv[i],"die",3)) kill_me |= true;
-        if (strncmp(argv[i],"abort",5)) abort_me |= true;
+        if (0 == strncmp(argv[i],"die",3)) kill_me |= true;
+        if (0 == strncmp(argv[i],"abort",5)) abort_me |= true;
     }
+    if (kill_me) std::cout << "I WILL EXIT WITH NON-ZERO CODE" << std::endl;
+    if (abort_me) std::cout << "I WILL ABORT" << std::endl;
 
     std::cout << "============ env =============" << std::endl;
     for (int i=0; NULL != environ[i]; ++i) {
