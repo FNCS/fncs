@@ -20,14 +20,23 @@
 
 #define HOST_NAME_SIZE 256
 
+/* bad design, global static, but it was simple and fast */
+static int world_rank;
+
 std::string parse_input_file(const char *filename);
+bool check_program(const char *progpath);
 
 class Log {
     public:
-        Log() {}
+        Log(): os(), str("") {}
         virtual ~Log() {
-            os << ": " << str;
-            std::cerr << os.str() << std::endl;
+            if (!str.empty()) {
+                os << ": " << str;
+            }
+            std::cerr << world_rank << ": " << os.str() << std::endl;
+        }
+        std::ostringstream& Get() {
+            return os;
         }
         std::ostringstream& Get(int errnum) {
             str = strerror(errnum);
@@ -35,12 +44,13 @@ class Log {
         }
     protected:
         std::ostringstream os;
-        char *str;
+        std::string str;
     private:
         Log(const Log&);
         Log& operator =(const Log&);
 };
-#define ERR Log().Get(errno)
+#define ERRNO Log().Get(errno)
+#define ERR Log().Get()
 
 template <typename T>
 std::string to_string(T object) {
@@ -52,7 +62,6 @@ std::string to_string(T object) {
 
 int main(int argc, char **argv)
 {
-    int world_rank = 0;
     int world_size = 0;
     std::string command;
     char host_name[HOST_NAME_SIZE] = {0};
@@ -79,7 +88,7 @@ int main(int argc, char **argv)
     /* retrieve host name for debugging, eventual broker location */
     retval = gethostname(host_name, HOST_NAME_SIZE);
     if (0 != retval) {
-        ERR << "gethostname";
+        ERRNO << "gethostname";
         MPI_Abort(MPI_COMM_WORLD, -1);
     }
 
@@ -149,7 +158,7 @@ int main(int argc, char **argv)
     if (tokens[0] != "pwd") {
         retval = chdir(tokens[0].c_str());
         if (0 != retval) {
-            ERR << "chdir(" << tokens[0] << ")";
+            ERRNO << "chdir(" << tokens[0] << ")";
             MPI_Abort(MPI_COMM_WORLD, -1);
         }
     }
@@ -170,7 +179,14 @@ int main(int argc, char **argv)
             break; /* no key=value found, break out */
         }
     }
+
     const char *program = tokens[tok].c_str();
+    /* check that we can execute the program */
+    if (!check_program(program)) {
+        ERR << program << ": No such file or directory";
+        MPI_Abort(MPI_COMM_WORLD, -1);
+    }
+
     std::vector<char*> new_argv;
     for (; tok<tokens.size(); ++tok) {
         new_argv.push_back(strdup(tokens[tok].c_str()));
@@ -193,43 +209,41 @@ int main(int argc, char **argv)
      * an MPI program, so we terminate MPI early. */
     MPI_Finalize();
 
-#if 1
     pid_t pid = fork();
     if (-1 == pid) {
         /* fork error */
-        ERR << "fork";
+        ERRNO << "fork";
         exit(EXIT_FAILURE);
     } else if (0 == pid) {
         /* this is the child */
         int fd = open("fncs.out", O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
         if (-1 == fd) {
-            ERR << "open(fncs.out)";
+            ERRNO << "open(fncs.out)";
             _exit(EXIT_FAILURE);
         }
         retval = dup2(fd, 1); /* make stdout go to file */
         if (-1 == retval) {
-            ERR << "dup2(stdout)";
+            ERRNO << "dup2(stdout)";
             _exit(EXIT_FAILURE);
         }
         retval = dup2(fd, 2); /* make stderr go to same file */
         if (-1 == retval) {
-            ERR << "dup2(stderr)";
+            ERRNO << "dup2(stderr)";
             _exit(EXIT_FAILURE);
         }
         retval = close(fd); /* fd no longer needed, dup'ed handles are sufficient */
         if (0 != retval) {
-            ERR << "close(fncs.out)";
+            ERRNO << "close(fncs.out)";
             _exit(EXIT_FAILURE);
         }
         retval = execvp(new_argv[0], &new_argv[0]);
         if (-1 == retval) {
-            ERR << "execvp(" << new_argv[0] << ", ...)";
+            ERRNO << "execvp(" << new_argv[0] << ", ...)";
             _exit(EXIT_FAILURE);
         }
     } else {
         /* parent, does nothing */
     }
-#endif
 
     return 0;
 }
@@ -318,4 +332,41 @@ std::string parse_input_file(const char *filename)
     return myline;
 }
 
+
+std::vector<std::string> split(const std::string& s, char delimiter)
+{
+   std::vector<std::string> tokens;
+   std::string token;
+   std::istringstream tokenStream(s);
+   while (std::getline(tokenStream, token, delimiter)) {
+      tokens.push_back(token);
+   }
+   return tokens;
+}
+
+
+/* check for progpath in PATH env var and that it is executable */
+bool check_program(const char *progpath)
+{
+    if (progpath[0] == '/') {
+        /* absolute path was given, don't check PATH */
+        return 0 == access(progpath, X_OK);
+    }
+
+    std::string PATH = getenv("PATH");
+    if (PATH.empty()) {
+        ERR << "PATH env var was empty";
+        return false;
+    }
+
+    std::vector<std::string> path = split(PATH,':');
+    for (size_t i=0; i<path.size(); ++i) {
+        std::string program = path[0] + "/" + progpath;
+        if (0 == access(program.c_str(), X_OK)) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
