@@ -53,7 +53,7 @@ AC_PROG_CXX
 
 AC_PATH_PROGS([MPICXX], [mpicxx mpic++ mpiCC sxmpic++ mpxlC_r mpxlC mpixlcxx_r mpixlcxx], [no])
 AM_CONDITIONAL([HAVE_MPICXX], [test "x$MPICXX" != xno])
-AC_ARG_VAR([MPICXX])
+AC_ARG_VAR([MPICXX], [MPI C++ compiler wrapper])
 AS_IF([test "x$MPICXX" != xno], [
       rm -f mpicxx_show.out
       AS_IF([$MPICXX -show > mpicxx_show.out], [
@@ -63,8 +63,25 @@ AS_IF([test "x$MPICXX" != xno], [
                            [MPICXX_LDFLAGS],
                            [MPICXX_CPPFLAGS])
       ])
+      rm -f mpicxx_show.out
 ])
 AC_SUBST([MPICXX_CPPFLAGS])
+
+AC_PATH_PROGS([ZIP], [zip], [no])
+AM_CONDITIONAL([HAVE_ZIP], [test "x$ZIP" != xno])
+AC_ARG_VAR([ZIP], [archive program (default zip)])
+AC_SUBST([ZIP])
+AC_DEFINE_UNQUOTED([ZIP], ["$ZIP"], [archive program])
+
+AS_IF([test "x$ZIP_ARGS" = x], [ZIP_ARGS=-r])
+AC_ARG_VAR([ZIP_ARGS], [archive program arguments (default -r)])
+AC_SUBST([ZIP_ARGS])
+AC_DEFINE_UNQUOTED([ZIP_ARGS], ["$ZIP_ARGS"], [archive program arguments])
+
+AS_IF([test "x$ZIP_EXT" = x], [ZIP_EXT=zip])
+AC_ARG_VAR([ZIP_EXT], [archive file extension (default zip)])
+AC_SUBST([ZIP_EXT])
+AC_DEFINE_UNQUOTED([ZIP_EXT], ["$ZIP_EXT"], [archive file extension])
 
 # Checks for libraries.
 FNCS_CHECK_PACKAGE([zmq], [zmq.h], [zmq], [zmq_ctx_new])
@@ -295,5 +312,8 @@ AC_MSG_NOTICE([        LDFLAGS=$LDFLAGS])
 AC_MSG_NOTICE([           LIBS=$LIBS])
 AC_MSG_NOTICE([         MPICXX=$MPICXX])
 AC_MSG_NOTICE([MPICXX_CPPFLAGS=$MPICXX_CPPFLAGS])
+AC_MSG_NOTICE([            ZIP=$ZIP])
+AC_MSG_NOTICE([       ZIP_ARGS=$ZIP_ARGS])
+AC_MSG_NOTICE([        ZIP_EXT=$ZIP_EXT])
 AC_MSG_NOTICE([])
 

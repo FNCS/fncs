@@ -144,6 +144,15 @@
 /* Version number of package */
 #undef VERSION
 
+/* archive program */
+#undef ZIP
+
+/* archive program arguments */
+#undef ZIP_ARGS
+
+/* archive file extension */
+#undef ZIP_EXT
+
 /* Define for Solaris 2.5.1 so the uint32_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
    #define below would cause a syntax error. */
