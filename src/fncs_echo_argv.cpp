@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -13,9 +14,15 @@
 
 int main(int argc, char **argv)
 {
+    /* for debugging, track the special "die" argv */
+    bool kill_me = false;
+    bool abort_me = false;
+
     std::cout << "============ argv ============" << std::endl;
     for (int i=0; i<argc; ++i) {
         std::cout << argv[i] << std::endl;
+        if (strncmp(argv[i],"die",3)) kill_me |= true;
+        if (strncmp(argv[i],"abort",5)) abort_me |= true;
     }
 
     std::cout << "============ env =============" << std::endl;
@@ -41,6 +48,8 @@ int main(int argc, char **argv)
     fncs::finalize();
 #endif
 
+    if (abort_me) abort();
+    if (kill_me) return EXIT_FAILURE;
     return 0;
 }
 

@@ -13,6 +13,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 /* 3rd party headers */
@@ -28,12 +29,17 @@ bool check_program(const char *progpath);
 
 class Log {
     public:
-        Log(): os(), str("") {}
+        Log(bool is_err_=true): os(), str(""), is_err(is_err_) {}
         virtual ~Log() {
             if (!str.empty()) {
                 os << ": " << str;
             }
-            std::cerr << world_rank << ": " << os.str() << std::endl;
+            if (is_err) {
+                std::cerr << world_rank << ": " << os.str() << std::endl;
+            }
+            else {
+                std::cout << world_rank << ": " << os.str() << std::endl;
+            }
         }
         std::ostringstream& Get() {
             return os;
@@ -45,12 +51,14 @@ class Log {
     protected:
         std::ostringstream os;
         std::string str;
+        bool is_err;
     private:
         Log(const Log&);
         Log& operator =(const Log&);
 };
 #define ERRNO Log().Get(errno)
 #define ERR Log().Get()
+#define LOG Log(false).Get()
 
 template <typename T>
 std::string to_string(T object) {
@@ -89,7 +97,7 @@ int main(int argc, char **argv)
     retval = gethostname(host_name, HOST_NAME_SIZE);
     if (0 != retval) {
         ERRNO << "gethostname";
-        MPI_Abort(MPI_COMM_WORLD, -1);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
     /* debugging print of all assigned commands */
@@ -152,14 +160,14 @@ int main(int argc, char **argv)
         std::cerr << world_rank
             << ": invalid command string: "
             << command << std::endl;
-        MPI_Abort(MPI_COMM_WORLD, -1);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
     /* attempt to change path now and report any error */
     if (tokens[0] != "pwd") {
         retval = chdir(tokens[0].c_str());
         if (0 != retval) {
             ERRNO << "chdir(" << tokens[0] << ")";
-            MPI_Abort(MPI_COMM_WORLD, -1);
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
     }
     /* set any env vars from the input file */
@@ -184,7 +192,7 @@ int main(int argc, char **argv)
     /* check that we can execute the program */
     if (!check_program(program)) {
         ERR << program << ": No such file or directory";
-        MPI_Abort(MPI_COMM_WORLD, -1);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
     std::vector<char*> new_argv;
@@ -205,16 +213,18 @@ int main(int argc, char **argv)
         }
         MPI_Barrier(MPI_COMM_WORLD);
     }
-    /* We're done with MPI at this point. It is unsafe to call fork from
-     * an MPI program, so we terminate MPI early. */
-    MPI_Finalize();
 
-    pid_t pid = fork();
-    if (-1 == pid) {
+    /* We're done with MPI at this point. It is unsafe to call fork from
+     * an MPI program, but we are only relying on MPI_Abort beyond this
+     * point. Ideally, we terminate MPI early, right now. */
+    /*MPI_Finalize();*/
+
+    pid_t cpid = fork();
+    if (-1 == cpid) {
         /* fork error */
         ERRNO << "fork";
-        exit(EXIT_FAILURE);
-    } else if (0 == pid) {
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    } else if (0 == cpid) {
         /* this is the child */
         int fd = open("fncs.out", O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
         if (-1 == fd) {
@@ -242,9 +252,25 @@ int main(int argc, char **argv)
             _exit(EXIT_FAILURE);
         }
     } else {
-        /* parent, does nothing */
+        /* parent */
+        int status;
+        pid_t w = waitpid(cpid, &status, 0);
+        if (w == -1) {
+            ERRNO << "waitpid";
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        }
+        if (WIFEXITED(status)) {
+            LOG << "exited, status=" << WEXITSTATUS(status);
+        } else if (WIFSIGNALED(status)) {
+            ERR << "killed by signal " << WTERMSIG(status);
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        } else if (WIFSTOPPED(status)) {
+            ERR << "stopped by signal " << WSTOPSIG(status);
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        }
     }
 
+    MPI_Finalize();
     return 0;
 }
 
@@ -276,7 +302,7 @@ std::string parse_input_file(const char *filename)
         if (line.empty() || line[0] == '#') {
             /* file was only comments */
             std::cerr << "Launcher input file missing actual data." << std::endl;
-            MPI_Abort(MPI_COMM_WORLD, -1);
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
         while (fin.good() && counter<world_size-1) {
             ++counter;
