@@ -327,10 +327,18 @@ int main(int argc, char **argv)
     /* If we got this far, we can zip up our working directory
      * and store it at the given location. We rely on an external
      * zip or zip-like tool. */
-    /* we don't zip up the fncs_broker working dir */
+    /* we don't zip up the fncs_broker working dir,
+     * but we do copy its log file to the archive_dir */
     if (0 == world_rank) {
         for (int i=1; i<world_size; ++i) {
             MPI_Barrier(MPI_COMM_WORLD);
+        }
+        /* now copy the log file to the final destination */
+        {
+            std::string dst_str = archive_dir + "/broker.out";
+            std::ifstream src("fncs.log", std::ios::binary);
+            std::ofstream dst(dst_str.c_str(), std::ios::binary);
+            dst << src.rdbuf();
         }
     }
     else {
