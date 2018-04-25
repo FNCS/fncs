@@ -257,6 +257,7 @@ int main(int argc, char **argv)
     new_argv.push_back(NULL);
 
     /* debugging print of all parsed commands */
+    /*
     for (int i=0; i<world_size; ++i) {
         if (i == world_rank) {
             std::cout << i << ": ";
@@ -266,18 +267,18 @@ int main(int argc, char **argv)
             std::cout << std::endl;
         }
         MPI_Barrier(MPI_COMM_WORLD);
-    }
+    } */ 
 
     /* We're mostly done with MPI at this point. It is unsafe to call
      * fork from an MPI program, but we are only relying on MPI_Abort
      * beyond this point. Ideally, we terminate MPI early, right now. */
-    /*MPI_Finalize();*/
+    MPI_Finalize();
 
     pid_t cpid = fork();
     if (-1 == cpid) {
         /* fork error */
         ERRNO << "fork";
-        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     } else if (0 == cpid) {
         /* this is the child */
         int fd = open("fncs.out", O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
@@ -311,16 +312,16 @@ int main(int argc, char **argv)
         pid_t w = waitpid(cpid, &status, 0);
         if (w == -1) {
             ERRNO << "waitpid";
-            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
         if (WIFEXITED(status)) {
             LOG << "exited, status=" << WEXITSTATUS(status);
         } else if (WIFSIGNALED(status)) {
             ERR << "killed by signal " << WTERMSIG(status);
-            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         } else if (WIFSTOPPED(status)) {
             ERR << "stopped by signal " << WSTOPSIG(status);
-            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
     }
 
@@ -330,9 +331,9 @@ int main(int argc, char **argv)
     /* we don't zip up the fncs_broker working dir,
      * but we do copy its log file to the archive_dir */
     if (0 == world_rank) {
-        for (int i=1; i<world_size; ++i) {
-            MPI_Barrier(MPI_COMM_WORLD);
-        }
+        //for (int i=1; i<world_size; ++i) {
+        //    MPI_Barrier(MPI_COMM_WORLD);
+        //}
         /* now copy the log file to the final destination */
         {
             std::string dst_str = archive_dir + "/broker.out";
@@ -358,6 +359,7 @@ int main(int argc, char **argv)
         new_argv.push_back(NULL);
 
         /* debugging print of all parsed commands */
+        /*
         for (int i=1; i<world_size; ++i) {
             if (i == world_rank) {
                 std::cout << i << ": ";
@@ -367,20 +369,20 @@ int main(int argc, char **argv)
                 std::cout << std::endl;
             }
             MPI_Barrier(MPI_COMM_WORLD);
-        }
+        } */
 
         /* working directory for archiving is up one diretory */
         retval = chdir("..");
         if (0 != retval) {
             ERRNO << "chdir(..) for archive";
-            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
 
         cpid = fork();
         if (-1 == cpid) {
             /* fork error */
             ERRNO << "fork archive";
-            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         } else if (0 == cpid) {
             /* this is the child */
             std::string archive_out = zipdir + ".out";
@@ -415,16 +417,16 @@ int main(int argc, char **argv)
             pid_t w = waitpid(cpid, &status, 0);
             if (w == -1) {
                 ERRNO << "waitpid";
-                MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+                //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
             }
             if (WIFEXITED(status)) {
                 LOG << "archive exited, status=" << WEXITSTATUS(status);
             } else if (WIFSIGNALED(status)) {
                 ERR << "archive killed by signal " << WTERMSIG(status);
-                MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+                //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
             } else if (WIFSTOPPED(status)) {
                 ERR << "archive stopped by signal " << WSTOPSIG(status);
-                MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+                //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
             }
         }
 
@@ -437,7 +439,7 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_Finalize();
+    //MPI_Finalize();
     return 0;
 }
 
@@ -673,4 +675,5 @@ bool dir_empty(const char *path)
 
     return ret;
 }
+
 
