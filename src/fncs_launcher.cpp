@@ -449,6 +449,7 @@ int main(int argc, char **argv)
  */
 std::string parse_input_file(const char *filename)
 {
+#if 0
     int world_rank;
     int world_size;
     int counter = 0;
@@ -521,6 +522,74 @@ std::string parse_input_file(const char *filename)
     }
 
     return myline;
+#else
+    int world_rank;
+    int world_size;
+    int counter = 0;
+    std::string myline;
+
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+    /* All ranks open the file for parsing.
+     * They pick out only their own line. */
+    std::ifstream fin(filename);
+    std::string line;
+    /* input file might start with comment(s), skip them all */
+    do {
+        std::getline(fin, line);
+    } while (fin.good() && line[0] == '#');
+    if (line.empty() || line[0] == '#') {
+        /* file was only comments */
+        ERR << "Launcher input file missing actual data.";
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+    /* rank 0 reads the whole file, others break early */
+    while (fin.good() && counter<world_size-1) {
+        ++counter;
+        if (0 != world_rank && world_rank == counter) {
+            myline = line;
+            break;
+        }
+        getline(fin, line);
+    }
+    /* only report bad files from rank 0 */
+    if (0 == world_rank) {
+        if (counter < world_size-1) {
+            ERR << "Launcher input file contained "
+                << counter << " lines and you requested "
+                << world_size << " MPI ranks."
+                << std::endl
+                << "You need " << counter << " plus 1 for the broker.";
+        }
+        else if (counter == world_size-1 && fin.good()) {
+            while (fin.good()) {
+                ++counter;
+                getline(fin, line);
+            }
+            ERR << "Launcher input file contained "
+                << counter << " lines and you requested "
+                << world_size << " MPI ranks."
+                << std::endl
+                << "You need " << counter << " plus 1 for the broker.";
+        }
+    }
+    /* rank 0 has the broker command */
+    if (0 == world_rank) {
+        std::ostringstream os;
+        //os << "pwd fncs_broker " << counter;
+        os << "pwd fncs_broker " << counter;
+        myline = os.str();
+    }
+    MPI_Bcast(&counter, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    if (counter != world_size-1) {
+        MPI_Finalize();
+        exit(EXIT_FAILURE);
+    }
+
+    return myline;
+#endif
 }
 
 
