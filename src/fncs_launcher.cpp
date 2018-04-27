@@ -27,12 +27,16 @@
 /* bad design, global static, but it was simple and fast */
 static int world_rank;
 
-std::string parse_input_file(const char *filename);
+std::vector<std::string> parse_input_file(const char *filename);
 std::vector<std::string> split(const std::string& s);
 std::vector<std::string> split(const std::string& s, char delimiter);
 bool check_program(const char *progpath);
 bool dir_exists(const char *path);
 bool dir_empty(const char *path);
+void killall(std::vector<pid_t> children);
+bool check_command(std::string command);
+pid_t run_command(std::string command);
+bool zip_command(std::string command, std::string archive_dir);
 
 class Log {
     public:
@@ -78,11 +82,12 @@ std::string to_string(T object) {
 int main(int argc, char **argv)
 {
     int world_size = 0;
-    std::string command;
+    std::vector<std::string> commands;
     char host_name[HOST_NAME_SIZE] = {0};
     int retval = 0;
-    size_t tok = 1;
     std::string archive_dir;
+    std::string broker_host = "tcp://*:7777";
+    std::string broker_client;
 
     /* basic MPI initialization, rank, and size info */
     MPI_Init(&argc, &argv);
@@ -131,7 +136,7 @@ int main(int argc, char **argv)
     }
 
     /* parse the input file to assign commands to MPI ranks */
-    command = parse_input_file(argv[1]);
+    commands = parse_input_file(argv[1]);
 
     /* retrieve host name for debugging, eventual broker location */
     retval = gethostname(host_name, HOST_NAME_SIZE);
@@ -143,28 +148,148 @@ int main(int argc, char **argv)
     /* debugging print of all assigned commands */
     for (int i=0; i<world_size; ++i) {
         if (i == world_rank) {
-            LOG << host_name << ": " << command;
+            for (size_t j=0; j<commands.size(); ++j) {
+                LOG << host_name << ": " << commands[j];
+            }
         }
-        MPI_Barrier(MPI_COMM_WORLD);
+        //MPI_Barrier(MPI_COMM_WORLD);
     }
 
     /* broadcast the rank 0 host name,
      * where the broker will be launched */
-    if (0 == world_rank) {
-        const char *env = "tcp://*:7777";
-        MPI_Bcast(host_name, HOST_NAME_SIZE, MPI_CHAR, 0, MPI_COMM_WORLD);
-        setenv("FNCS_BROKER", env, 1);
-    }
-    if (0 != world_rank) {
-        char env[HOST_NAME_SIZE] = {0};
-        MPI_Bcast(host_name, HOST_NAME_SIZE, MPI_CHAR, 0, MPI_COMM_WORLD);
-        strcpy(env, "tcp://");
-        strcat(env, host_name);
-        strcat(env, ":7777");
-        setenv("FNCS_BROKER", env, 1);
-    }
-    setenv("FNCS_LAUNCHER_RANK", to_string(world_rank).c_str(), 1);
+    MPI_Bcast(host_name, HOST_NAME_SIZE, MPI_CHAR, 0, MPI_COMM_WORLD);
+    broker_client = "tcp://";
+    broker_client += host_name;
+    broker_client += ":7777";
 
+    /* we must reset our working directory before any run of a command
+     * because the command string has its own working directory */
+    char cwd[PATH_MAX];
+    if (NULL == getcwd(cwd, PATH_MAX)) {
+        ERRNO << "getcwd";
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+
+    /* verify we can run the commands first */
+    int checksum = 0;
+    for (size_t i=0; i<commands.size(); ++i) {
+        int retval = chdir(cwd);
+        if (0 != retval) {
+            ERRNO << "chdir(" << cwd << ")";
+            checksum = 1;
+        }
+        bool check = check_command(commands[i]);
+        if (!check) {
+            ERR << "Check command failed: " << commands[i];
+            checksum = 1;
+        }
+    }
+    MPI_Allreduce(MPI_IN_PLACE, &checksum, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    if (0 != checksum) {
+        if (0 == world_rank) {
+            ERR << "Check command failed";
+        }
+        MPI_Finalize();
+        exit(EXIT_FAILURE);
+    }
+
+    /* We're mostly done with MPI at this point. It is unsafe to call
+     * fork from an MPI program, but we are only relying on MPI_Abort
+     * beyond this point. Ideally, we terminate MPI early, right now. */
+    MPI_Finalize();
+
+    std::vector<pid_t> children;
+    for (size_t i=0; i<commands.size(); ++i) {
+        int retval = chdir(cwd);
+        if (0 != retval) {
+            ERRNO << "chdir(" << cwd << ")";
+            killall(children);
+        }
+        /* first command of rank 0 is always broker */
+        if (0 == world_rank && 0 == i) {
+            setenv("FNCS_BROKER", broker_host.c_str(), 1);
+        }
+        else {
+            setenv("FNCS_BROKER", broker_client.c_str(), 1);
+        }
+        /* this env var is used by a special test program only */
+        {
+            std::string val = to_string(world_rank);
+            val += "_";
+            val += to_string(i);
+            setenv("FNCS_LAUNCHER_RANK", val.c_str(), 1);
+            LOG << "FNCS_LAUNCHER_RANK=" << val;
+        }
+        pid_t child = run_command(commands[i]);
+        if (-1 == child) {
+            ERRNO << "run_command(" << commands[i] << ")";
+            killall(children);
+        }
+        children.push_back(child);
+    }
+
+    /* wait for all children */
+    bool any_error = false;
+    if (!commands.empty()) {
+        int status;
+        pid_t pid;
+        while ((pid = wait(&status)) > 0) {
+            /* parent */
+            if (pid == -1) {
+                ERRNO << "wait";
+                any_error |= true;
+            }
+            if (WIFEXITED(status)) {
+                LOG << "child exited, status=" << WEXITSTATUS(status);
+                any_error |= (0 != WEXITSTATUS(status));
+            } else if (WIFSIGNALED(status)) {
+                ERR << "killed by signal " << WTERMSIG(status);
+                any_error |= true;
+            } else if (WIFSTOPPED(status)) {
+                ERR << "stopped by signal " << WSTOPSIG(status);
+                any_error |= true;
+            }
+        }
+
+        /* regardless of errors, we zip all working directories */
+        for (size_t i=0; i<commands.size(); ++i) {
+            int retval = chdir(cwd);
+            if (0 != retval) {
+                ERRNO << "chdir(" << cwd << ")";
+            }
+            if (0 == world_rank && 0 == i) {
+                continue; /* skip zipping broker command */
+            }
+            any_error |= zip_command(commands[i], archive_dir);
+        }
+    }
+
+    if (0 == world_rank) {
+        int retval = chdir(cwd);
+        if (0 != retval) {
+            ERRNO << "chdir(" << cwd << ")";
+        }
+        std::string dst_str = archive_dir + "/broker.out";
+        std::ifstream src("fncs.log", std::ios::binary);
+        std::ofstream dst(dst_str.c_str(), std::ios::binary);
+        dst << src.rdbuf();
+    }
+
+    return any_error ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+
+void killall(std::vector<pid_t> children)
+{
+    for (size_t i=0; i<children.size(); ++i) {
+        kill(children[i], SIGKILL);
+    }
+    exit(EXIT_FAILURE);
+}
+
+
+bool check_command(std::string command)
+{
     /* parse the command so we can call fork exec */
     /* command is parsed based on whitespace */
     /* exec command requires NULL terminated array of char* */
@@ -196,7 +321,7 @@ int main(int argc, char **argv)
      * 2) program name */
     if (tokens.size() < 2) {
         ERR << "invalid command string: " << command;
-        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        return false;
     }
     /* attempt to change path now and report any error */
 	std::string working_directory = tokens[0];
@@ -204,15 +329,15 @@ int main(int argc, char **argv)
         char buf[PATH_MAX];
         if (NULL == getcwd(buf, PATH_MAX)) {
             ERRNO << "getcwd";
-            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            return false;
         }
         working_directory = buf;
     }
     else {
-        retval = chdir(working_directory.c_str());
+        int retval = chdir(working_directory.c_str());
         if (0 != retval) {
             ERRNO << "chdir(" << working_directory << ")";
-            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            return false;
         }
     }
     /* figure out the zipdir early, in case of error */
@@ -221,12 +346,12 @@ int main(int argc, char **argv)
         std::string::size_type found = working_directory.rfind('/');
         if (found == std::string::npos) {
             ERR << working_directory << ": could not determine directory to zip";
-            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            return false;
         }
         zipdir = working_directory.substr(found+1);
     }
     /* set any env vars from the input file */
-    tok = 1;
+    size_t tok = 1;
     while (tok < tokens.size()) {
         size_t pos = tokens[tok].find('=');
         if (std::string::npos != pos) {
@@ -247,7 +372,98 @@ int main(int argc, char **argv)
     /* check that we can execute the program */
     if (!check_program(program)) {
         ERR << program << ": No such file or directory";
-        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        return false;
+    }
+
+    return true;
+}
+
+
+pid_t run_command(std::string command)
+{
+    /* parse the command so we can call fork exec */
+    /* command is parsed based on whitespace */
+    /* exec command requires NULL terminated array of char* */
+    /* preserved quoted arguments */
+    std::vector<std::string> tokens;
+    std::istringstream iss(command);
+    std::istream_iterator<std::string> it(iss);
+    std::istream_iterator<std::string> eos;
+    bool has_quote = false;
+    while (it!=eos) {
+        std::string token = *it;
+        if (has_quote) {
+            if (*token.rbegin() == '"') {
+                has_quote = false;
+            }
+            tokens.back() += " " + token;
+        }
+        else {
+            if (token[0] == '"') {
+                has_quote = true;
+            }
+            tokens.push_back(token);
+        }
+        ++it;
+    }
+
+    /* there must be at least 2 tokens,
+     * 1) working directory,
+     * 2) program name */
+    if (tokens.size() < 2) {
+        ERR << "invalid command string: " << command;
+        return -1;
+    }
+    /* attempt to change path now and report any error */
+	std::string working_directory = tokens[0];
+    if (working_directory == "pwd") {
+        char buf[PATH_MAX];
+        if (NULL == getcwd(buf, PATH_MAX)) {
+            ERRNO << "getcwd";
+            return -1;
+        }
+        working_directory = buf;
+    }
+    else {
+        int retval = chdir(working_directory.c_str());
+        if (0 != retval) {
+            ERRNO << "chdir(" << working_directory << ")";
+            return -1;
+        }
+    }
+    /* figure out the zipdir early, in case of error */
+    std::string zipdir;
+    if (0 != world_rank) {
+        std::string::size_type found = working_directory.rfind('/');
+        if (found == std::string::npos) {
+            ERR << working_directory << ": could not determine directory to zip";
+            return -1;
+        }
+        zipdir = working_directory.substr(found+1);
+    }
+    /* set any env vars from the input file */
+    size_t tok = 1;
+    while (tok < tokens.size()) {
+        size_t pos = tokens[tok].find('=');
+        if (std::string::npos != pos) {
+            std::string key = tokens[tok].substr(0, pos);
+            std::string val = tokens[tok].substr(pos+1);
+            setenv(key.c_str(), val.c_str(), 1);
+            ++tok;
+#if 0
+            LOG << key << "=" << val;
+#endif
+        }
+        else {
+            break; /* no key=value found, break out */
+        }
+    }
+
+    const char *program = tokens[tok].c_str();
+    /* check that we can execute the program */
+    if (!check_program(program)) {
+        ERR << program << ": No such file or directory";
+        return -1;
     }
 
     std::vector<char*> new_argv;
@@ -256,31 +472,14 @@ int main(int argc, char **argv)
     }
     new_argv.push_back(NULL);
 
-    /* debugging print of all parsed commands */
-    /*
-    for (int i=0; i<world_size; ++i) {
-        if (i == world_rank) {
-            std::cout << i << ": ";
-            for (int j=0; NULL != new_argv[j]; ++j) {
-                std::cout << new_argv[j] << " ";
-            }
-            std::cout << std::endl;
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-    } */ 
-
-    /* We're mostly done with MPI at this point. It is unsafe to call
-     * fork from an MPI program, but we are only relying on MPI_Abort
-     * beyond this point. Ideally, we terminate MPI early, right now. */
-    MPI_Finalize();
-
     pid_t cpid = fork();
     if (-1 == cpid) {
         /* fork error */
         ERRNO << "fork";
-        //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        return -1;
     } else if (0 == cpid) {
         /* this is the child */
+        int retval;
         int fd = open("fncs.out", O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
         if (-1 == fd) {
             ERRNO << "open(fncs.out)";
@@ -306,83 +505,103 @@ int main(int argc, char **argv)
             ERRNO << "execvp(" << new_argv[0] << ", ...)";
             _exit(EXIT_FAILURE);
         }
-    } else {
-        /* parent */
-        int status;
-        pid_t w = waitpid(cpid, &status, 0);
-        if (w == -1) {
-            ERRNO << "waitpid";
-            //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+
+    return cpid;
+}
+
+
+bool zip_command(std::string command, std::string archive_dir)
+{
+    /* parse the command so we can get working directory */
+    /* command is parsed based on whitespace */
+    std::vector<std::string> tokens;
+    std::istringstream iss(command);
+    std::istream_iterator<std::string> it(iss);
+    std::istream_iterator<std::string> eos;
+    bool has_quote = false;
+    while (it!=eos) {
+        std::string token = *it;
+        if (has_quote) {
+            if (*token.rbegin() == '"') {
+                has_quote = false;
+            }
+            tokens.back() += " " + token;
         }
-        if (WIFEXITED(status)) {
-            LOG << "exited, status=" << WEXITSTATUS(status);
-        } else if (WIFSIGNALED(status)) {
-            ERR << "killed by signal " << WTERMSIG(status);
-            //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-        } else if (WIFSTOPPED(status)) {
-            ERR << "stopped by signal " << WSTOPSIG(status);
-            //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        else {
+            if (token[0] == '"') {
+                has_quote = true;
+            }
+            tokens.push_back(token);
         }
+        ++it;
+    }
+
+    /* attempt to change path now and report any error */
+	std::string working_directory = tokens[0];
+    if (working_directory == "pwd") {
+        char buf[PATH_MAX];
+        if (NULL == getcwd(buf, PATH_MAX)) {
+            ERRNO << "getcwd";
+            return false;
+        }
+        working_directory = buf;
+    }
+    else {
+        int retval = chdir(working_directory.c_str());
+        if (0 != retval) {
+            ERRNO << "chdir(" << working_directory << ")";
+            return false;
+        }
+    }
+    /* figure out the zipdir early, in case of error */
+    std::string zipdir;
+    {
+        std::string::size_type found = working_directory.rfind('/');
+        if (found == std::string::npos) {
+            ERR << working_directory << ": could not determine directory to zip";
+            return false;
+        }
+        zipdir = working_directory.substr(found+1);
     }
 
     /* If we got this far, we can zip up our working directory
      * and store it at the given location. We rely on an external
      * zip or zip-like tool. */
-    /* we don't zip up the fncs_broker working dir,
-     * but we do copy its log file to the archive_dir */
-    if (0 == world_rank) {
-        //for (int i=1; i<world_size; ++i) {
-        //    MPI_Barrier(MPI_COMM_WORLD);
-        //}
-        /* now copy the log file to the final destination */
-        {
-            std::string dst_str = archive_dir + "/broker.out";
-            std::ifstream src("fncs.log", std::ios::binary);
-            std::ofstream dst(dst_str.c_str(), std::ios::binary);
-            dst << src.rdbuf();
-        }
-    }
-    else {
+    {
         std::string zipfile = zipdir + "." + ZIP_EXT;
-        program = ZIP;
+        const char *program = ZIP;
+        std::vector<char*> new_argv;
         tokens.clear();
-        new_argv.clear(); /* leaks strdup'd strings */
         tokens.push_back(ZIP);
         tokens.push_back(ZIP_ARGS);
         tokens.push_back(zipfile);
         tokens.push_back(zipdir);
 
-        tok = 0;
+        /* debugging print of all assigned commands */
+        LOG << tokens[0]
+            << " " << tokens[1]
+            << " " << tokens[2]
+            << " " << tokens[3];
+
+        size_t tok = 0;
         for (; tok<tokens.size(); ++tok) {
             new_argv.push_back(strdup(tokens[tok].c_str()));
         }
         new_argv.push_back(NULL);
 
-        /* debugging print of all parsed commands */
-        /*
-        for (int i=1; i<world_size; ++i) {
-            if (i == world_rank) {
-                std::cout << i << ": ";
-                for (int j=0; NULL != new_argv[j]; ++j) {
-                    std::cout << new_argv[j] << " ";
-                }
-                std::cout << std::endl;
-            }
-            MPI_Barrier(MPI_COMM_WORLD);
-        } */
-
         /* working directory for archiving is up one diretory */
-        retval = chdir("..");
+        int retval = chdir("..");
         if (0 != retval) {
             ERRNO << "chdir(..) for archive";
-            //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            return false;
         }
 
-        cpid = fork();
+        pid_t cpid = fork();
         if (-1 == cpid) {
             /* fork error */
             ERRNO << "fork archive";
-            //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            return false;
         } else if (0 == cpid) {
             /* this is the child */
             std::string archive_out = zipdir + ".out";
@@ -417,16 +636,19 @@ int main(int argc, char **argv)
             pid_t w = waitpid(cpid, &status, 0);
             if (w == -1) {
                 ERRNO << "waitpid";
-                //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+                return false;
             }
             if (WIFEXITED(status)) {
                 LOG << "archive exited, status=" << WEXITSTATUS(status);
+                if (0 != WEXITSTATUS(status)) {
+                    return false;
+                }
             } else if (WIFSIGNALED(status)) {
                 ERR << "archive killed by signal " << WTERMSIG(status);
-                //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+                return false;
             } else if (WIFSTOPPED(status)) {
                 ERR << "archive stopped by signal " << WSTOPSIG(status);
-                //MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+                return false;
             }
         }
 
@@ -439,8 +661,7 @@ int main(int argc, char **argv)
         }
     }
 
-    //MPI_Finalize();
-    return 0;
+    return true;
 }
 
 
@@ -449,20 +670,24 @@ int main(int argc, char **argv)
  * The file has the format, one per line
  * [KEY1=VALUE1] ... [KEYN=VALUEN] program_name [arg1] ... [argn]
  */
-std::string parse_input_file(const char *filename)
+std::vector<std::string> parse_input_file(const char *filename)
 {
-#if 0
+    std::vector<std::string> commands;
     int world_rank;
     int world_size;
-    int counter = 0;
+    int total = 0;
+    int count = 0;
+    int remain = 0;
+    int start = 0;
+    int stop = 0;
     std::string myline;
 
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
-    /* Rank 0 opens the file for parsing,
-     * broadcasts the contents to all ranks. */
-    if (0 == world_rank) {
+    /* All ranks open the file for parsing.
+     * They pick out only their own lines. */
+    {
         std::ifstream fin(filename);
         std::string line;
         /* input file might start with comment(s), skip them all */
@@ -472,126 +697,78 @@ std::string parse_input_file(const char *filename)
         if (line.empty() || line[0] == '#') {
             /* file was only comments */
             ERR << "Launcher input file missing actual data.";
-            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            commands.clear();
+            return commands;
         }
-        while (fin.good() && counter<world_size-1) {
-            ++counter;
-            MPI_Send(line.c_str(), line.size(), MPI_CHAR,
-                    counter, 0, MPI_COMM_WORLD);
+        /* all ranks read the whole file to count the lines */
+        while (fin.good()) {
+            ++total;
             getline(fin, line);
         }
-        if (counter < world_size-1) {
-            ERR << "Launcher input file contained "
-                << counter << " lines and you requested "
-                << world_size << " MPI ranks."
-                << std::endl
-                << "You need " << counter << " plus 1 for the broker.";
-            /* go ahead and send remaining empty messages */
-            for (int i=counter+1; i<world_size; ++i) {
-                MPI_Send("", 0, MPI_CHAR, i, 0, MPI_COMM_WORLD);
-            }
-        }
-        else if (counter == world_size-1 && fin.good()) {
-            while (fin.good()) {
-                ++counter;
-                getline(fin, line);
-            }
-            ERR << "Launcher input file contained "
-                << counter << " lines and you requested "
-                << world_size << " MPI ranks."
-                << std::endl
-                << "You need " << counter << " plus 1 for the broker.";
-        }
-        std::ostringstream os;
-        //os << "pwd fncs_broker " << counter;
-        os << "pwd fncs_broker " << counter;
-        myline = os.str();
-        MPI_Bcast(&counter, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    }
-    else {
-        int count;
-        MPI_Status status;
-        MPI_Probe(0, 0, MPI_COMM_WORLD, &status);
-        MPI_Get_count(&status, MPI_CHAR, &count);
-        myline.assign(count+1, '\0');
-        MPI_Recv(&myline[0], count, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
-        MPI_Bcast(&counter, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    }
-
-    if (counter != world_size-1) {
-        MPI_Finalize();
-        exit(EXIT_FAILURE);
-    }
-
-    return myline;
-#else
-    int world_rank;
-    int world_size;
-    int counter = 0;
-    std::string myline;
-
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
-    /* All ranks open the file for parsing.
-     * They pick out only their own line. */
-    std::ifstream fin(filename);
-    std::string line;
-    /* input file might start with comment(s), skip them all */
-    do {
-        std::getline(fin, line);
-    } while (fin.good() && line[0] == '#');
-    if (line.empty() || line[0] == '#') {
-        /* file was only comments */
-        ERR << "Launcher input file missing actual data.";
-        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-    }
-    /* rank 0 reads the whole file, others break early */
-    while (fin.good() && counter<world_size-1) {
-        ++counter;
-        if (0 != world_rank && world_rank == counter) {
-            myline = line;
-            break;
-        }
-        getline(fin, line);
     }
     /* only report bad files from rank 0 */
     if (0 == world_rank) {
-        if (counter < world_size-1) {
+        if (total < world_size-1) {
             ERR << "Launcher input file contained "
-                << counter << " lines and you requested "
+                << total << " lines and you requested "
                 << world_size << " MPI ranks."
                 << std::endl
-                << "You need " << counter << " plus 1 for the broker.";
-        }
-        else if (counter == world_size-1 && fin.good()) {
-            while (fin.good()) {
-                ++counter;
-                getline(fin, line);
-            }
-            ERR << "Launcher input file contained "
-                << counter << " lines and you requested "
-                << world_size << " MPI ranks."
+                << "You requested too many MPI ranks."
                 << std::endl
-                << "You need " << counter << " plus 1 for the broker.";
+                << "You need " << total << " plus 1 for the broker.";
         }
     }
+
     /* rank 0 has the broker command */
     if (0 == world_rank) {
         std::ostringstream os;
-        //os << "pwd fncs_broker " << counter;
-        os << "pwd fncs_broker " << counter;
-        myline = os.str();
-    }
-    MPI_Bcast(&counter, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-    if (counter != world_size-1) {
-        MPI_Finalize();
-        exit(EXIT_FAILURE);
+        //os << "pwd fncs_broker " << total;
+        os << "pwd fncs_broker " << total;
+        commands.push_back(os.str());
     }
 
-    return myline;
-#endif
+    /* divide lines evenly between ranks, spread remaineder out */
+    count = total / world_size;
+    remain = total % world_size;
+    start = world_rank * count;
+    stop = world_rank * count + count;
+    if (world_rank < remain) {
+        start += world_rank;
+        stop += world_rank + 1;
+    }
+    else {
+        start += remain;
+        stop += remain;
+    }
+    //LOG << "start=" << start << " stop=" << stop;
+
+    /* now reread the file and pull out the commands */
+    {
+        std::ifstream fin(filename);
+        std::string line;
+        /* input file might start with comment(s), skip them all */
+        do {
+            std::getline(fin, line);
+        } while (fin.good() && line[0] == '#');
+        if (line.empty() || line[0] == '#') {
+            /* file was only comments */
+            ERR << "Launcher input file missing actual data.";
+            commands.clear();
+            return commands;
+        }
+        /* all ranks read the whole file to count the lines */
+        total = 0;
+        while (fin.good()) {
+            if (start <= total && total < stop) {
+                commands.push_back(line);
+            }
+            ++total;
+            getline(fin, line);
+        }
+    }
+
+
+    return commands;
 }
 
 
