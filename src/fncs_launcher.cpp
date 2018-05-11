@@ -38,6 +38,9 @@ bool check_command(std::string command);
 pid_t run_command(std::string command);
 bool zip_command(std::string command, std::string archive_dir);
 
+enum loglevel_e
+    {logWARNING, logINFO, logDEBUG, logDEBUG1, logDEBUG2, logDEBUG3, logDEBUG4};
+
 class Log {
     public:
         Log(bool is_err_=true): os(), str(""), is_err(is_err_) {}
@@ -67,9 +70,24 @@ class Log {
         Log(const Log&);
         Log& operator =(const Log&);
 };
+
+loglevel_e launcher_log_level;
+
+// these outputs we always want!
 #define ERRNO Log().Get(errno)
 #define ERR Log().Get()
-#define LOG Log(false).Get()
+
+#define LAUNCHER_LOG(level) \
+    if (level > launcher_log_level) ; \
+    else Log(false).Get()
+
+#define LWARNING LAUNCHER_LOG(logWARNING)
+#define LINFO LAUNCHER_LOG(logINFO)
+#define LDEBUG LAUNCHER_LOG(logDEBUG)
+#define LDEBUG1 LAUNCHER_LOG(logDEBUG1)
+#define LDEBUG2 LAUNCHER_LOG(logDEBUG2)
+#define LDEBUG3 LAUNCHER_LOG(logDEBUG3)
+#define LDEBUG4 LAUNCHER_LOG(logDEBUG4)
 
 template <typename T>
 std::string to_string(T object) {
@@ -88,6 +106,31 @@ int main(int argc, char **argv)
     std::string archive_dir;
     std::string broker_host = "tcp://*:7777";
     std::string broker_client;
+
+    /* start the logging feature, check enviroment*/
+    char *log_level_export = NULL;
+    log_level_export = getenv("FNCS_LAUNCHER_LOG_LEVEL");
+
+    if (!log_level_export) {
+        launcher_log_level = logINFO; 
+    } else if (strcmp(log_level_export,"WARNING") == 0) {
+        launcher_log_level = logWARNING;
+    } else if (strcmp(log_level_export,"INFO") == 0) {
+        launcher_log_level = logINFO;
+    } else if (strcmp(log_level_export,"DEBUG") == 0) {
+        launcher_log_level = logDEBUG;
+    } else if (strcmp(log_level_export,"DEBUG1") == 0) {
+        launcher_log_level = logDEBUG1;
+    } else if (strcmp(log_level_export,"DEBUG2") == 0) {
+        launcher_log_level = logDEBUG2;
+    } else if (strcmp(log_level_export,"DEBUG3") == 0) {
+        launcher_log_level = logDEBUG3;
+    } else if (strcmp(log_level_export,"DEBUG4") == 0) {
+        launcher_log_level = logDEBUG4;
+    } else {
+        launcher_log_level = logINFO;
+        LINFO << "The FNCS_LAUNCHER_LOG_LEVEL was set to an unknown value";
+    }
 
     /* basic MPI initialization, rank, and size info */
     MPI_Init(&argc, &argv);
@@ -145,13 +188,14 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
-    /* debugging print of all assigned commands */
+    /* informative print of all assigned commands */
     for (int i=0; i<world_size; ++i) {
         if (i == world_rank) {
             for (size_t j=0; j<commands.size(); ++j) {
-                LOG << host_name << ": " << commands[j];
+                LINFO << host_name << ": " << commands[j];
             }
         }
+        /* include this if you want ordered output from MPI, will slow down execution significantly */
         //MPI_Barrier(MPI_COMM_WORLD);
     }
 
@@ -178,11 +222,13 @@ int main(int argc, char **argv)
             ERRNO << "chdir(" << cwd << ")";
             checksum = 1;
         }
+        /*
         bool check = check_command(commands[i]);
         if (!check) {
             ERR << "Check command failed: " << commands[i];
             checksum = 1;
         }
+        */
     }
     MPI_Allreduce(MPI_IN_PLACE, &checksum, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (0 != checksum) {
@@ -218,7 +264,7 @@ int main(int argc, char **argv)
             val += "_";
             val += to_string(i);
             setenv("FNCS_LAUNCHER_RANK", val.c_str(), 1);
-            LOG << "FNCS_LAUNCHER_RANK=" << val;
+            LDEBUG << "FNCS_LAUNCHER_RANK=" << val;
         }
         pid_t child = run_command(commands[i]);
         if (-1 == child) {
@@ -233,20 +279,31 @@ int main(int argc, char **argv)
     if (!commands.empty()) {
         int status;
         pid_t pid;
+        std::string command_exit;
         while ((pid = wait(&status)) > 0) {
             /* parent */
             if (pid == -1) {
                 ERRNO << "wait";
                 any_error |= true;
             }
-            if (WIFEXITED(status)) {
-                LOG << "child exited, status=" << WEXITSTATUS(status);
+            if (WIFEXITED(status)) { 
+                LDEBUG << "child exited, status=" << WEXITSTATUS(status);
                 any_error |= (0 != WEXITSTATUS(status));
             } else if (WIFSIGNALED(status)) {
-                ERR << "killed by signal " << WTERMSIG(status);
+                for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
+                    if (pid == children[i]) {
+                        command_exit = commands[i];
+                    }       
+                }
+                ERR << "killed by signal " << WTERMSIG(status) << " (" << command_exit << ")";
                 any_error |= true;
             } else if (WIFSTOPPED(status)) {
-                ERR << "stopped by signal " << WSTOPSIG(status);
+                for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
+                    if (pid == children[i]) {
+                        command_exit = commands[i];
+                    }       
+                }
+                ERR << "stopped by signal " << WSTOPSIG(status) << " (" << command_exit << ")";
                 any_error |= true;
             }
         }
@@ -270,7 +327,7 @@ int main(int argc, char **argv)
             ERRNO << "chdir(" << cwd << ")";
         }
         std::string dst_str = archive_dir + "/broker.out";
-        std::ifstream src("fncs.log", std::ios::binary);
+        std::ifstream src("fncs.out", std::ios::binary);
         std::ofstream dst(dst_str.c_str(), std::ios::binary);
         dst << src.rdbuf();
     }
@@ -359,9 +416,7 @@ bool check_command(std::string command)
             std::string val = tokens[tok].substr(pos+1);
             setenv(key.c_str(), val.c_str(), 1);
             ++tok;
-#if 0
-            LOG << key << "=" << val;
-#endif
+            LDEBUG1 << key << "=" << val;
         }
         else {
             break; /* no key=value found, break out */
@@ -450,9 +505,7 @@ pid_t run_command(std::string command)
             std::string val = tokens[tok].substr(pos+1);
             setenv(key.c_str(), val.c_str(), 1);
             ++tok;
-#if 0
-            LOG << key << "=" << val;
-#endif
+            LDEBUG1 << key << "=" << val;
         }
         else {
             break; /* no key=value found, break out */
@@ -543,7 +596,7 @@ bool zip_command(std::string command, std::string archive_dir)
         char buf[PATH_MAX];
         if (NULL == getcwd(buf, PATH_MAX)) {
             ERRNO << "getcwd";
-            return false;
+            return true;
         }
         working_directory = buf;
     }
@@ -551,7 +604,7 @@ bool zip_command(std::string command, std::string archive_dir)
         int retval = chdir(working_directory.c_str());
         if (0 != retval) {
             ERRNO << "chdir(" << working_directory << ")";
-            return false;
+            return true;
         }
     }
     /* figure out the zipdir early, in case of error */
@@ -560,7 +613,7 @@ bool zip_command(std::string command, std::string archive_dir)
         std::string::size_type found = working_directory.rfind('/');
         if (found == std::string::npos) {
             ERR << working_directory << ": could not determine directory to zip";
-            return false;
+            return true;
         }
         zipdir = working_directory.substr(found+1);
     }
@@ -579,7 +632,7 @@ bool zip_command(std::string command, std::string archive_dir)
         tokens.push_back(zipdir);
 
         /* debugging print of all assigned commands */
-        LOG << tokens[0]
+        LDEBUG1 << tokens[0]
             << " " << tokens[1]
             << " " << tokens[2]
             << " " << tokens[3];
@@ -594,14 +647,14 @@ bool zip_command(std::string command, std::string archive_dir)
         int retval = chdir("..");
         if (0 != retval) {
             ERRNO << "chdir(..) for archive";
-            return false;
+            return true;
         }
 
         pid_t cpid = fork();
         if (-1 == cpid) {
             /* fork error */
             ERRNO << "fork archive";
-            return false;
+            return true;
         } else if (0 == cpid) {
             /* this is the child */
             std::string archive_out = zipdir + ".out";
@@ -636,19 +689,19 @@ bool zip_command(std::string command, std::string archive_dir)
             pid_t w = waitpid(cpid, &status, 0);
             if (w == -1) {
                 ERRNO << "waitpid";
-                return false;
+                return true;
             }
             if (WIFEXITED(status)) {
-                LOG << "archive exited, status=" << WEXITSTATUS(status);
+                LDEBUG << "archive exited, status=" << WEXITSTATUS(status);
                 if (0 != WEXITSTATUS(status)) {
-                    return false;
+                    return true;
                 }
-            } else if (WIFSIGNALED(status)) {
-                ERR << "archive killed by signal " << WTERMSIG(status);
-                return false;
-            } else if (WIFSTOPPED(status)) {
-                ERR << "archive stopped by signal " << WSTOPSIG(status);
-                return false;
+            } else if (WIFSIGNALED(status)) {               
+                ERR << "archive killed by signal " << WTERMSIG(status) << " (" << command << ")";
+                return true;
+            } else if (WIFSTOPPED(status)) {             
+                ERR << "archive stopped by signal " << WSTOPSIG(status) << " (" << command << ")";
+                return true;
             }
         }
 
@@ -661,7 +714,7 @@ bool zip_command(std::string command, std::string archive_dir)
         }
     }
 
-    return true;
+    return false;
 }
 
 
@@ -740,7 +793,7 @@ std::vector<std::string> parse_input_file(const char *filename)
         start += remain;
         stop += remain;
     }
-    //LOG << "start=" << start << " stop=" << stop;
+    LDEBUG1 << "start=" << start << " stop=" << stop;
 
     /* now reread the file and pull out the commands */
     {
