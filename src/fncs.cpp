@@ -1061,7 +1061,12 @@ void fncs::publish(const string &key, const string &value)
             zstr_sendm(client, fncs::PUBLISH);
             zstr_sendm(client, new_key.c_str());
             zstr_send(client, value.c_str());
-            LDEBUG4 << "sent PUBLISH '" << new_key << "'='" << value << "'";
+            if (value.length() <= 200) {
+            	LDEBUG4 << "sent PUBLISH '" << new_key << "'='" << value << "'";
+            } else {
+            	string new_value = value.substr(0,200);
+            	LDEBUG4 << "sent PUBLISH '" << new_key << "'='" << new_value << "...'";
+            }
         }
     }
     else {
