@@ -36,6 +36,7 @@ bool dir_empty(const char *path);
 void killall(std::vector<pid_t> children);
 bool check_command(std::string command);
 pid_t run_command(std::string command);
+pid_t unzip_command(std::string command);
 bool zip_command(std::string command, std::string archive_dir);
 
 enum loglevel_e
@@ -244,7 +245,61 @@ int main(int argc, char **argv)
      * beyond this point. Ideally, we terminate MPI early, right now. */
     MPI_Finalize();
 
+    /* for the GridLAB-D federates we need to unzip the model files we need */
     std::vector<pid_t> children;
+    for (size_t i=0; i<commands.size(); ++i) {
+        int retval = chdir(cwd);
+        if (0 != retval) {
+            ERRNO << "chdir(" << cwd << ")";
+        }
+        if (0 == world_rank && 0 == i) {
+            continue; /* skip zipping broker command */
+        }
+        pid_t child = unzip_command(commands[i]); 
+        if (-1 == child) {
+            ERRNO << "unzip_command(" << commands[i] << ")";
+            killall(children);
+        }
+        children.push_back(child);
+    }
+    
+    /* wait for all children */
+    bool any_error = false;
+    if (!commands.empty()) {
+        int status;
+        pid_t pid;
+        std::string command_exit;
+        while ((pid = wait(&status)) > 0) {
+            /* parent */
+            if (pid == -1) {
+                ERRNO << "wait";
+                exit(EXIT_FAILURE);
+            }
+            if (WIFEXITED(status)) { 
+                LDEBUG << "unzip exited, status=" << WEXITSTATUS(status);
+                any_error |= (0 != WEXITSTATUS(status));
+            } else if (WIFSIGNALED(status)) {
+                for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
+                    if (pid == children[i]) {
+                        command_exit = commands[i];
+                    }       
+                }
+                ERR << "unzip killed by signal " << WTERMSIG(status) << " (" << command_exit << ")";
+                exit(EXIT_FAILURE);
+            } else if (WIFSTOPPED(status)) {
+                for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
+                    if (pid == children[i]) {
+                        command_exit = commands[i];
+                    }       
+                }
+                ERR << "unzip stopped by signal " << WSTOPSIG(status) << " (" << command_exit << ")";
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+    
+    /* time to run the actual commands */
+    children.clear();
     for (size_t i=0; i<commands.size(); ++i) {
         int retval = chdir(cwd);
         if (0 != retval) {
@@ -275,7 +330,6 @@ int main(int argc, char **argv)
     }
 
     /* wait for all children */
-    bool any_error = false;
     if (!commands.empty()) {
         int status;
         pid_t pid;
@@ -432,6 +486,100 @@ bool check_command(std::string command)
 
     return true;
 }
+
+
+pid_t unzip_command(std::string command)
+{
+    /* parse the command so we can call fork exec on the unzip */
+    /* command is parsed based on whitespace */
+    /* exec command requires NULL terminated array of char* */
+    /* preserved quoted arguments */
+    std::vector<std::string> tokens;
+    std::istringstream iss(command);
+    std::istream_iterator<std::string> it(iss);
+    std::istream_iterator<std::string> eos;
+    bool has_quote = false;
+    while (it!=eos) {
+        std::string token = *it;
+        if (has_quote) {
+            if (*token.rbegin() == '"') {
+                has_quote = false;
+            }
+            tokens.back() += " " + token;
+        }
+        else {
+            if (token[0] == '"') {
+                has_quote = true;
+            }
+            tokens.push_back(token);
+        }
+        ++it;
+    }
+
+    /* there must be at least 2 tokens,
+     * 1) working directory,
+     * 2) program name */
+    if (tokens.size() < 2) {
+        ERR << "invalid command string: " << command;
+        return -1;
+    }
+    /* attempt to change path now and report any error */
+    std::string working_directory = tokens[0];
+    if (working_directory == "pwd") {
+        char buf[PATH_MAX];
+        if (NULL == getcwd(buf, PATH_MAX)) {
+            ERRNO << "getcwd";
+            return -1;
+        }
+        working_directory = buf;
+    }
+    else {
+        int retval = chdir(working_directory.c_str());
+        if (0 != retval) {
+            ERRNO << "chdir(" << working_directory << ")";
+            return -1;
+        }
+    }
+
+    /* find position of the command */
+    size_t tok = 1;
+    while (tok < tokens.size()) {
+        size_t pos = tokens[tok].find('=');
+        if (std::string::npos != pos) {
+            ++tok;
+        }
+        else {
+            break; /* no key=value found, break out */
+        }
+    }
+
+    std::vector<char*> new_argv;
+    for (; tok<tokens.size(); ++tok) {
+        new_argv.push_back(strdup(tokens[tok].c_str()));
+    }
+    new_argv.push_back(NULL);
+
+    pid_t cpid = fork();
+    if (-1 == cpid) {
+        /* fork error */
+        ERRNO << "fork";
+        return -1;
+    } else if (0 == cpid) {
+        /* this is the child */
+        int retval;
+        if (strcmp(new_argv[0],"gridlabd") == 0) { // if this is a GridLAB-D federate we need to extract the model file
+            char* uzipcommand[] = { "unzip", "*.zip", NULL };
+            retval = execvp(uzipcommand[0], uzipcommand);
+            if (-1 == retval) {
+                ERRNO << "execvp(unzip *.zip)";
+                _exit(EXIT_FAILURE);
+            }    
+        }
+    }
+
+    return cpid;
+}
+
 
 
 pid_t run_command(std::string command)
