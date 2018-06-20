@@ -264,7 +264,6 @@ int main(int argc, char **argv)
     }
     
     /* wait for all children */
-    bool any_error = false;
     if (!commands.empty()) {
         int status;
         pid_t pid;
@@ -277,7 +276,9 @@ int main(int argc, char **argv)
             }
             if (WIFEXITED(status)) { 
                 LDEBUG << "unzip exited, status=" << WEXITSTATUS(status);
-                any_error |= (0 != WEXITSTATUS(status));
+                if (0 != WEXITSTATUS(status)) {
+                    exit(EXIT_FAILURE);
+                }
             } else if (WIFSIGNALED(status)) {
                 for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
                     if (pid == children[i]) {
@@ -300,6 +301,7 @@ int main(int argc, char **argv)
     
     /* time to run the actual commands */
     children.clear();
+    bool any_error = false;
     for (size_t i=0; i<commands.size(); ++i) {
         int retval = chdir(cwd);
         if (0 != retval) {
@@ -568,12 +570,21 @@ pid_t unzip_command(std::string command)
         /* this is the child */
         int retval;
         if (strcmp(new_argv[0],"gridlabd") == 0) { // if this is a GridLAB-D federate we need to extract the model file
-            char* uzipcommand[] = { "unzip", "*.zip", NULL };
-            retval = execvp(uzipcommand[0], uzipcommand);
+            char const * const uzipcommand[] = { "unzip", "-qq", "*.zip", NULL };
+            //retval = execvp(uzipcommand[0], uzipcommand);
+            retval = execvp("unzip", (char**)uzipcommand);
             if (-1 == retval) {
                 ERRNO << "execvp(unzip *.zip)";
                 _exit(EXIT_FAILURE);
             }    
+        } else { // my not so elegant way to ensure that we do not fork without executing a command...
+            //const char* uzipcommand[] = { "true", "", NULL };
+            char const * const uzipcommand[] = { "true", "", NULL };
+            retval = execvp("true", (char**)uzipcommand);
+            if (-1 == retval) {
+                ERRNO << "execvp(true)";
+                _exit(EXIT_FAILURE);
+            }       	
         }
     }
 
