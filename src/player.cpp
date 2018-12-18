@@ -94,7 +94,7 @@ int main(int argc, char **argv)
         copy(istream_iterator<string>(iss),
                 istream_iterator<string>(),
                 back_inserter(tokens));
-        if (tokens.size() != 3) {
+        if (tokens.size() < 3) {
             cerr << "Bad line: " << counter << ": '" << line << "'" << endl;
             fncs::die();
         }
@@ -107,6 +107,10 @@ int main(int argc, char **argv)
                 cerr << "Bad time token in line: " << counter << ": '" << line << "'" << endl;
                 fncs::die();
             }
+        }
+        string pub_val = tokens[2];
+        for (int i = 3; i < tokens.size(); i++) {
+            pub_val = pub_val + " " + tokens[i];
         }
 
         /* sync */
@@ -121,9 +125,9 @@ int main(int argc, char **argv)
 
         /* create event */
 #ifdef FNCS_ANON
-        fncs::publish_anon(tokens[1], tokens[2]);
+        fncs::publish_anon(tokens[1], pub_val);
 #else
-        fncs::publish(tokens[1], tokens[2]);
+        fncs::publish(tokens[1], pub_val);
 #endif
 
         /* read next line */

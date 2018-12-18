@@ -17,6 +17,9 @@
 /* 3rd party headers */
 #include "czmq.h"
 
+/* 3rd party contrib */
+#include "yaml-cpp/yaml.h"
+
 /* fncs headers */
 #include "log.hpp"
 #include "fncs.hpp"
@@ -33,6 +36,8 @@ class SimulatorState {
             , time_last_processed(0)
             , processing(true)
             , messages_pending(false)
+            , aggregate_sub(false)
+            , aggregate_pub(false)
         {}
 
         string name;
@@ -41,7 +46,10 @@ class SimulatorState {
         fncs::time time_last_processed;
         bool processing;
         bool messages_pending;
+        bool aggregate_sub;
+        bool aggregate_pub;
         set<string> subscription_values;
+        map<string,string> messages;
 };
 
 typedef map<string,size_t> SimIndex;
@@ -51,6 +59,7 @@ typedef vector<fncs::time> TimeVec;
 typedef map<string,IndexVec> TopicMap;
 typedef map<string,set<string> > SimKeyMap;
 typedef map<string,TimeVec> SimTimeMap;
+typedef map<string,map<string,string> > SimPubMap;
 
 static fncs::time time_real_start;
 static fncs::time time_real;
@@ -90,12 +99,21 @@ int main(int argc, char **argv)
     TopicMap topic_to_indexes;  /* quickly lookup subscribed sims */
     SimKeyMap name_to_keys;     /* summary of topics per sim name */
     SimKeyMap name_to_peers;    /* summary of peers per sim name */
+    SimPubMap name_to_pubs;     /* summary of a sim's pending messages */
     SimTimeMap name_to_peertimes; /* summary of peer deltas */
     fncs::time time_granted = 0;/* global clock */
     zsock_t *server = NULL;     /* the broker socket */
     bool do_trace = false;      /* whether to dump all received messages */
     fncs::time realtime_interval = 0;
-
+    
+#ifdef INSTRUMENTATION
+    //Instrumentation variables
+    static vector<int> vec_grant_time_calc;
+    static vector<int> vec_granted_time;
+    static vector<int> vec_granted_num;
+    static long publication_count = 0;
+#endif
+    
     fncs::start_logging();
     fncs::replicate_logging(FNCSLog::ReportingLevel(),
             Output2Tee::Stream1(), Output2Tee::Stream2());
@@ -113,7 +131,7 @@ int main(int argc, char **argv)
         int n_sims_signed = 0;
         istringstream iss(argv[1]);
         iss >> n_sims_signed;
-        LDEBUG4 << "n_sims_signed = " << n_sims_signed;
+        LINFO << "n_sims_signed = " << n_sims_signed;
         if (n_sims_signed <= 0) {
             LERROR << "number of simulators arg must be >= 1";
             exit(EXIT_FAILURE);
@@ -152,6 +170,13 @@ int main(int argc, char **argv)
     if (!endpoint) {
         endpoint = "tcp://*:5570";
     }
+    
+    // Setting the ZMQ sending and receving high-water mark (message buffer sizes)
+    //  to infinite to ensure that situations in which a large number of FNCS messages
+    //  are generated get completely processed by the broker.
+    zsys_set_sndhwm(0);
+    zsys_set_rcvhwm(0);
+
 
     server = zsock_new_router(endpoint);
     if (!server) {
@@ -163,6 +188,14 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     LDEBUG4 << "broker socket bound to " << endpoint;
+    
+    zsock_set_unbounded(server);
+    
+    // Allows ZMQ to hang around and clear up sending and receiving any pending messages
+    //  "-1" means "hang around forever" which could obviously be problematic but
+    //  currently solves the problem we have of the broker leaving the federation too
+    //  early (while messages are enroute).
+    zsock_set_linger(server, -1);
 
     /* begin event loop */
     zmq_pollitem_t items[] = { { zsock_resolve(server), 0, ZMQ_POLLIN, 0 } };
@@ -170,9 +203,11 @@ int main(int argc, char **argv)
         int rc = 0;
         
         LDEBUG4 << "entering blocking poll";
+        fncs::time poll_start = fncs::timer();
         rc = zmq_poll(items, 1, -1);
         if (rc == -1) {
-            LERROR << "broker polling error: " << strerror(errno);
+            fncs::time poll_wait = fncs::timer() - poll_start;
+            LERROR << "broker polling error " << poll_wait << " after entering blocking poll:" << strerror(errno);
             broker_die(simulators, server); /* interrupted */
         }
 
@@ -196,6 +231,7 @@ int main(int argc, char **argv)
                 broker_die(simulators, server);
             }
             sender = fncs::to_string(frame);
+            LDEBUG4 << "message received from " << sender;
 
             /* next frame is message type identifier */
             frame = zmsg_next(msg);
@@ -211,6 +247,8 @@ int main(int argc, char **argv)
                 string config_string;
                 fncs::Config config;
                 string time_delta;
+                string aggregate_sub;
+                string aggregate_pub;
                 size_t index = 0;
 
                 LDEBUG4 << "HELLO received";
@@ -220,8 +258,16 @@ int main(int argc, char **argv)
                     LERROR << "simulator '" << sender << "' already connected";
                     broker_die(simulators, server);
                 }
+                
+                /* if all sims have connected, this is an error to get
+                an extra HELLO */
+                if (simulators.size() == n_sims) {
+                    LERROR << "max number of simulators already connected";
+                    broker_die(simulators, server);
+                }
+                
                 index = simulators.size();
-                LDEBUG4 << "registering client '" << sender << "'";
+                LDEBUG1 << "registering client '" << sender << "'";
 
                 /* next frame is config chunk */
                 frame = zmsg_next(msg);
@@ -271,6 +317,40 @@ int main(int argc, char **argv)
                     time_delta = "1s";
                 }
                 state.time_delta = fncs::parse_time(time_delta);
+
+                /* get aggregate_sub from config */
+                aggregate_sub = config.aggregate_sub;
+                if (aggregate_sub.empty()) {
+                    LWARNING << sender << " config does not contain 'aggregate_sub'";
+                    LWARNING << sender << " aggregate_sub defaulting to false";
+                    aggregate_sub = "false";
+                }
+				{
+					char fc = aggregate_sub[0];
+					if (fc == 'N' || fc == 'n' || fc == 'F' || fc == 'f') {
+						state.aggregate_sub = false;
+					}
+					else {
+						state.aggregate_sub = true;
+					}
+				}
+
+                /* get aggregate_pub from config */
+                aggregate_pub = config.aggregate_pub;
+                if (aggregate_pub.empty()) {
+                    LWARNING << sender << " config does not contain 'aggregate_pub'";
+                    LWARNING << sender << " aggregate_pub defaulting to false";
+                    aggregate_pub = "false";
+                }
+				{
+					char fc = aggregate_pub[0];
+					if (fc == 'N' || fc == 'n' || fc == 'F' || fc == 'f') {
+						state.aggregate_pub = false;
+					}
+					else {
+						state.aggregate_pub = true;
+					}
+				}
 
                 /* parse subscription values */
                 set<string> subscription_values;
@@ -324,13 +404,15 @@ int main(int argc, char **argv)
                 state.processing = false;
                 state.messages_pending = false;
                 state.subscription_values = subscription_values;
+                state.messages.clear();
                 name_to_index[sender] = index;
                 simulators.push_back(state);
 
-                LDEBUG4 << "simulators.size() = " << simulators.size();
+                LDEBUG2 << "simulators.size() = " << simulators.size();
 
                 /* if all sims have connected, send the go-ahead */
                 if (simulators.size() == n_sims) {
+                    LINFO << "all federates checked in";
                     time_real_start = fncs::timer_ft();
                     time_real = 0;
                     if (realtime_interval) {
@@ -494,6 +576,9 @@ int main(int argc, char **argv)
                 --n_processing;
 
                 /* if all sims are done, determine next time step */
+#ifdef INSTRUMENTATION
+                double start_grant_calc = fncs::timer_ft();
+#endif
                 if (0 == n_processing) {
                     vector<fncs::time> time_actionable(n_sims);
                     for (size_t i=0; i<n_sims; ++i) {
@@ -508,7 +593,7 @@ int main(int argc, char **argv)
                     }
                     time_granted = *min_element(time_actionable.begin(),
                                                 time_actionable.end());
-                    LDEBUG4 << "time_granted = " << time_granted;
+                    LINFO << "time_granted = " << time_granted;
                     if (realtime_interval) {
 #ifdef _WIN32
                         cerr << "realtime clock not yet supported on WIN32" << endl;
@@ -525,6 +610,22 @@ int main(int argc, char **argv)
                     }
                     for (size_t i=0; i<n_sims; ++i) {
                         if (time_granted == time_actionable[i]) {
+                            if (simulators[i].aggregate_sub && !simulators[i].messages.empty()) {
+                                LDEBUG4 << "sending aggregate_sub message to "
+                                    << simulators[i].name;
+                                zstr_sendm(server, simulators[i].name.c_str());
+                                zstr_sendm(server, fncs::PUBLISH_AGGREGATE);
+                                zstr_sendfm(server, "%llu", (unsigned long long)simulators[i].messages.size());
+                                for (map<string,string>::const_iterator it=
+                                        simulators[i].messages.begin();
+                                        it!=simulators[i].messages.end();
+                                        ++it) {
+                                    zstr_sendm(server, it->first.c_str());
+                                    zstr_sendm(server, it->second.c_str());
+                                }
+                                zstr_send(server, "END");
+                                simulators[i].messages.clear();
+                            }
                             LDEBUG4 << "granting " << time_granted
                                 << " to " << simulators[i].name;
                             ++n_processing;
@@ -540,14 +641,23 @@ int main(int argc, char **argv)
                             simulators[i].time_last_processed += simulators[i].time_delta * jump;
                         }
                     }
+#ifdef INSTRUMENTATION
+                    double stop_grant_calc = fncs::timer_ft();
+                    vec_grant_time_calc.push_back(stop_grant_calc - start_grant_calc);
+                    vec_granted_time.push_back(time_granted);
+                    vec_granted_num.push_back(n_processing);
+#endif
                 }
             }
             else if (fncs::PUBLISH == message_type) {
                 string topic = "";
+                string value = ""; /* will lazy construct */
                 bool found_one = false;
 
                 LDEBUG4 << "PUBLISH received";
-
+#ifdef INSTRUMENTATION
+                publication_count++;
+#endif
                 /* did we receive message from a connected sim? */
                 if (name_to_index.count(sender) == 0) {
                     LERROR << "simulator '" << sender << "' not connected";
@@ -571,7 +681,7 @@ int main(int argc, char **argv)
                         LERROR << "PUBLISH message missing value";
                         broker_die(simulators, server);
                     }
-                    string value = fncs::to_string(frame);
+                    value = fncs::to_string(frame);
                     trace << time_granted
                         << "\t" << topic
                         << "\t" << value
@@ -579,30 +689,6 @@ int main(int argc, char **argv)
                 }
 
                 /* send the message to subscribed sims */
-#if 0
-                for (size_t i=0; i<n_sims; ++i) {
-                    bool found = false;
-                    if (simulators[i].subscription_values.count(topic)) {
-                        found = true;
-                    }
-                    if (found) {
-                        zmsg_t *msg_copy = zmsg_dup(msg);
-                        if (!msg_copy) {
-                            LERROR << "failed to copy pub message";
-                            broker_die(simulators, server);
-                        }
-                        /* swap out original sender with new destiation */
-                        zframe_reset(zmsg_first(msg_copy),
-                                simulators[i].name.c_str(),
-                                simulators[i].name.size());
-                        /* send it on */
-                        zmsg_send(&msg_copy, server);
-                        found_one = true;
-                        simulators[i].messages_pending = true;
-                        LDEBUG4 << "pub to " << simulators[i].name;
-                    }
-                }
-#else
                 {
                     TopicMap::iterator iter = topic_to_indexes.find(topic);
                     if (iter != topic_to_indexes.end()) {
@@ -610,28 +696,134 @@ int main(int argc, char **argv)
                         IndexVec::iterator index;
                         for (index=iv.begin(); index!=iv.end(); index++) {
                             size_t i = *index;
-							if (0 == byes.count(simulators[i].name)) {
-								zmsg_t *msg_copy = zmsg_dup(msg);
-								if (!msg_copy) {
-									LERROR << "failed to copy pub message";
-									broker_die(simulators, server);
-								}
-								/* swap out original sender with new destiation */
-								zframe_reset(zmsg_first(msg_copy),
-										simulators[i].name.c_str(),
-										simulators[i].name.size());
-								/* send it on */
-								zmsg_send(&msg_copy, server);
-								found_one = true;
-								simulators[i].messages_pending = true;
-								LDEBUG4 << "pub to " << simulators[i].name;
-							}
+                            if (0 == byes.count(simulators[i].name)) {
+                                if (simulators[i].aggregate_sub) {
+                                    /* if we haven't gotten the value
+                                     * yet, do it now */
+                                    if (value.empty()) {
+                                        /* next frame is value payload */
+                                        frame = zmsg_next(msg);
+                                        if (!frame) {
+                                            LERROR << "PUBLISH message missing value";
+                                            broker_die(simulators, server);
+                                        }
+                                        value = fncs::to_string(frame);
+                                    }
+                                    simulators[i].messages[topic] = value;
+                                    found_one = true;
+                                    simulators[i].messages_pending = true;
+                                    LDEBUG4 << "agg pub to " << simulators[i].name;
+                                }
+                                else {
+                                    zmsg_t *msg_copy = zmsg_dup(msg);
+                                    if (!msg_copy) {
+                                        LERROR << "failed to copy pub message";
+                                        broker_die(simulators, server);
+                                    }
+                                    /* swap out original sender with new destiation */
+                                    zframe_reset(zmsg_first(msg_copy),
+                                            simulators[i].name.c_str(),
+                                            simulators[i].name.size());
+                                    /* send it on */
+                                    zmsg_send(&msg_copy, server);
+                                    found_one = true;
+                                    simulators[i].messages_pending = true;
+                                    LDEBUG4 << "pub to " << simulators[i].name;
+                                }
+                            }
                         }
                     }
                 }
-#endif
                 if (!found_one) {
                     LDEBUG4 << "dropping PUBLISH message '" << topic << "'";
+                }
+            }
+            else if (fncs::PUBLISH_AGGREGATE == message_type) {
+                LDEBUG4 << "PUBLISH_AGGREGATE received";
+#ifdef INSTRUMENTATION
+                publication_count++;
+#endif
+                /* did we receive message from a connected sim? */
+                if (name_to_index.count(sender) == 0) {
+                    LERROR << "simulator '" << sender << "' not connected";
+                    broker_die(simulators, server);
+                }
+
+                /* next frame is number of key/value pairs */
+                frame = zmsg_next(msg);
+                if (!frame) {
+                    LERROR << "PUBLISH_AGGREGATE message missing n_keys";
+                    broker_die(simulators, server);
+                }
+                int n_keys = atoi(fncs::to_string(frame).c_str());
+                LDEBUG2 << "n_keys is " << n_keys;
+
+                for (int i=0; i<n_keys; ++i) {
+                    string topic = "";
+                    string value = "";
+                    bool found_one = false;
+
+                    topic.clear();
+                    value.clear();
+
+                    /* next frame is topic */
+                    frame = zmsg_next(msg);
+                    if (!frame) {
+                        LERROR << "PUBLISH_AGGREGATE message missing topic";
+                        broker_die(simulators, server);
+                    }
+                    topic = fncs::to_string(frame);
+
+                    LDEBUG4 << "PUBLISH_AGGREGATE received topic " << topic;
+
+                    /* next frame is value payload */
+                    frame = zmsg_next(msg);
+                    if (!frame) {
+                        LERROR << "PUBLISH_AGGREGATE message missing value";
+                        broker_die(simulators, server);
+                    }
+                    value = fncs::to_string(frame);
+
+                    LDEBUG4 << "PUBLISH_AGGREGATE received value " << value;
+
+                    if (do_trace) {
+                        trace << time_granted
+                            << "\t" << topic
+                            << "\t" << value
+                            << endl;
+                    }
+
+                    /* send the message to subscribed sims */
+                    {
+                        TopicMap::iterator iter = topic_to_indexes.find(topic);
+                        if (iter != topic_to_indexes.end()) {
+                            IndexVec &iv = iter->second;
+                            IndexVec::iterator index;
+                            for (index=iv.begin(); index!=iv.end(); index++) {
+                                size_t i = *index;
+                                if (0 == byes.count(simulators[i].name)) {
+                                    if (simulators[i].aggregate_sub) {
+                                        simulators[i].messages[topic] = value;
+                                        found_one = true;
+                                        simulators[i].messages_pending = true;
+                                        LDEBUG4 << "agg pub to " << simulators[i].name;
+                                    }
+                                    else {
+                                        zstr_sendm(server, simulators[i].name.c_str());
+                                        zstr_sendm(server, fncs::PUBLISH);
+                                        zstr_sendm(server, topic.c_str());
+                                        zstr_send(server, value.c_str());
+                                        found_one = true;
+                                        simulators[i].messages_pending = true;
+                                        LDEBUG4 << "pub to " << simulators[i].name;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (!found_one) {
+                        LDEBUG4 << "dropping PUBLISH message '" << topic << "'";
+                    }
                 }
             }
             else if (fncs::DIE == message_type) {
@@ -685,12 +877,27 @@ int main(int argc, char **argv)
         }
     }
 
+    // simulation is done, let the user know
+    LINFO << "broker is done and will exit now";
+
     zsock_destroy(&server);
     zsys_shutdown(); /* without this, Windows will assert */
 
     if (trace.is_open()) {
         trace.close();
     }
+#ifdef INSTRUMENTATION
+    // Writing out broker-only instrumentation results
+    ofstream myfile;
+    myfile.open("broker_only_instrumentation.csv", ios::out | ios::app);
+    myfile << "Total publication count: " << publication_count << endl;
+    myfile << "Granted time" << "," << "Number of granted federates" << "," << "Calculation time for grant (ns)" << endl;
+    int vsize = vec_grant_time_calc.size();
+    for(int vn=0; vn<vsize; vn++)
+    {
+        myfile << vec_granted_time[vn] << "," << vec_granted_num[vn] << "," << vec_grant_time_calc[vn] << endl;
+    }
+#endif
 
     return 0;
 }

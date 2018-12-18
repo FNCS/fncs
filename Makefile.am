@@ -13,6 +13,7 @@ LDADD =
 
 pkgconfig_DATA = src/libfncs.pc
 
+AM_CPPFLAGS += -I$(top_builddir)
 AM_CPPFLAGS += -I$(top_srcdir)/src
 AM_CPPFLAGS += -I$(top_srcdir)/contrib
 AM_CPPFLAGS += -I$(top_srcdir)/contrib/yaml-cpp/include
@@ -25,9 +26,22 @@ AM_LDFLAGS += $(ZMQ_LDFLAGS)
 LDADD += libfncs.la
 LDADD += $(CZMQ_LIBS)
 LDADD += $(ZMQ_LIBS)
+LDADD += libyamlcpp.la
+LDADD += libjsoncpp.la
 
 include_HEADERS += src/fncs.hpp
 include_HEADERS += src/fncs.h
+
+# If FORTRAN is enabled, build the mod file without creating a
+# dependency on FORTRAN libraries in the C/C++ libfncs.la library.
+if ENABLE_FORTRAN
+noinst_LTLIBRARIES += libfncsf.la
+libfncsf_la_SOURCES = src/fncs_fapi_mod.f90
+include_HEADERS += fncs.mod
+endif
+
+fclibs:
+	@echo $(FCLIBS)
 
 lib_LTLIBRARIES += libfncs.la
 libfncs_la_SOURCES =
@@ -35,11 +49,13 @@ libfncs_la_SOURCES += src/echo.cpp
 libfncs_la_SOURCES += src/echo.hpp
 libfncs_la_SOURCES += src/fncs.cpp
 libfncs_la_SOURCES += src/fncs_capi.cpp
+libfncs_la_SOURCES += src/fncs_fapi.cpp
 libfncs_la_SOURCES += src/fncs_internal.hpp
 libfncs_la_LIBADD =
 libfncs_la_LIBADD += $(CZMQ_LIBS)
 libfncs_la_LIBADD += $(ZMQ_LIBS)
 libfncs_la_LIBADD += libyamlcpp.la
+libfncs_la_LIBADD += libjsoncpp.la
 if ON_MINGW
 libfncs_la_LDFLAGS = \
     -no-undefined \
@@ -145,6 +161,12 @@ contrib_yaml_cpp_test_test_CPPFLAGS += -I$(top_srcdir)/contrib/yaml-cpp/test
 
 contrib_yaml_cpp_test_test_LDADD = libyamlcpp.la
 
+noinst_LTLIBRARIES += libjsoncpp.la
+libjsoncpp_la_SOURCES =
+libjsoncpp_la_SOURCES += contrib/json-cpp/jsoncpp.cpp
+libjsoncpp_la_SOURCES += contrib/json-cpp/json/json.h
+libjsoncpp_la_SOURCES += contrib/json-cpp/json/json-forwards.h
+
 check_PROGRAMS += tests/config
 tests_config_SOURCES = tests/config.cpp
 
@@ -166,3 +188,53 @@ fncs_player_SOURCES = src/player.cpp
 bin_PROGRAMS += fncs_player_anon
 fncs_player_anon_SOURCES = src/player.cpp
 fncs_player_anon_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_ANON
+
+if ENABLE_FORTRAN
+check_PROGRAMS += tests/fcoverage
+endif
+tests_fcoverage_SOURCES = tests/fcoverage.F90
+tests_fcoverage_LDADD = $(LDADD) $(FCLIBS)
+nodist_EXTRA_tests_fcoverage_SOURCES = dummy.cxx
+
+if ENABLE_FORTRAN
+check_PROGRAMS += tests/fcoverage_mod
+endif
+tests_fcoverage_mod_SOURCES = tests/fcoverage_mod.f90
+tests_fcoverage_mod_LDADD = $(LDADD) $(FCLIBS)
+nodist_EXTRA_tests_fcoverage_mod_SOURCES = dummy.cxx
+
+bin_PROGRAMS += fncs_test_federate
+fncs_test_federate_SOURCES = src/test_federate.cpp
+fncs_test_federate_LDADD = $(LDADD) libjsoncpp.la
+
+bin_PROGRAMS += mini_federate
+mini_federate_SOURCES = src/mini_federate.cpp
+
+if HAVE_MPICXX
+
+bin_PROGRAMS += fncs_launcher
+fncs_launcher_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+    $(LIBTOOLFLAGS) --mode=link $(MPICXX) $(AM_CXXFLAGS) \
+    $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+fncs_launcher_SOURCES = src/fncs_launcher.cpp
+fncs_launcher_CPPFLAGS =
+fncs_launcher_CPPFLAGS += $(AM_CPPFLAGS)
+fncs_launcher_CPPFLAGS += $(MPICXX_CPPFLAGS)
+
+bin_PROGRAMS += fncs_run_once_per_host
+fncs_run_once_per_host_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+    $(LIBTOOLFLAGS) --mode=link $(MPICXX) $(AM_CXXFLAGS) \
+    $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+fncs_run_once_per_host_SOURCES = src/fncs_run_once_per_host.cpp
+fncs_run_once_per_host_CPPFLAGS =
+fncs_run_once_per_host_CPPFLAGS += $(AM_CPPFLAGS)
+fncs_run_once_per_host_CPPFLAGS += $(MPICXX_CPPFLAGS)
+
+endif
+
+bin_PROGRAMS += fncs_echo_argv
+fncs_echo_argv_SOURCES = src/fncs_echo_argv.cpp
+
+bin_PROGRAMS += fncs_test_init
+fncs_test_init_SOURCES = src/fncs_echo_argv.cpp
+fncs_test_init_CPPFLAGS = $(AM_CPPFLAGS) -DFNCS_INIT

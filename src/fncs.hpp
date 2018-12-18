@@ -22,6 +22,8 @@ using ::std::vector;
 #if (defined WIN32 || defined _WIN32)
 #   if defined LIBFNCS_STATIC
 #       define FNCS_EXPORT
+#   elif defined __MINGW32__
+#       define FNCS_EXPORT
 #   elif defined LIBFNCS_EXPORTS
 #       define FNCS_EXPORT __declspec(dllexport)
 #   else
@@ -41,6 +43,12 @@ namespace fncs {
     /** Connect to broker and parse inline configuration. */
     FNCS_EXPORT void initialize(const string &configuration);
 
+    /** Connect to broker and parse config file for Transactive agents. */
+	FNCS_EXPORT void agentRegister();
+
+	/** Connect to broker and parse inline configuration for transactive agents. */
+	FNCS_EXPORT void agentRegister(const string &configuration);
+
     /** Check whether simulator is configured and connected to broker. */
     FNCS_EXPORT bool is_initialized();
 
@@ -52,6 +60,9 @@ namespace fncs {
 
     /** Publish value anonymously using the given key. */
     FNCS_EXPORT void publish_anon(const string &key, const string &value);
+
+    /** Publish function for transactive agents. */
+    FNCS_EXPORT void agentPublish(const string &value);
 
     /** Publish value using the given key, adding from:to into the key. */
     FNCS_EXPORT void route(const string &from, const string &to, const string &key, const string &value);
@@ -69,6 +80,10 @@ namespace fncs {
     /** Get the keys for all values that were updated during the last
      * time_request. */
     FNCS_EXPORT vector<string> get_events();
+
+    /** Get the agent events for all values that were updated during the last
+	 * time_request. */
+	FNCS_EXPORT string agentGetEvents();
 
     /** Get a value from the cache with the given key.
      * Will hard fault if key is not found. */
