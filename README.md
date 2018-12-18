@@ -86,11 +86,11 @@ Please note that you must use your own username to clone the git repository as i
 # we are doing everything from your $HOME directory
 cd $HOME
 
-# clone FNCS
-git clone https://github.com/FNCS/fncs.git
+# download FNCS
+git clone https://github.com/GridOPTICS/FNCS2.git
 
 # change to FNCS directory
-cd fncs
+cd FNCS2
 
 # configure, make, and make install 
 ./configure --prefix=$HOME/FNCS_install --with-zmq=$HOME/FNCS_install
