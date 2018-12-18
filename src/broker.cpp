@@ -131,7 +131,7 @@ int main(int argc, char **argv)
         int n_sims_signed = 0;
         istringstream iss(argv[1]);
         iss >> n_sims_signed;
-        LDEBUG4 << "n_sims_signed = " << n_sims_signed;
+        LINFO << "n_sims_signed = " << n_sims_signed;
         if (n_sims_signed <= 0) {
             LERROR << "number of simulators arg must be >= 1";
             exit(EXIT_FAILURE);
@@ -171,9 +171,6 @@ int main(int argc, char **argv)
         endpoint = "tcp://*:5570";
     }
     
-    zsys_set_sndhwm(0);
-    zsys_set_rcvhwm(0);
-
     // Setting the ZMQ sending and receving high-water mark (message buffer sizes)
     //  to infinite to ensure that situations in which a large number of FNCS messages
     //  are generated get completely processed by the broker.
@@ -192,15 +189,12 @@ int main(int argc, char **argv)
     }
     LDEBUG4 << "broker socket bound to " << endpoint;
     
-    
     zsock_set_unbounded(server);
     
     // Allows ZMQ to hang around and clear up sending and receiving any pending messages
     //  "-1" means "hang around forever" which could obviously be problematic but
     //  currently solves the problem we have of the broker leaving the federation too
     //  early (while messages are enroute).
-    zsock_set_linger(server, -1);
-
     zsock_set_linger(server, -1);
 
     /* begin event loop */
@@ -273,7 +267,7 @@ int main(int argc, char **argv)
                 }
                 
                 index = simulators.size();
-                LDEBUG4 << "registering client '" << sender << "'";
+                LDEBUG1 << "registering client '" << sender << "'";
 
                 /* next frame is config chunk */
                 frame = zmsg_next(msg);
@@ -414,10 +408,11 @@ int main(int argc, char **argv)
                 name_to_index[sender] = index;
                 simulators.push_back(state);
 
-                LDEBUG4 << "simulators.size() = " << simulators.size();
+                LDEBUG2 << "simulators.size() = " << simulators.size();
 
                 /* if all sims have connected, send the go-ahead */
                 if (simulators.size() == n_sims) {
+                    LINFO << "all federates checked in";
                     time_real_start = fncs::timer_ft();
                     time_real = 0;
                     if (realtime_interval) {
@@ -598,7 +593,7 @@ int main(int argc, char **argv)
                     }
                     time_granted = *min_element(time_actionable.begin(),
                                                 time_actionable.end());
-                    LDEBUG4 << "time_granted = " << time_granted;
+                    LINFO << "time_granted = " << time_granted;
                     if (realtime_interval) {
 #ifdef _WIN32
                         cerr << "realtime clock not yet supported on WIN32" << endl;
@@ -881,6 +876,9 @@ int main(int argc, char **argv)
             zmsg_destroy(&msg);
         }
     }
+
+    // simulation is done, let the user know
+    LINFO << "broker is done and will exit now";
 
     zsock_destroy(&server);
     zsys_shutdown(); /* without this, Windows will assert */

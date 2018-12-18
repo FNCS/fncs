@@ -697,6 +697,15 @@ ZMQ_LIBS
 EGREP
 GREP
 CXXCPP
+ZIP_EXT
+ZIP_ARGS
+HAVE_ZIP_FALSE
+HAVE_ZIP_TRUE
+ZIP
+MPICXX_CPPFLAGS
+HAVE_MPICXX_FALSE
+HAVE_MPICXX_TRUE
+MPICXX
 am__fastdepCXX_FALSE
 am__fastdepCXX_TRUE
 CXXDEPMODE
@@ -773,7 +782,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -821,6 +829,10 @@ LDFLAGS
 LIBS
 CPPFLAGS
 CCC
+MPICXX
+ZIP
+ZIP_ARGS
+ZIP_EXT
 CXXCPP
 CC
 CFLAGS
@@ -865,7 +877,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1118,15 +1129,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1264,7 +1266,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1417,7 +1419,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1496,6 +1497,10 @@ Some influential environment variables:
   LIBS        libraries to pass to the linker, e.g. -l<library>
   CPPFLAGS    (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
+  MPICXX      MPI C++ compiler wrapper
+  ZIP         archive program (default zip)
+  ZIP_ARGS    archive program arguments (default -r)
+  ZIP_EXT     archive file extension (default zip)
   CXXCPP      C++ preprocessor
   CC          C compiler command
   CFLAGS      C compiler flags
@@ -4362,8 +4367,288 @@ fi
 
 
 
-# Checks for libraries.
+for ac_prog in mpicxx mpic++ mpiCC sxmpic++ mpxlC_r mpxlC mpixlcxx_r mpixlcxx
+do
+  # Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_MPICXX+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $MPICXX in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_MPICXX="$MPICXX" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_MPICXX="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
 
+  ;;
+esac
+fi
+MPICXX=$ac_cv_path_MPICXX
+if test -n "$MPICXX"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $MPICXX" >&5
+$as_echo "$MPICXX" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+  test -n "$MPICXX" && break
+done
+test -n "$MPICXX" || MPICXX="no"
+
+ if test "x$MPICXX" != xno; then
+  HAVE_MPICXX_TRUE=
+  HAVE_MPICXX_FALSE='#'
+else
+  HAVE_MPICXX_TRUE='#'
+  HAVE_MPICXX_FALSE=
+fi
+
+
+
+if test "x$MPICXX" != xno; then :
+
+      rm -f mpicxx_show.out
+      if $MPICXX -show > mpicxx_show.out; then :
+
+            MPICXX_SHOW=`cat mpicxx_show.out`
+            if ac_fn_cxx_compute_int "$LINENO" "(long int) (sizeof (void*))" "fncs_arg_parse_sizeof_voidp"        ""; then :
+
+fi
+
+for arg in $MPICXX_SHOW ; do
+    fncs_arg_parse_ok=yes
+    case $arg in #(
+  yes) :
+     ;; #(
+  no) :
+     ;; #(
+  -l*) :
+    MPICXX_LIBS="$MPICXX_LIBS $arg" ;; #(
+  -L*) :
+    MPICXX_LDFLAGS="$MPICXX_LDFLAGS $arg" ;; #(
+  -WL*) :
+    MPICXX_LDFLAGS="$MPICXX_LDFLAGS $arg" ;; #(
+  -Wl*) :
+    MPICXX_LDFLAGS="$MPICXX_LDFLAGS $arg" ;; #(
+  -I*) :
+    MPICXX_CPPFLAGS="$MPICXX_CPPFLAGS $arg" ;; #(
+  *.a) :
+    MPICXX_LIBS="$MPICXX_LIBS $arg" ;; #(
+  *.so) :
+    MPICXX_LIBS="$MPICXX_LIBS $arg" ;; #(
+  *lib) :
+    if test -d $arg; then :
+  MPICXX_LDFLAGS="$MPICXX_LDFLAGS -L$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of MPICXX_SHOW not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of MPICXX_SHOW not parsed" >&2;}
+fi ;; #(
+  *lib/) :
+    if test -d $arg; then :
+  MPICXX_LDFLAGS="$MPICXX_LDFLAGS -L$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of MPICXX_SHOW not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of MPICXX_SHOW not parsed" >&2;}
+fi ;; #(
+  *lib64) :
+    if test -d $arg; then :
+  MPICXX_LDFLAGS="$MPICXX_LDFLAGS -L$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of MPICXX_SHOW not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of MPICXX_SHOW not parsed" >&2;}
+fi ;; #(
+  *lib64/) :
+    if test -d $arg; then :
+  MPICXX_LDFLAGS="$MPICXX_LDFLAGS -L$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of MPICXX_SHOW not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of MPICXX_SHOW not parsed" >&2;}
+fi ;; #(
+  *include) :
+    if test -d $arg; then :
+  MPICXX_CPPFLAGS="$MPICXX_CPPFLAGS -I$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of MPICXX_SHOW not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of MPICXX_SHOW not parsed" >&2;}
+fi ;; #(
+  *include/) :
+    if test -d $arg; then :
+  MPICXX_CPPFLAGS="$MPICXX_CPPFLAGS -I$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of MPICXX_SHOW not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of MPICXX_SHOW not parsed" >&2;}
+fi ;; #(
+  *include64) :
+    if test -d $arg; then :
+  MPICXX_CPPFLAGS="$MPICXX_CPPFLAGS -I$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of MPICXX_SHOW not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of MPICXX_SHOW not parsed" >&2;}
+fi ;; #(
+  *include64/) :
+    if test -d $arg; then :
+  MPICXX_CPPFLAGS="$MPICXX_CPPFLAGS -I$arg"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of MPICXX_SHOW not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of MPICXX_SHOW not parsed" >&2;}
+fi ;; #(
+  *) :
+    fncs_arg_parse_ok=no ;;
+esac
+# $arg didn't fit the most common cases
+# check for subdirectories e.g. lib,include
+    if test "x$fncs_arg_parse_ok" = xno; then :
+  if test "x$fncs_arg_parse_sizeof_voidp" = x8; then :
+  if test -d $arg/lib64; then :
+  MPICXX_LDFLAGS="$MPICXX_LDFLAGS -L$arg/lib64"; fncs_arg_parse_ok=yes
+elif test -d $arg/lib; then :
+  MPICXX_LDFLAGS="$MPICXX_LDFLAGS -L$arg/lib"; fncs_arg_parse_ok=yes
+fi
+             if test -d $arg/include64; then :
+  MPICXX_CPPFLAGS="$MPICXX_CPPFLAGS -I$arg/include64"; fncs_arg_parse_ok=yes
+elif test -d $arg/include; then :
+  MPICXX_CPPFLAGS="$MPICXX_CPPFLAGS -I$arg/include"; fncs_arg_parse_ok=yes
+fi
+else
+  if test -d $arg/lib; then :
+  MPICXX_LDFLAGS="$MPICXX_LDFLAGS -L$arg/lib"; fncs_arg_parse_ok=yes
+fi
+             if test -d $arg/include; then :
+  MPICXX_CPPFLAGS="$MPICXX_CPPFLAGS -I$arg/include"; fncs_arg_parse_ok=yes
+fi
+fi
+fi
+# $arg still unknown, look for "lib" and "include" anywhere...
+    if test "x$fncs_arg_parse_ok" = xno; then :
+  case $arg in #(
+  *lib*) :
+    if test -d $arg; then :
+  MPICXX_LDFLAGS="$MPICXX_LDFLAGS -L$arg"; fncs_arg_parse_ok=yes
+fi ;; #(
+  *include*) :
+    if test -d $arg; then :
+  MPICXX_CPPFLAGS="$MPICXX_CPPFLAGS -I$arg"; fncs_arg_parse_ok=yes
+fi ;; #(
+  *) :
+     ;;
+esac
+fi
+# warn user that $arg fell through
+     if test "x$fncs_arg_parse_ok" = xno; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arg of MPICXX_SHOW not parsed" >&5
+$as_echo "$as_me: WARNING: $arg of MPICXX_SHOW not parsed" >&2;}
+fi
+done
+
+fi
+      rm -f mpicxx_show.out
+
+fi
+
+
+for ac_prog in zip
+do
+  # Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_ZIP+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $ZIP in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_ZIP="$ZIP" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_ZIP="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+ZIP=$ac_cv_path_ZIP
+if test -n "$ZIP"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ZIP" >&5
+$as_echo "$ZIP" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+  test -n "$ZIP" && break
+done
+test -n "$ZIP" || ZIP="no"
+
+ if test "x$ZIP" != xno; then
+  HAVE_ZIP_TRUE=
+  HAVE_ZIP_FALSE='#'
+else
+  HAVE_ZIP_TRUE='#'
+  HAVE_ZIP_FALSE=
+fi
+
+
+
+
+cat >>confdefs.h <<_ACEOF
+#define ZIP "$ZIP"
+_ACEOF
+
+
+if test "x$ZIP_ARGS" = x; then :
+  ZIP_ARGS=-r
+fi
+
+
+
+cat >>confdefs.h <<_ACEOF
+#define ZIP_ARGS "$ZIP_ARGS"
+_ACEOF
+
+
+if test "x$ZIP_EXT" = x; then :
+  ZIP_EXT=zip
+fi
+
+
+
+cat >>confdefs.h <<_ACEOF
+#define ZIP_EXT "$ZIP_EXT"
+_ACEOF
+
+
+# Checks for libraries.
 ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -4784,6 +5069,7 @@ case $with_zmq in #(
 fi
 
 for arg in $with_zmq ; do
+    fncs_arg_parse_ok=yes
     case $arg in #(
   yes) :
      ;; #(
@@ -5043,6 +5329,7 @@ case $with_czmq in #(
 fi
 
 for arg in $with_czmq ; do
+    fncs_arg_parse_ok=yes
     case $arg in #(
   yes) :
      ;; #(
@@ -9331,7 +9618,7 @@ linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
   lt_cv_deplibs_check_method=pass_all
   ;;
 
-netbsd* | netbsdelf*-gnu)
+netbsd*)
   if echo __ELF__ | $CC -E - | $GREP __ELF__ > /dev/null; then
     lt_cv_deplibs_check_method='match_pattern /lib[^/]+(\.so\.[0-9]+\.[0-9]+|_pic\.a)$'
   else
@@ -13031,9 +13318,6 @@ $as_echo_n "checking whether the $compiler linker ($LD) supports shared librarie
   openbsd* | bitrig*)
     with_gnu_ld=no
     ;;
-  linux* | k*bsd*-gnu | gnu*)
-    link_all_deplibs=no
-    ;;
   esac
 
   ld_shlibs=yes
@@ -13288,7 +13572,7 @@ _LT_EOF
       fi
       ;;
 
-    netbsd* | netbsdelf*-gnu)
+    netbsd*)
       if echo __ELF__ | $CC -E - | $GREP __ELF__ >/dev/null; then
 	archive_cmds='$LD -Bshareable $libobjs $deplibs $linker_flags -o $lib'
 	wlarc=
@@ -13958,7 +14242,6 @@ $as_echo "$lt_cv_irix_exported_symbol" >&6; }
 	if test yes = "$lt_cv_irix_exported_symbol"; then
           archive_expsym_cmds='$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-soname $wl$soname `test -n "$verstring" && func_echo_all "$wl-set_version $wl$verstring"` $wl-update_registry $wl$output_objdir/so_locations $wl-exports_file $wl$export_symbols -o $lib'
 	fi
-	link_all_deplibs=no
       else
 	archive_cmds='$CC -shared $libobjs $deplibs $compiler_flags -soname $soname `test -n "$verstring" && func_echo_all "-set_version $verstring"` -update_registry $output_objdir/so_locations -o $lib'
 	archive_expsym_cmds='$CC -shared $libobjs $deplibs $compiler_flags -soname $soname `test -n "$verstring" && func_echo_all "-set_version $verstring"` -update_registry $output_objdir/so_locations -exports_file $export_symbols -o $lib'
@@ -13980,7 +14263,7 @@ $as_echo "$lt_cv_irix_exported_symbol" >&6; }
       esac
       ;;
 
-    netbsd* | netbsdelf*-gnu)
+    netbsd*)
       if echo __ELF__ | $CC -E - | $GREP __ELF__ >/dev/null; then
 	archive_cmds='$LD -Bshareable -o $lib $libobjs $deplibs $linker_flags'  # a.out
       else
@@ -15093,18 +15376,6 @@ fi
   # people can always --disable-shared, the test was removed, and we
   # assume the GNU/Linux dynamic linker is in use.
   dynamic_linker='GNU/Linux ld.so'
-  ;;
-
-netbsdelf*-gnu)
-  version_type=linux
-  need_lib_prefix=no
-  need_version=no
-  library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major ${libname}${shared_ext}'
-  soname_spec='${libname}${release}${shared_ext}$major'
-  shlibpath_var=LD_LIBRARY_PATH
-  shlibpath_overrides_runpath=no
-  hardcode_into_libs=yes
-  dynamic_linker='NetBSD ld.elf_so'
   ;;
 
 netbsd*)
@@ -18001,7 +18272,7 @@ lt_prog_compiler_static_CXX=
 	    ;;
 	esac
 	;;
-      netbsd* | netbsdelf*-gnu)
+      netbsd*)
 	;;
       *qnx* | *nto*)
         # QNX uses GNU C++, but need to define -shared option too, otherwise
@@ -18375,9 +18646,6 @@ $as_echo_n "checking whether the $compiler linker ($LD) supports shared librarie
       exclude_expsyms_CXX='[_]+GLOBAL_OFFSET_TABLE_|[_]+GLOBAL__[FID]_.*|[_]+head_[A-Za-z0-9_]+_dll|[A-Za-z0-9_]+_dll_iname'
       ;;
     esac
-    ;;
-  linux* | k*bsd*-gnu | gnu*)
-    link_all_deplibs_CXX=no
     ;;
   *)
     export_symbols_cmds_CXX='$NM $libobjs $convenience | $global_symbol_pipe | $SED '\''s/.* //'\'' | sort | uniq > $export_symbols'
@@ -19070,18 +19338,6 @@ fi
   # people can always --disable-shared, the test was removed, and we
   # assume the GNU/Linux dynamic linker is in use.
   dynamic_linker='GNU/Linux ld.so'
-  ;;
-
-netbsdelf*-gnu)
-  version_type=linux
-  need_lib_prefix=no
-  need_version=no
-  library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major ${libname}${shared_ext}'
-  soname_spec='${libname}${release}${shared_ext}$major'
-  shlibpath_var=LD_LIBRARY_PATH
-  shlibpath_overrides_runpath=no
-  hardcode_into_libs=yes
-  dynamic_linker='NetBSD ld.elf_so'
   ;;
 
 netbsd*)
@@ -20352,9 +20608,6 @@ $as_echo_n "checking whether the $compiler linker ($LD) supports shared librarie
   openbsd* | bitrig*)
     with_gnu_ld=no
     ;;
-  linux* | k*bsd*-gnu | gnu*)
-    link_all_deplibs_FC=no
-    ;;
   esac
 
   ld_shlibs_FC=yes
@@ -20609,7 +20862,7 @@ _LT_EOF
       fi
       ;;
 
-    netbsd* | netbsdelf*-gnu)
+    netbsd*)
       if echo __ELF__ | $CC -E - | $GREP __ELF__ >/dev/null; then
 	archive_cmds_FC='$LD -Bshareable $libobjs $deplibs $linker_flags -o $lib'
 	wlarc=
@@ -21229,7 +21482,6 @@ $as_echo "$lt_cv_irix_exported_symbol" >&6; }
 	if test yes = "$lt_cv_irix_exported_symbol"; then
           archive_expsym_cmds_FC='$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-soname $wl$soname `test -n "$verstring" && func_echo_all "$wl-set_version $wl$verstring"` $wl-update_registry $wl$output_objdir/so_locations $wl-exports_file $wl$export_symbols -o $lib'
 	fi
-	link_all_deplibs_FC=no
       else
 	archive_cmds_FC='$CC -shared $libobjs $deplibs $compiler_flags -soname $soname `test -n "$verstring" && func_echo_all "-set_version $verstring"` -update_registry $output_objdir/so_locations -o $lib'
 	archive_expsym_cmds_FC='$CC -shared $libobjs $deplibs $compiler_flags -soname $soname `test -n "$verstring" && func_echo_all "-set_version $verstring"` -update_registry $output_objdir/so_locations -exports_file $export_symbols -o $lib'
@@ -21251,7 +21503,7 @@ $as_echo "$lt_cv_irix_exported_symbol" >&6; }
       esac
       ;;
 
-    netbsd* | netbsdelf*-gnu)
+    netbsd*)
       if echo __ELF__ | $CC -E - | $GREP __ELF__ >/dev/null; then
 	archive_cmds_FC='$LD -Bshareable -o $lib $libobjs $deplibs $linker_flags'  # a.out
       else
@@ -22188,18 +22440,6 @@ fi
   dynamic_linker='GNU/Linux ld.so'
   ;;
 
-netbsdelf*-gnu)
-  version_type=linux
-  need_lib_prefix=no
-  need_version=no
-  library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major ${libname}${shared_ext}'
-  soname_spec='${libname}${release}${shared_ext}$major'
-  shlibpath_var=LD_LIBRARY_PATH
-  shlibpath_overrides_runpath=no
-  hardcode_into_libs=yes
-  dynamic_linker='NetBSD ld.elf_so'
-  ;;
-
 netbsd*)
   version_type=sunos
   need_lib_prefix=no
@@ -22683,6 +22923,14 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCXX\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${HAVE_MPICXX_TRUE}" && test -z "${HAVE_MPICXX_FALSE}"; then
+  as_fn_error $? "conditional \"HAVE_MPICXX\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${HAVE_ZIP_TRUE}" && test -z "${HAVE_ZIP_FALSE}"; then
+  as_fn_error $? "conditional \"HAVE_ZIP\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${HAVE_ZMQ_TRUE}" && test -z "${HAVE_ZMQ_FALSE}"; then
@@ -25390,20 +25638,28 @@ $as_echo "$as_me:  $PACKAGE_NAME configured as follows:" >&6;}
 $as_echo "$as_me: **************************************************************" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: " >&5
 $as_echo "$as_me: " >&6;}
-{ $as_echo "$as_me:${as_lineno-$LINENO}:           CXX=$CXX" >&5
-$as_echo "$as_me:           CXX=$CXX" >&6;}
-{ $as_echo "$as_me:${as_lineno-$LINENO}:      CXXFLAGS=$CXXFLAGS" >&5
-$as_echo "$as_me:      CXXFLAGS=$CXXFLAGS" >&6;}
-{ $as_echo "$as_me:${as_lineno-$LINENO}:           CPP=$CPP" >&5
-$as_echo "$as_me:           CPP=$CPP" >&6;}
-{ $as_echo "$as_me:${as_lineno-$LINENO}:      CPPFLAGS=$CPPFLAGS" >&5
-$as_echo "$as_me:      CPPFLAGS=$CPPFLAGS" >&6;}
-{ $as_echo "$as_me:${as_lineno-$LINENO}:       LDFLAGS=$LDFLAGS" >&5
-$as_echo "$as_me:       LDFLAGS=$LDFLAGS" >&6;}
-{ $as_echo "$as_me:${as_lineno-$LINENO}:          LIBS=$LIBS" >&5
-$as_echo "$as_me:          LIBS=$LIBS" >&6;}
-{ $as_echo "$as_me:${as_lineno-$LINENO}:       MPIEXEC=$MPIEXEC" >&5
-$as_echo "$as_me:       MPIEXEC=$MPIEXEC" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:             CXX=$CXX" >&5
+$as_echo "$as_me:             CXX=$CXX" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:        CXXFLAGS=$CXXFLAGS" >&5
+$as_echo "$as_me:        CXXFLAGS=$CXXFLAGS" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:             CPP=$CPP" >&5
+$as_echo "$as_me:             CPP=$CPP" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:        CPPFLAGS=$CPPFLAGS" >&5
+$as_echo "$as_me:        CPPFLAGS=$CPPFLAGS" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:         LDFLAGS=$LDFLAGS" >&5
+$as_echo "$as_me:         LDFLAGS=$LDFLAGS" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:            LIBS=$LIBS" >&5
+$as_echo "$as_me:            LIBS=$LIBS" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:          MPICXX=$MPICXX" >&5
+$as_echo "$as_me:          MPICXX=$MPICXX" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}: MPICXX_CPPFLAGS=$MPICXX_CPPFLAGS" >&5
+$as_echo "$as_me: MPICXX_CPPFLAGS=$MPICXX_CPPFLAGS" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:             ZIP=$ZIP" >&5
+$as_echo "$as_me:             ZIP=$ZIP" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:        ZIP_ARGS=$ZIP_ARGS" >&5
+$as_echo "$as_me:        ZIP_ARGS=$ZIP_ARGS" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}:         ZIP_EXT=$ZIP_EXT" >&5
+$as_echo "$as_me:         ZIP_EXT=$ZIP_EXT" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: " >&5
 $as_echo "$as_me: " >&6;}
 
