@@ -33,12 +33,6 @@ AS_IF([test "$FNCS_TOP_BUILDDIR" != "$FNCS_TOP_SRCDIR"],
 
 AC_CANONICAL_HOST
 
-AC_ARG_ENABLE([fortran],
-              [AS_HELP_STRING([--enable-fortran], [enable FORTRAN code])],
-              [],
-              [enable_fortran=no])
-AM_CONDITIONAL([ENABLE_FORTRAN], [test "x$enable_fortran" != xno])
-
 AC_LANG([C++])
 
 ###############################################################################
@@ -50,38 +44,6 @@ AC_MSG_NOTICE
 
 # Checks for programs.
 AC_PROG_CXX
-
-AC_PATH_PROGS([MPICXX], [mpicxx mpic++ mpiCC sxmpic++ mpxlC_r mpxlC mpixlcxx_r mpixlcxx], [no])
-AM_CONDITIONAL([HAVE_MPICXX], [test "x$MPICXX" != xno])
-AC_ARG_VAR([MPICXX], [MPI C++ compiler wrapper])
-AS_IF([test "x$MPICXX" != xno], [
-      rm -f mpicxx_show.out
-      AS_IF([$MPICXX -show > mpicxx_show.out], [
-            MPICXX_SHOW=`cat mpicxx_show.out`
-            FNCS_ARG_PARSE([MPICXX_SHOW],
-                           [MPICXX_LIBS],
-                           [MPICXX_LDFLAGS],
-                           [MPICXX_CPPFLAGS])
-      ])
-      rm -f mpicxx_show.out
-])
-AC_SUBST([MPICXX_CPPFLAGS])
-
-AC_PATH_PROGS([ZIP], [zip], [no])
-AM_CONDITIONAL([HAVE_ZIP], [test "x$ZIP" != xno])
-AC_ARG_VAR([ZIP], [archive program (default zip)])
-AC_SUBST([ZIP])
-AC_DEFINE_UNQUOTED([ZIP], ["$ZIP"], [archive program])
-
-AS_IF([test "x$ZIP_ARGS" = x], [ZIP_ARGS=-r])
-AC_ARG_VAR([ZIP_ARGS], [archive program arguments (default -r)])
-AC_SUBST([ZIP_ARGS])
-AC_DEFINE_UNQUOTED([ZIP_ARGS], ["$ZIP_ARGS"], [archive program arguments])
-
-AS_IF([test "x$ZIP_EXT" = x], [ZIP_EXT=zip])
-AC_ARG_VAR([ZIP_EXT], [archive file extension (default zip)])
-AC_SUBST([ZIP_EXT])
-AC_DEFINE_UNQUOTED([ZIP_EXT], ["$ZIP_EXT"], [archive file extension])
 
 # Checks for libraries.
 FNCS_CHECK_PACKAGE([zmq], [zmq.h], [zmq], [zmq_ctx_new])
@@ -207,48 +169,6 @@ AC_PROG_CC
 AC_LANG_POP([C])
 
 ###############################################################################
-# Fortran compiler
-###############################################################################
-AC_MSG_NOTICE
-AS_IF([test "x$enable_fortran" = xno],
-    [AC_MSG_NOTICE([Fortran compiler (disabled, but some tests still required)])],
-    [AC_MSG_NOTICE([Fortran compiler])])
-AC_LANG_PUSH([Fortran])
-
-# Checks for programs.
-AC_PROG_FC
-
-# If FORTRAN compiler was not found, we disable support.
-AS_IF([test "x$FC" = x], [enable_fortran=no])
-
-# If FORTRAN compiler does not work, we disable support for it.
-AC_LINK_IFELSE(
-    [AC_LANG_PROGRAM([],[])], [],
-    [AC_MSG_WARN([FORTRAN compiler does not work, disabling])
-     enable_fortran=no; FC=])
-
-# Perform FORTRAN tests only if enabled.
-if test "x$enable_fortran" = xyes
-then
-
-# Checks for libraries.
-AC_FC_LIBRARY_LDFLAGS
-
-# Checks for header files.
-
-# Checks for typedefs, structures, and compiler characteristics.
-AC_FC_PP_SRCEXT([F90])
-AC_FC_SRCEXT([f90])
-AC_FC_MODULE_EXTENSION
-AC_FC_MODULE_FLAG
-
-# Checks for library functions.
-
-fi
-
-AC_LANG_POP([Fortran])
-
-###############################################################################
 # Libtool setup -- no compiler/linker tests after this
 ###############################################################################
 AC_MSG_NOTICE
@@ -304,16 +224,12 @@ AC_MSG_NOTICE([**************************************************************])
 AC_MSG_NOTICE([ $PACKAGE_NAME configured as follows:])
 AC_MSG_NOTICE([**************************************************************])
 AC_MSG_NOTICE([])
-AC_MSG_NOTICE([            CXX=$CXX])
-AC_MSG_NOTICE([       CXXFLAGS=$CXXFLAGS])
-AC_MSG_NOTICE([            CPP=$CPP])
-AC_MSG_NOTICE([       CPPFLAGS=$CPPFLAGS])
-AC_MSG_NOTICE([        LDFLAGS=$LDFLAGS])
-AC_MSG_NOTICE([           LIBS=$LIBS])
-AC_MSG_NOTICE([         MPICXX=$MPICXX])
-AC_MSG_NOTICE([MPICXX_CPPFLAGS=$MPICXX_CPPFLAGS])
-AC_MSG_NOTICE([            ZIP=$ZIP])
-AC_MSG_NOTICE([       ZIP_ARGS=$ZIP_ARGS])
-AC_MSG_NOTICE([        ZIP_EXT=$ZIP_EXT])
+AC_MSG_NOTICE([          CXX=$CXX])
+AC_MSG_NOTICE([     CXXFLAGS=$CXXFLAGS])
+AC_MSG_NOTICE([          CPP=$CPP])
+AC_MSG_NOTICE([     CPPFLAGS=$CPPFLAGS])
+AC_MSG_NOTICE([      LDFLAGS=$LDFLAGS])
+AC_MSG_NOTICE([         LIBS=$LIBS])
+AC_MSG_NOTICE([      MPIEXEC=$MPIEXEC])
 AC_MSG_NOTICE([])
 

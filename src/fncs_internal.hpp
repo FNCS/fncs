@@ -10,7 +10,6 @@
 #include "czmq.h"
 
 #include "yaml-cpp/yaml.h"
-#include "json-cpp/json/json.h"
 #include "fncs.hpp"
 #include "log.h"
 
@@ -72,8 +71,6 @@ namespace fncs {
                 , name("")
                 , time_delta("")
                 , fatal("")
-                , aggregate_sub("")
-                , aggregate_pub("")
                 , values()
             {}
 
@@ -81,8 +78,6 @@ namespace fncs {
             string name;
             string time_delta;
             string fatal;
-            string aggregate_sub;
-            string aggregate_pub;
             vector<Subscription> values;
 
             string to_string() {
@@ -99,12 +94,6 @@ namespace fncs {
                 if (!fatal.empty()) {
                     os << "fatal: " << fatal << endl;
                 }
-                if (!aggregate_sub.empty()) {
-                    os << "aggregate_sub: " << aggregate_sub << endl;
-                }
-                if (!aggregate_pub.empty()) {
-                    os << "aggregate_pub: " << aggregate_pub << endl;
-                }
                 if (values.size()) {
                     os << "values:" << endl;
                     for (size_t i=0; i<values.size(); ++i) {
@@ -119,7 +108,6 @@ namespace fncs {
     const char * const ACK = "ack";
     const char * const TIME_REQUEST = "time_request";
     const char * const PUBLISH = "publish";
-    const char * const PUBLISH_AGGREGATE = "publish_aggregate";
     const char * const DIE = "die";
     const char * const BYE = "bye";
     const char * const TIME_DELTA = "time_delta";
@@ -157,9 +145,6 @@ namespace fncs {
 
     /** Parses the given zconfig object. */
     FNCS_EXPORT Config parse_config(zconfig_t *zconfig);
-
-    /** Converts the given Json::Value into a fncs Config. */
-    FNCS_EXPORT Config parse_config(const Json::Value &json_config);
 
     /** Converts given 'value' zconfig into a fncs Subscription value. */
     FNCS_EXPORT fncs::Subscription parse_value(zconfig_t *config);

@@ -3,18 +3,19 @@ import string
 
 import fncs
 
-name = "testpy"
+name = "randome_name_" + "".join( [random.choice(string.digits) for i in xrange(8)] )
 
 config = """name = %s
 time_delta = 1s""" % name
 
 # generate some time steps
-time_steps = sorted(random.sample([i for i in range(100)], 10))
+time_steps = sorted(random.sample([i for i in xrange(100)], 10))
+print time_steps
 
-fncs.initialize(config.encode('utf-8'))
-my_key = "some_key"
+fncs.initialize(config)
 
 for time in time_steps:
     current_time = fncs.time_request(time)
-    fncs.publish(my_key, current_time * 2)
+    print "current time is", current_time
+    fncs.publish("some_key", "some_value")
 fncs.finalize()
