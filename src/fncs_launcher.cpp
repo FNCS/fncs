@@ -190,15 +190,17 @@ int main(int argc, char **argv)
     }
 
     /* informative print of all assigned commands */
+    /*
     for (int i=0; i<world_size; ++i) {
         if (i == world_rank) {
             for (size_t j=0; j<commands.size(); ++j) {
                 LINFO << host_name << ": " << commands[j];
             }
         }
-        /* include this if you want ordered output from MPI, will slow down execution significantly */
+        // include this if you want ordered output from MPI, will slow down execution significantly
         //MPI_Barrier(MPI_COMM_WORLD);
     }
+    */
 
     /* broadcast the rank 0 host name,
      * where the broker will be launched */
@@ -328,6 +330,8 @@ int main(int argc, char **argv)
             ERRNO << "run_command(" << commands[i] << ")";
             killall(children);
         }
+        // some initial information about where each process is started
+        LINFO << host_name << ", " << child << ": " << commands[i];
         children.push_back(child);
     }
 
@@ -345,6 +349,14 @@ int main(int argc, char **argv)
             if (WIFEXITED(status)) { 
                 LDEBUG << "child exited, status=" << WEXITSTATUS(status);
                 any_error |= (0 != WEXITSTATUS(status));
+                if (WEXITSTATUS(status) != 0) {
+                    for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
+                        if (pid == children[i]) {
+                            command_exit = commands[i];
+                        }       
+                    }
+                    ERR << "child exited with non-zero status, " << WEXITSTATUS(status) << " (" << command_exit << ")";
+                }
             } else if (WIFSIGNALED(status)) {
                 for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
                     if (pid == children[i]) {
@@ -569,7 +581,7 @@ pid_t unzip_command(std::string command)
     } else if (0 == cpid) {
         /* this is the child */
         int retval;
-        if (strcmp(new_argv[0],"gridlabd") == 0) { // if this is a GridLAB-D federate we need to extract the model file
+        if (strcmp(new_argv[2],"gridlabd") == 0) { // if this is a GridLAB-D federate we need to extract the model file
             char const * const uzipcommand[] = { "unzip", "-qq", "*.zip", NULL };
             //retval = execvp(uzipcommand[0], uzipcommand);
             retval = execvp("unzip", (char**)uzipcommand);
