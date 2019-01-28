@@ -103,8 +103,10 @@ int main(int argc, char **argv)
     int world_size = 0;
     std::vector<std::string> commands;
     char host_name[HOST_NAME_SIZE] = {0};
+    char host_name_orig[HOST_NAME_SIZE] = {0};
     int retval = 0;
     std::string archive_dir;
+    bool zipped_gridlabd = false;
     std::string broker_host = "tcp://*:7777";
     std::string broker_client;
 
@@ -139,7 +141,11 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     /* error checking for input file */
-    if (3 != argc) {
+    if (4 == argc) {
+        if (strcmp(argv[3],"true") == 0) {
+            zipped_gridlabd = true;
+        }
+    } else if (argc < 3) {
         if (0 == world_rank) {
             if (1 == argc) {
                 ERR << "Missing input file";
@@ -150,6 +156,8 @@ int main(int argc, char **argv)
         }
         MPI_Finalize();
         exit(EXIT_FAILURE);
+    } else if (argc > 4) {
+        ERR << "To many argument specified";
     }
 
     /* make sure our output directory is empty so that we don't
@@ -188,17 +196,22 @@ int main(int argc, char **argv)
         ERRNO << "gethostname";
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
-
+    
+    // let's keep a copy of the hostname
+    strcpy(host_name_orig, host_name);
+    
     /* informative print of all assigned commands */
+    /*
     for (int i=0; i<world_size; ++i) {
         if (i == world_rank) {
             for (size_t j=0; j<commands.size(); ++j) {
                 LINFO << host_name << ": " << commands[j];
             }
         }
-        /* include this if you want ordered output from MPI, will slow down execution significantly */
+        // include this if you want ordered output from MPI, will slow down execution significantly
         //MPI_Barrier(MPI_COMM_WORLD);
     }
+    */
 
     /* broadcast the rank 0 host name,
      * where the broker will be launched */
@@ -245,60 +258,63 @@ int main(int argc, char **argv)
      * beyond this point. Ideally, we terminate MPI early, right now. */
     MPI_Finalize();
 
-    /* for the GridLAB-D federates we need to unzip the model files we need */
     std::vector<pid_t> children;
-    for (size_t i=0; i<commands.size(); ++i) {
-        int retval = chdir(cwd);
-        if (0 != retval) {
-            ERRNO << "chdir(" << cwd << ")";
-        }
-        if (0 == world_rank && 0 == i) {
-            continue; /* skip zipping broker command */
-        }
-        pid_t child = unzip_command(commands[i]); 
-        if (-1 == child) {
-            ERRNO << "unzip_command(" << commands[i] << ")";
-            killall(children);
-        }
-        children.push_back(child);
-    }
     
-    /* wait for all children */
-    if (!commands.empty()) {
-        int status;
-        pid_t pid;
-        std::string command_exit;
-        while ((pid = wait(&status)) > 0) {
-            /* parent */
-            if (pid == -1) {
-                ERRNO << "wait";
-                exit(EXIT_FAILURE);
+    if (zipped_gridlabd) {
+        /* for the GridLAB-D federates we need to unzip the model files we need */
+        for (size_t i=0; i<commands.size(); ++i) {
+            int retval = chdir(cwd);
+            if (0 != retval) {
+                ERRNO << "chdir(" << cwd << ")";
             }
-            if (WIFEXITED(status)) { 
-                LDEBUG << "unzip exited, status=" << WEXITSTATUS(status);
-                if (0 != WEXITSTATUS(status)) {
+            if (0 == world_rank && 0 == i) {
+                continue; /* skip zipping broker command */
+            }
+            pid_t child = unzip_command(commands[i]); 
+            if (-1 == child) {
+                ERRNO << "unzip_command(" << commands[i] << ")";
+                killall(children);
+            }
+            children.push_back(child);
+        }
+        
+        /* wait for all children */
+        if (!commands.empty()) {
+            int status;
+            pid_t pid;
+            std::string command_exit;
+            while ((pid = wait(&status)) > 0) {
+                /* parent */
+                if (pid == -1) {
+                    ERRNO << "wait";
                     exit(EXIT_FAILURE);
                 }
-            } else if (WIFSIGNALED(status)) {
-                for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
-                    if (pid == children[i]) {
-                        command_exit = commands[i];
-                    }       
+                if (WIFEXITED(status)) { 
+                    LDEBUG << "unzip exited, status=" << WEXITSTATUS(status);
+                    if (0 != WEXITSTATUS(status)) {
+                        exit(EXIT_FAILURE);
+                    }
+                } else if (WIFSIGNALED(status)) {
+                    for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
+                        if (pid == children[i]) {
+                            command_exit = commands[i];
+                        }       
+                    }
+                    ERR << "unzip killed by signal " << WTERMSIG(status) << " (" << command_exit << ")";
+                    exit(EXIT_FAILURE);
+                } else if (WIFSTOPPED(status)) {
+                    for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
+                        if (pid == children[i]) {
+                            command_exit = commands[i];
+                        }       
+                    }
+                    ERR << "unzip stopped by signal " << WSTOPSIG(status) << " (" << command_exit << ")";
+                    exit(EXIT_FAILURE);
                 }
-                ERR << "unzip killed by signal " << WTERMSIG(status) << " (" << command_exit << ")";
-                exit(EXIT_FAILURE);
-            } else if (WIFSTOPPED(status)) {
-                for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
-                    if (pid == children[i]) {
-                        command_exit = commands[i];
-                    }       
-                }
-                ERR << "unzip stopped by signal " << WSTOPSIG(status) << " (" << command_exit << ")";
-                exit(EXIT_FAILURE);
             }
         }
     }
-    
+
     /* time to run the actual commands */
     children.clear();
     bool any_error = false;
@@ -328,6 +344,8 @@ int main(int argc, char **argv)
             ERRNO << "run_command(" << commands[i] << ")";
             killall(children);
         }
+        // some initial information about where each process is started
+        LINFO << host_name_orig << ", " << child << ": " << commands[i];
         children.push_back(child);
     }
 
@@ -345,6 +363,14 @@ int main(int argc, char **argv)
             if (WIFEXITED(status)) { 
                 LDEBUG << "child exited, status=" << WEXITSTATUS(status);
                 any_error |= (0 != WEXITSTATUS(status));
+                if (WEXITSTATUS(status) != 0) {
+                    for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
+                        if (pid == children[i]) {
+                            command_exit = commands[i];
+                        }       
+                    }
+                    ERR << "child exited with non-zero status, " << WEXITSTATUS(status) << " (" << command_exit << ")";
+                }
             } else if (WIFSIGNALED(status)) {
                 for (std::vector<pid_t>::size_type i = 0; i != children.size(); i++) {
                     if (pid == children[i]) {
@@ -569,7 +595,7 @@ pid_t unzip_command(std::string command)
     } else if (0 == cpid) {
         /* this is the child */
         int retval;
-        if (strcmp(new_argv[0],"gridlabd") == 0) { // if this is a GridLAB-D federate we need to extract the model file
+        if (strcmp(new_argv[2],"gridlabd") == 0) { // if this is a GridLAB-D federate we need to extract the model file
             char const * const uzipcommand[] = { "unzip", "-qq", "*.zip", NULL };
             //retval = execvp(uzipcommand[0], uzipcommand);
             retval = execvp("unzip", (char**)uzipcommand);
