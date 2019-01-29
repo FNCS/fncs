@@ -59,7 +59,7 @@ static fncs::time time_window = 0;
 static zsock_t *client = NULL;
 static map<string,string> pub_cache;
 static map<string,string> cache;
-static vector<string> events;
+static set<string> events;
 static set<string> keys; /* keys that other sims subscribed to */
 static vector<string> mykeys; /* keys from the fncs config file */
 static long poll_timeout = -1;
@@ -732,21 +732,21 @@ fncs::time fncs::time_request(fncs::time time_next)
     LDEBUG2 << "sending TIME_REQUEST of " << time_next << " in sim units";
     time_next *= time_delta_multiplier;
 
-    if (time_next % time_delta != 0) {
-        LERROR << "time request "
-            << time_next
-            << " ns is not a multiple of time delta ("
-            << time_delta
-            << " ns)!";
-        die();
-        return time_next;
-    }
-
     if (time_next < time_current) {
         LERROR << "time request "
             << time_next
             << " ns is smaller than the current time ("
             << time_current
+            << " ns)!";
+        die();
+        return time_next;
+    }
+
+    if ((time_next-time_current) % time_delta != 0) {
+        LERROR << "time request "
+            << time_next
+            << " ns is not a multiple of time delta ("
+            << time_delta
             << " ns)!";
         die();
         return time_next;
@@ -900,7 +900,7 @@ fncs::time fncs::time_request(fncs::time time_next)
 
                 /* if found then store in cache */
                 if (found) {
-                    events.push_back(subscription.key);
+                    events.insert(subscription.key);
                     if (subscription.is_list()) {
                         cache_list[subscription.key].push_back(value);
                         LDEBUG4 << "updated cache_list "
@@ -967,7 +967,7 @@ fncs::time fncs::time_request(fncs::time time_next)
 
                     /* if found then store in cache */
                     if (found) {
-                        events.push_back(subscription.key);
+                        events.insert(subscription.key);
                         if (subscription.is_list()) {
                             cache_list[subscription.key].push_back(value);
                             LDEBUG4 << "updated cache_list "
@@ -1855,7 +1855,9 @@ vector<string> fncs::get_events()
         return vector<string>();
     }
 
-    return events;
+    std::vector<string> output(events.size());
+    std::copy(events.begin(), events.end(),output.begin()); 
+    return output;
 }
 
 
@@ -1876,7 +1878,7 @@ string fncs::agentGetEvents()
     Json::StyledWriter json_writer;
     Json::Value default_payload = "";
     vector<string> unique_keys;
-    for (vector<string>::iterator keys = events.begin(); keys != events.end(); ++keys) {
+    for (set<string>::iterator keys = events.begin(); keys != events.end(); ++keys) {
         key = *keys;
         bool is_key_unique = true;
         if (unique_keys.size() > 0) {
