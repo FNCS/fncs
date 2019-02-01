@@ -12,6 +12,10 @@
 
 #include "fncs.hpp"
 
+#ifdef __APPLE__
+extern char **environ;
+#endif
+
 int main(int argc, char **argv)
 {
     /* for debugging, track the special "die" argv */
