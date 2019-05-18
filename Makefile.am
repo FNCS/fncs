@@ -203,9 +203,12 @@ tests_fcoverage_mod_SOURCES = tests/fcoverage_mod.f90
 tests_fcoverage_mod_LDADD = $(LDADD) $(FCLIBS)
 nodist_EXTRA_tests_fcoverage_mod_SOURCES = dummy.cxx
 
+if ON_MINGW
+else
 bin_PROGRAMS += fncs_test_federate
 fncs_test_federate_SOURCES = src/test_federate.cpp
 fncs_test_federate_LDADD = $(LDADD) libjsoncpp.la
+endif
 
 bin_PROGRAMS += mini_federate
 mini_federate_SOURCES = src/mini_federate.cpp
