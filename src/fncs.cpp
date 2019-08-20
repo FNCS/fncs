@@ -764,12 +764,12 @@ fncs::time fncs::time_request(fncs::time time_next)
         it->second.clear();
     }
 
-    if (time_passed < time_window) {
+    /*if (time_passed < time_window) {
         time_window -= time_passed;
         LDEBUG1 << "there are " << time_window << " nanoseconds left in the window";
         LDEBUG1 << "time_granted " << time_next << " nanoseonds";
         time_current = time_next;
-        /* convert nanoseonds to sim's time unit */
+        //convert nanoseonds to sim's time unit
         time_granted = convert_broker_to_sim_time(time_next);
         LDEBUG2 << "time_granted " << time_granted << " in sim units";
         return time_granted;
@@ -777,7 +777,7 @@ fncs::time fncs::time_request(fncs::time time_next)
     else {
         LDEBUG1 << "time_window expired";
         time_window = 0;
-    }
+    }*/
 
     LDEBUG1 << "sending TIME_REQUEST of " << time_next << " nanoseconds";
 
