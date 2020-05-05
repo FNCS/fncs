@@ -1,5 +1,5 @@
-INSTALL_PATH := ~/src/tesp/examples/loadshed/java
-FNCS_PATH := /usr/local
+INSTALL_PATH := $(TESP_INSTALL)/java
+FNCS_PATH := $(TESP_INSTALL)
 CXX = g++
 
 CXXFLAGS =
@@ -30,7 +30,7 @@ fncs.jar: fncs/JNIfncs.java
 
 libJNIfncs.so: fncs/JNIfncs.cpp
 	$(CXX) $(CPPFLAGS) -DJNIfncs_EXPORTS -o fncs/JNIfncs.o -c fncs/JNIfncs.cpp
-	$(CXX) -shared -o libJNIfncs.so fncs/JNIfncs.o -L. $(LIBS)
+	$(CXX) -shared -o libJNIfncs.so fncs/JNIfncs.o $(LDFLAGS) $(LIBS)
 
 clean:
 	rm -f fncs/*.class
