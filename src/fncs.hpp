@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <memory>
 
 using ::std::pair;
 using ::std::string;
@@ -94,7 +95,16 @@ namespace fncs {
     FNCS_EXPORT vector<string> get_values(const string &key);
 
     /** Get a vector of configured keys. */
+    FNCS_EXPORT std::unique_ptr<vector<string>> get_keys_pointer();
+
+    /** Get a vector of configured keys. */
     FNCS_EXPORT vector<string> get_keys();
+
+    /** Get the size of the keys. */
+    FNCS_EXPORT int get_keys_size();
+
+    /** Get the key by the index in mykeys. */
+    FNCS_EXPORT std::string get_key_by_index(int index);
 
     /** Return the name of the simulator. */
     FNCS_EXPORT string get_name();

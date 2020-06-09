@@ -15,6 +15,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <memory>
+#include <iostream>
 
 /* for fncs::timer() */
 #ifdef __MACH__
@@ -28,6 +30,7 @@
 #include <time.h>
 #endif
 #include <assert.h>
+#include <unistd.h>
 
 /* 3rd party headers */
 #include "czmq.h"
@@ -1990,18 +1993,67 @@ vector<string> fncs::get_values(const string &key)
 }
 
 
+std::unique_ptr<vector<string>> fncs::get_keys_pointer()
+{
+    LDEBUG4 << "fncs::get_keys()";
+    std::cout << "getting keys..." << std::endl;
+    if (!is_initialized_) {
+        LWARNING << "fncs is not initialized";
+        return std::make_unique<vector<string>>();
+    }
+
+    auto values = std::make_unique<std::vector<std::string>>();
+    values->reserve(mykeys.size());
+//    for (std::vector<std::string>::iterator it = mykeys.begin();
+//        it != mykeys.end(); ++it) {
+//    	std::cout << *it << std::endl;
+//        values.push_back(*it);
+//    }
+
+    for(auto value : mykeys){
+    	values->emplace_back(std::string(value));
+    }
+
+    return std::move(values);
+}
+
 vector<string> fncs::get_keys()
 {
     LDEBUG4 << "fncs::get_keys()";
-
+    std::cout << "getting keys...again" << std::endl;
+//    char buff[FILENAME_MAX];
+//    getcwd(buff, FILENAME_MAX);
+//    std::cout << "Current path is " << std::string(buff) << std::endl;
+//    char result[PATH_MAX];
+//    ssize_t count = readlink("/proc/self/maps", result, PATH_MAX);
+//    std::cout << "Current exe path is " << std::string(result, (count > 0) ? count : 0) << std::endl;
     if (!is_initialized_) {
         LWARNING << "fncs is not initialized";
         return vector<string>();
     }
 
+//    std::vector<std::string> values;
+//    values.reserve(mykeys.size());
+////    for (std::vector<std::string>::iterator it = mykeys.begin();
+////        it != mykeys.end(); ++it) {
+////    	std::cout << *it << std::endl;
+////        values.push_back(*it);
+////    }
+//
+//    for(auto value : mykeys){
+//    	values.emplace_back(std::string(value));
+//    }
+
     return mykeys;
 }
 
+int fncs::get_keys_size(){
+	return mykeys.size();
+}
+
+std::string fncs::get_key_by_index(int index){
+	return mykeys.at(index);
+}
 
 string fncs::get_name()
 {
