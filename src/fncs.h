@@ -121,6 +121,16 @@ extern "C" {
     /** Convenience wrapper around libc free. */
     FNCS_EXPORT void _fncs_free(void * ptr);
 
+    /** Faster version: call count first, and then
+     *  fncs_next_event that many times */
+    FNCS_EXPORT size_t fncs_count_events();
+    FNCS_EXPORT const char *fncs_next_event();
+
+    /** Faster version: call count first, and then fncs_next_value
+     *  that many times on the same key   */
+    FNCS_EXPORT size_t fncs_count_values(const char *key);
+    FNCS_EXPORT const char *fncs_next_value();
+
 #ifdef __cplusplus
 }
 #endif

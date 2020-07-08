@@ -1077,6 +1077,32 @@ void fncs::publish(const string &key, const string &value)
     }
 }
 
+void fncs::cpublish(const string &key, const char *value)
+{
+    LDEBUG4 << "fncs::cpublish(c_str,c_str)";
+
+    if (!is_initialized_) {
+        LWARNING << "fncs is not initialized";
+        return;
+    }
+
+    if (keys.count(key)) {
+        string new_key = simulation_name + '/' + key;
+        if (aggregate_pub) {
+            pub_cache[new_key] = value;
+            LDEBUG4 << "cached PUBLISH '" << new_key << "'='" << value << "'";
+        }
+        else {
+            zstr_sendm(client, fncs::PUBLISH);
+            zstr_sendm(client, new_key.c_str());
+            zstr_send(client, value);
+        }
+    }
+    else {
+        LDEBUG4 << "dropped " << key;
+    }
+}
+
 
 void fncs::publish_anon(const string &key, const string &value)
 {
