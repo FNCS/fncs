@@ -146,6 +146,7 @@ int idxValue = 0;
 
 size_t fncs_count_events()
 {
+  vecEvents.clear();
   vecEvents = fncs::get_events();
   idxEvent = 0;
   return vecEvents.size();
@@ -158,6 +159,7 @@ const char *fncs_next_event()
 
 size_t fncs_count_values(const char *key)
 {
+  vecValues.clear();
   vecValues = fncs::get_values(key);
   idxValue = 0;
   return vecValues.size();
