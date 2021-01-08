@@ -30,7 +30,9 @@
 #include <time.h>
 #endif
 #include <assert.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 /* 3rd party headers */
 #include "czmq.h"

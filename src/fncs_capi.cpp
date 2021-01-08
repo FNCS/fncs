@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include <fncs.hpp>
-#include <fncs.h>
+#include "fncs.hpp"
+#include "fncs.h"
 
 using namespace std;
 
