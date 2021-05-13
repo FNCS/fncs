@@ -40,6 +40,7 @@ clean:
 	rm -f *.so
 
 install:
+	$(info $$INSTALL_PATH is [${INSTALL_PATH}])
 	mkdir -p $(INSTALL_PATH)
 	cp fncs.jar $(INSTALL_PATH)
 	cp libJNIfncs.so $(INSTALL_PATH) 
