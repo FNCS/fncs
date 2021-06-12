@@ -58,6 +58,7 @@ namespace fncs {
 
     /** Publish value using the given key. */
     FNCS_EXPORT void publish(const string &key, const string &value);
+    FNCS_EXPORT void cpublish(const string &key, const char *value);
 
     /** Publish value anonymously using the given key. */
     FNCS_EXPORT void publish_anon(const string &key, const string &value);

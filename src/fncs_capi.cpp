@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include <fncs.hpp>
-#include <fncs.h>
+#include "fncs.hpp"
+#include "fncs.h"
 
 using namespace std;
 
@@ -40,7 +40,7 @@ fncs_time fncs_time_request(fncs_time next)
 
 void fncs_publish(const char *key, const char *value)
 {
-    fncs::publish(key, value);
+    fncs::cpublish(key, value);
 }
 
 void fncs_publish_anon(const char *key, const char *value)
@@ -137,6 +137,37 @@ size_t fncs_get_values_size(const char *key)
 const char** fncs_get_values(const char *key)
 {
     return convert(fncs::get_values(key));
+}
+
+vector<string> vecEvents;
+vector<string> vecValues;
+int idxEvent = 0;
+int idxValue = 0;
+
+size_t fncs_count_events()
+{
+  vecEvents.clear();
+  vecEvents = fncs::get_events();
+  idxEvent = 0;
+  return vecEvents.size();
+}
+
+const char *fncs_next_event()
+{
+  return vecEvents[idxEvent++].c_str();
+}
+
+size_t fncs_count_values(const char *key)
+{
+  vecValues.clear();
+  vecValues = fncs::get_values(key);
+  idxValue = 0;
+  return vecValues.size();
+}
+
+const char *fncs_next_value()
+{
+  return vecValues[idxValue++].c_str();
 }
 
 const char* fncs_get_value_at(const char *key, size_t index)
