@@ -8,8 +8,8 @@ INCLUDE(UseJava)
 
 # find fncs
 INCLUDE(FindPackageHandleStandardArgs)
-FIND_PATH(FNCS_INCLUDE_DIR fncs.hpp)
-FIND_LIBRARY(FNCS_LIBRARY fncs)
+FIND_PATH(FNCS_INCLUDE_DIR fncs.hpp PATHS $ENV{FNCS_INCLUDE_DIR})
+FIND_LIBRARY(FNCS_LIBRARY fncs PATHS $ENV{FNCS_LIBRARY})
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(FNCS
     DEFAULT_MSG
     FNCS_INCLUDE_DIR
@@ -24,11 +24,18 @@ ELSE()
 ENDIF()
 
 # generate JNIfncs.h stub
+#ADD_CUSTOM_COMMAND(
+#    OUTPUT fncs_JNIfncs.h
+#    COMMAND ${Java_JAVAH_EXECUTABLE} -verbose
+#        -classpath fncs.jar
+#        -jni fncs.JNIfncs
+#    MAIN_DEPENDENCY fncs.jar
+#)
 ADD_CUSTOM_COMMAND(
     OUTPUT fncs_JNIfncs.h
-    COMMAND ${Java_JAVAH_EXECUTABLE} -verbose
-        -classpath fncs.jar
-        -jni fncs.JNIfncs
+    COMMAND ${Java_JAVAC_EXECUTABLE} -h ../fncs -verbose
+        -classpath fncs
+         ../fncs/JNIfncs.java
     MAIN_DEPENDENCY fncs.jar
 )
 
