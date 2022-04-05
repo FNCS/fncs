@@ -24,6 +24,13 @@ ELSE()
 ENDIF()
 
 # generate JNIfncs.h stub
+#ADD_CUSTOM_COMMAND(
+#    OUTPUT fncs_JNIfncs.h
+#    COMMAND ${Java_JAVAH_EXECUTABLE} -verbose
+#        -classpath fncs.jar
+#        -jni fncs.JNIfncs
+#    MAIN_DEPENDENCY fncs.jar
+#)
 ADD_CUSTOM_COMMAND(
     OUTPUT fncs_JNIfncs.h
     COMMAND ${Java_JAVAC_EXECUTABLE} -h ../fncs -verbose

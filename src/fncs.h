@@ -70,43 +70,49 @@ extern "C" {
     FNCS_EXPORT size_t fncs_get_events_size();
 
     /** Get the keys for all values that were updated during the last
-     * time_request. */
+     * time_request. Must _fncs_free return value.   */
     FNCS_EXPORT const char** fncs_get_events();
 
     /** Get one key for the given event index that as updated during the
-     * last time_request. */
+     * last time_request. Must _fncs_free return value. */ 
     FNCS_EXPORT const char* fncs_get_event_at(size_t index);
 
     /** Get the agent events for all values that were updated during the last
-	   * time_request. */
+     * time_request. Must _fncs_free return value. */ 
     FNCS_EXPORT const char* fncs_agentGetEvents();
 
     /** Get a value from the cache with the given key.
-     * Will hard fault if key is not found. */
+     * Will hard fault if key is not found. Must _fncs_free 
+     * return value. */ 
     FNCS_EXPORT const char* fncs_get_value(const char *key);
 
     /** Get the number of values from the cache with the given key. */
     FNCS_EXPORT size_t fncs_get_values_size(const char *key);
 
     /** Get an array of values from the cache with the given key.
-     * Will return an array of size 1 if only a single value exists. */
+     * Will return an array of size 1 if only a single value 
+     * exists. Must _fncs_free the return value. */ 
     FNCS_EXPORT const char** fncs_get_values(const char *key);
 
-    /** Get a single value from the array of values for the given key. */
+    /** Get a single value from the array of values for the given
+     *  key. Must _fncs_free the return value. */
     FNCS_EXPORT const char* fncs_get_value_at(const char *key, size_t index);
 
     /** Get the number of subscribed keys. */
     FNCS_EXPORT size_t fncs_get_keys_size();
 
     /** Get the subscribed keys.
-     * Will return NULL if fncs_get_keys_size() returns 0. */
+     * Will return NULL if fncs_get_keys_size() returns 0. Must 
+     * _fncs_free the return value. */ 
     FNCS_EXPORT const char** fncs_get_keys();
 
     /** Get the subscribed key at the given index.
-     * Will return NULL if fncs_get_keys_size() returns 0. */
+     * Will return NULL if fncs_get_keys_size() returns 0. Must 
+     * _fncs_free the return value. */ 
     FNCS_EXPORT const char* fncs_get_key_at(size_t index);
 
-    /** Return the name of the simulator. */
+    /** Return the name of the simulator. Must _fncs_free the
+     *  return value. */
     FNCS_EXPORT const char * fncs_get_name();
 
     /** Return a unique numeric ID for the simulator. */
@@ -120,6 +126,18 @@ extern "C" {
 
     /** Convenience wrapper around libc free. */
     FNCS_EXPORT void _fncs_free(void * ptr);
+
+    /** Faster version: call count first, and then
+     *  fncs_next_event that many times. Don't _fncs_free retval
+     *  and don't retain the references. */
+    FNCS_EXPORT size_t fncs_count_events();
+    FNCS_EXPORT const char *fncs_next_event();
+
+    /** Faster version: call count first, and then fncs_next_value
+     *  that many times on the same key. Don't _fncs_free retval
+     *  and don't retain the references. */
+    FNCS_EXPORT size_t fncs_count_values(const char *key);
+    FNCS_EXPORT const char *fncs_next_value();
 
 #ifdef __cplusplus
 }
