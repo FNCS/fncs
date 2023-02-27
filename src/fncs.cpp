@@ -964,7 +964,7 @@ ostream& operator << (ostream& os, zframe_t *self) {
     assert (self);
     assert (zframe_is (self));
 
-    byte *data = zframe_data (self);
+    unsigned char *data = zframe_data (self);
     size_t size = zframe_size (self);
 
     //  Probe data to check if it looks like unprintable binary
